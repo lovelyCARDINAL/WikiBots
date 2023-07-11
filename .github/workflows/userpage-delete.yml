@@ -1,4 +1,4 @@
-name: "[ABOT] userpage-delete"
+name: "[ABOT] userpage-deletion"
 
 on:
   schedule:
