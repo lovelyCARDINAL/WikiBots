@@ -1,7 +1,7 @@
 import {env} from 'process';
 
 const config = {
-	apiuseragent: env.MOEGIRL_API_USER_AGENT,
+	apiuseragent: env.MOEGIRL_API_USER_AGENT, // For WAF
 	api: {
 		zh: 'https://mzh.moegirl.org.cn/api.php',
 		cm: 'https://commons.moegirl.org.cn/api.php',
