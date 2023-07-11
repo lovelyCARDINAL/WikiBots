@@ -2,7 +2,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 
-const api = new MediaWikiApi(config.api.zh, {
+const api = new MediaWikiApi(config.zh.api, {
 	headers: {
 		'api-user-agent': config.apiuseragent || '',
 	},
@@ -60,7 +60,7 @@ async function cannotDelete(pageid) {
 	console.log(result.data);
 }
 
-api.login(config.abot.zh.name, config.abot.zh.password)
+api.login(config.zh.abot.name, config.zh.abot.password)
 	.then(console.log, console.error)
 	.then(async () => {
 		const [usergroup, botlist] = await Promise.all([

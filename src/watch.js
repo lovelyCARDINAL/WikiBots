@@ -3,7 +3,7 @@ import config from './utils/config.js';
 import moment from 'moment';
 import splitAndJoin from './utils/commonOperations.js';
 
-const api = new MediaWikiApi(config.api.zh, {
+const api = new MediaWikiApi(config.zh.api, {
 	headers: {
 		'api-user-agent': config.apiuseragent || '',
 	},
@@ -20,7 +20,7 @@ async function watch(titles, unwatch) {
 
 console.log(`Start time: ${ new Date().toISOString()}`);
 
-api.login(config.main.zh.name, config.main.zh.password)
+api.login(config.zh.main.name, config.zh.main.password)
 	.then(console.log, console.error)
 	.then(async () => {
 		const usergroup = await api.get({
