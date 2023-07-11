@@ -92,6 +92,10 @@ rules:
       AssignmentExpression:
         object: true
         array: false
+  space-infix-ops: warn
+  object-curly-spacing: 
+    - warn
+    - always
 
 root:
   true

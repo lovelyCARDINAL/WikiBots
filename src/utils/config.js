@@ -1,4 +1,4 @@
-import {env} from 'process';
+import { env } from 'process';
 
 const config = {
 	apiuseragent: env.MOEGIRL_API_USER_AGENT, // For WAF

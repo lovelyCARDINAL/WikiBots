@@ -20,7 +20,7 @@ const lestart = new Date(Date.now() - 3 * 60 * 1000).toISOString(),
 	leend = new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString();
 
 function ruleTest(item, targetns) {
-	const {params, comment} = item;
+	const { params, comment } = item;
 	if (params.suppressredirect || !targetns.includes(params.target_ns) || item.commenthidden) {
 		return false;
 	} 
@@ -29,13 +29,13 @@ function ruleTest(item, targetns) {
 
 async function ruleTest2(item) {
 	const { title, timestamp } = item;
-	const data = await api.get({
+	const { data:{ query:{ pages } } } = await api.get({
 		prop: 'revisions',
 		titles: title,
 		rvprop: 'ids|timestamp',
 		rvlimit: '2',
 	});
-	const {missing, revisions, pageid} = data.data.query.pages[0];
+	const { missing, revisions, pageid } = pages[0];
 	if (missing || revisions.length > 1) {
 		return false;
 	}
@@ -62,7 +62,7 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 			NS_LIST.map(async (ns) => {
 				const [targetns, reason] = NS_REASON_MAP[ns] || [[parseInt(ns)], '自动删除移动讨论页面残留重定向'];
 
-				const pagedata = await api.get({
+				const { data :{ query:{ logevents: pagelist } } } = await api.get({
 					list: 'logevents',
 					letype: 'move',
 					leprop: 'title|type|user|timestamp|comment|details',
@@ -71,7 +71,6 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 					lestart,
 					leend,
 				});
-				const pagelist = pagedata.data.query.logevents;
 				
 				if (pagelist.length) {
 					await Promise.all(
