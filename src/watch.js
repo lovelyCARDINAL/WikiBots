@@ -1,10 +1,9 @@
-import { readFileSync } from 'fs';
 import { MediaWikiApi } from 'wiki-saikou';
+import config from './utils/config.js';
 import moment from 'moment';
 import splitAndJoin from './utils/commonOperations.js';
 
-const config = JSON.parse(readFileSync('./src/utils/config.json')).main;
-const api = new MediaWikiApi(config.zh.api);
+const api = new MediaWikiApi(config.api.zh);
 
 async function watch(titles, unwatch) {
     const result = await api.postWithToken('watch', {
@@ -17,7 +16,7 @@ async function watch(titles, unwatch) {
 
 console.log(`Start time: ${ new Date().toISOString()}`);
 
-api.login(config.zh.lgname, config.zh.lgpassword)
+api.login(config.main.zh.name, config.main.zh.password)
     .then(console.log, console.error)
     .then(async () => {
         const usergroup = await api.get({
