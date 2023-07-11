@@ -5,13 +5,11 @@ name: "[BOT] test"
 
 on:
   push:
-    branches: 
-      - "main"
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - "main"
+    branches: [ "main" ]
   schedule:
-    - cron: 5,20,45 * * * *
+    - cron: "5,20,45 * * * *"
 
 jobs:
   build:
