@@ -2,8 +2,8 @@ addReviewers: true
 
 addAssignees: true
 
-reviewers: 
+reviewers:
   - lovelyCARDINAL
 
-assignees: 
+assignees:
   - lovelyCARDINAL
