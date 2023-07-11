@@ -93,9 +93,8 @@ rules:
         object: true
         array: false
   space-infix-ops: warn
-  object-curly-spacing: 
+  object-curly-spacing:
     - warn
     - always
 
-root:
-  true
+root: true

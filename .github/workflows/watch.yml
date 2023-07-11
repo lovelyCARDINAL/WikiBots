@@ -9,21 +9,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Set Node Version
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18.x
-        cache: 'npm'
-      
-    - name: Install dependencies
-      run: npm ci
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
 
-    - name: Master
-      env:
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Master
+        env:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
-      run: node src/watch.js
-      
+        run: node src/watch.js
