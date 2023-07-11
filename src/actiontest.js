@@ -1,7 +1,11 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 
-const api = new MediaWikiApi(config.api.zh);
+const api = new MediaWikiApi(config.api.zh, {
+    headers: {
+        'api-user-agent': config.apiuseragent || '',
+    },
+});
 
 console.log(`Start time: ${new Date().toISOString()}`);
 

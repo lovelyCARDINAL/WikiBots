@@ -3,7 +3,11 @@ import config from './utils/config.js';
 import moment from 'moment';
 import splitAndJoin from './utils/commonOperations.js';
 
-const api = new MediaWikiApi(config.api.zh);
+const api = new MediaWikiApi(config.api.zh, {
+    headers: {
+        'api-user-agent': config.apiuseragent || '',
+    },
+});
 
 async function watch(titles, unwatch) {
     const result = await api.postWithToken('watch', {
