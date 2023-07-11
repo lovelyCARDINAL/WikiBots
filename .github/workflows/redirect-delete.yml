@@ -1,4 +1,4 @@
-name: "[ABOT] redirect-delete"
+name: "[ABOT] redirect-deletion"
 
 on:
   schedule:
