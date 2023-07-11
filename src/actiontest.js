@@ -18,6 +18,7 @@ api.login(config.bot.zh.name, config.bot.zh.password)
             text: `${new Date().toISOString()}`,
             summary: 'Github Actions Test - Cron',
             bot: true,
+            minor: true,
             tags: 'Bot',
         });
     });
