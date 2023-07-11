@@ -4,6 +4,7 @@
   "description": "moegirlpedia bot",
   "main": "index.js",
   "scripts": {
+    "test": "node ./src/actiontest.js",
     "main_watch": "node ./src/watch.js"
   },
   "author": "hoshimi",
