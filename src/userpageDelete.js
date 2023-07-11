@@ -10,7 +10,7 @@ const api = new MediaWikiApi(config.api.zh, {
 
 console.log(`Start time: ${new Date().toISOString()}`);
 
-async function rule_test(title, pageid, maintainlist) {
+async function ruleTest(title, pageid, maintainlist) {
 	const rootuser = title.replace(/^User:(.+?)(?:\/.*)?$/, '$1');
 
 	const pagedata = await api.get({
@@ -28,7 +28,7 @@ async function rule_test(title, pageid, maintainlist) {
 	return isCreator && exuserlist.length === 0;
 }
 
-async function pagedelete(pageid) {
+async function pageDelete(pageid) {
 	const result = await api.postWithToken('csrf', {
 		action: 'delete',
 		pageid,
@@ -39,7 +39,7 @@ async function pagedelete(pageid) {
 	console.log(result.data);
 }
 
-async function cannottdelete(pageid) {
+async function cannotDelete(pageid) {
 	const content = await api.get({
 		prop: 'revisions',
 		pageids: pageid,
@@ -96,10 +96,10 @@ api.login(config.abot.zh.name, config.abot.zh.password)
 			await Promise.all(
 				pagelist.map(async (page) => {
 					const { title, pageid } = page;
-					if (await rule_test(title, pageid, maintainlist)) {
-						await pagedelete(pageid);
+					if (await ruleTest(title, pageid, maintainlist)) {
+						await pageDelete(pageid);
 					} else {
-						await cannottdelete(pageid);
+						await cannotDelete(pageid);
 					}
 				}),
 			);
