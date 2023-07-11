@@ -19,6 +19,10 @@ const config = {
 	},
 	cm: {
 		api: 'https://commons.moegirl.org.cn/api.php',
+		bot: {
+			name: '机娘星海酱@tf',
+			password: env.CM_BOT,
+		},
 	},
 	lb: {
 		api: 'https://library.moegirl.org.cn/api.php',
