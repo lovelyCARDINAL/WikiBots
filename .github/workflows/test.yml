@@ -23,6 +23,7 @@ jobs:
     
     - name: Master
       env:
+          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_BOT: ${{ secrets.ZH_BOT }}
       run: node src/actiontest.js
       

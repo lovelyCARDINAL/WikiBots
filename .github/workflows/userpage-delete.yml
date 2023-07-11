@@ -23,6 +23,7 @@ jobs:
 
     - name: Master
       env:
+          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
       run: node src/userpageDelete.js
       
