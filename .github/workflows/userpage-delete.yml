@@ -2,7 +2,7 @@ name: "[ABOT] userpage-deletion"
 
 on:
   schedule:
-    - cron: "35 2-23/4 * * *"
+    - cron: "35 2-20/4 * * *"
 
 jobs:
   build:
