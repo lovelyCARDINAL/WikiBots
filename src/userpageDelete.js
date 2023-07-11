@@ -13,14 +13,14 @@ console.log(`Start time: ${new Date().toISOString()}`);
 async function ruleTest(title, pageid, maintainlist) {
 	const rootuser = title.replace(/^User:(.+?)(?:\/.*)?$/, '$1');
 
-	const pagedata = await api.get({
+	const { data:{ query:{ pages } } } = await api.get({
 		prop: 'revisions',
 		pageids: pageid,
 		rvprop: 'user',
 		rvlimit: 'max',
 		rvdir: 'newer',
 	});
-	const editlist = pagedata.data.query.pages[0].revisions.map((item) => item.user);
+	const editlist = pages[0].revisions.map((item) => item.user);
 
 	const isCreator = editlist[0] === rootuser;
 	const exuserlist = editlist.filter((element) => !maintainlist.includes(element) && element !== rootuser);
@@ -29,25 +29,25 @@ async function ruleTest(title, pageid, maintainlist) {
 }
 
 async function pageDelete(pageid) {
-	const result = await api.postWithToken('csrf', {
+	const { data } = await api.postWithToken('csrf', {
 		action: 'delete',
 		pageid,
 		reason: '自动删除悬挂{{[[Template:ns2d|ns2d]]}}的用户页面',
 		tags: 'Bot',
 		watchlist: 'nochange',
 	});
-	console.log(result.data);
+	console.log(data);
 }
 
 async function cannotDelete(pageid) {
-	const content = await api.get({
+	const { data:{ query:{ pages } } } = await api.get({
 		prop: 'revisions',
 		pageids: pageid,
 		rvprop: 'content',
 	});
-	let wikitext = content.data.query.pages[0].revisions[0].content;
+	let wikitext = pages[0].revisions[0].content;
 	wikitext = wikitext.replace(/(?:<noinclude>\s*)?{{\s*(?:T:|模板:|[样樣]板:|Template:)?\s*ns2d\s*}}(?:\s*<\/noinclude>)?/gi, '');
-	const result = await api.postWithToken('csrf', {
+	const { data } = await api.postWithToken('csrf', {
 		action: 'edit',
 		pageid,
 		tags: 'Bot',
@@ -57,7 +57,7 @@ async function cannotDelete(pageid) {
 		bot: true,
 		summary: '无法自动删除，请至[[萌娘百科_talk:讨论版/操作申请]]提请维护人员删除。',
 	});
-	console.log(result.data);
+	console.log(data);
 }
 
 api.login(config.zh.abot.name, config.zh.abot.password)

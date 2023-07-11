@@ -39,7 +39,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 					if (pagelist.length) {
 						await Promise.all(
 							pagelist.map(async (pageid) => {
-								const { data: { edit: result } } = await api.postWithToken('csrf', {
+								const { data } = await api.postWithToken('csrf', {
 									action: 'edit',
 									pageid,
 									appendtext: '',
@@ -48,7 +48,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 									tags: 'Bot',
 									summary: '空编辑以刷新分类表',
 								});
-								console.log(result);
+								console.log(data);
 							}),
 						);
 					} else {
