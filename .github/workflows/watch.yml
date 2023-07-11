@@ -6,20 +6,23 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set Node Version
       uses: actions/setup-node@v3
       with:
         node-version: 18.x
         cache: 'npm'
+      
     - name: Install dependencies
       run: npm ci
+
     - name: Master
-      run: node src/watch.js
       env:
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
+      run: node src/watch.js
       
