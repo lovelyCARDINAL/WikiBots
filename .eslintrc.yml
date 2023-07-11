@@ -19,7 +19,7 @@ rules:
   curly: error
   indent:
     - 2
-    - 4
+    - tab
     - SwitchCase: 1
   linebreak-style:
     - 0
