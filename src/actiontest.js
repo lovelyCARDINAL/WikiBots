@@ -8,7 +8,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 api.login(config.bot.zh.name, config.bot.zh.password)
     .then(console.log, console.error)
     .then(() => {
-        return bot.postWithToken('csrf', {
+        return api.postWithToken('csrf', {
             action: 'edit',
             title: 'User:星海子/test/001',
             text: `${new Date().toISOString()}`,
