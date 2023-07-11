@@ -1,10 +1,13 @@
 {
-  "name": "node",
-  "version": "1.0.0",
+  "name": "wikibot",
   "description": "moegirlpedia bot",
   "main": "index.js",
+  "engines": {
+    "node": "18.*"
+  },
   "scripts": {
-    "test": "node ./src/actiontest.js"
+    "test": "node ./src/actiontest.js",
+    "eslint": "eslint src --fix"
   },
   "author": "hoshimi",
   "license": "MIT",
