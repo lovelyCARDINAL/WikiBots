@@ -23,4 +23,7 @@ jobs:
       run: npm install
     - run: npm run build --if-present
     - run: npm run main_watch
+      env:
+          ZH_MAIN: ${{ secrets.ZH_MAIN }}
+          ZH_BOT: ${{ secrets.ZH_BOT }}
       name: MAIN
