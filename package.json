@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "node ./src/actiontest.js",
-    "eslint": "eslint src --fix"
+    "format": "eslint src --fix && find . -type f \\( -name '*.json' -o -name '*.yaml' -o -name '*.yml' \\) -exec prettier --write {} +"
   },
   "author": "hoshimi",
   "license": "MIT",
