@@ -2,7 +2,8 @@ name: "[BOT] test"
 
 on:
   schedule:
-    - cron: "5,20,45 * * * *"
+    - cron: "59 23,15 * * *"
+    - cron: "0 0,16 * * *"
 
 jobs:
   build:
