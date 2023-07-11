@@ -6,10 +6,6 @@ name: "[MAIN] watch"
 on:
   schedule:
     - cron: "30 0 * * *"
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
@@ -29,5 +25,4 @@ jobs:
     - run: npm run main_watch
       env:
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
-          ZH_BOT: ${{ secrets.ZH_BOT }}
-      name: MAIN
+      name: Master
