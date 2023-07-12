@@ -13,7 +13,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 async function ruleTest(title, pageid, maintainlist) {
 	const rootuser = title.replace(/^User:(.+?)(?:\/.*)?$/, '$1');
 
-	const { data:{ query:{ pages } } } = await api.get({
+	const { data:{ query:{ pages } } } = await api.post({
 		prop: 'revisions',
 		pageids: pageid,
 		rvprop: 'user',
@@ -40,7 +40,7 @@ async function pageDelete(pageid) {
 }
 
 async function cannotDelete(pageid) {
-	const { data:{ query:{ pages } } } = await api.get({
+	const { data:{ query:{ pages } } } = await api.post({
 		prop: 'revisions',
 		pageids: pageid,
 		rvprop: 'content',
@@ -64,12 +64,12 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 	.then(console.log, console.error)
 	.then(async () => {
 		const [ usergroup, botlist ] = await Promise.all([
-			api.get({
+			api.post({
 				prop: 'revisions',
 				titles: 'Module:UserGroup/data',
 				rvprop: 'content',
 			}),
-			api.get({
+			api.post({
 				list: 'allusers',
 				augroup: 'bot',
 				aulimit: 'max',
@@ -81,7 +81,7 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 		const bot = botlist.data.query.allusers.map((user) => user.name);
 		const maintainlist = [ ...sysop, ...patroller, ...staff, ...bot ];
 		
-		const data = await api.get({
+		const data = await api.post({
 			action: 'query',
 			prop: 'transcludedin',
 			titles: 'Template:Ns2d',

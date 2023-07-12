@@ -23,7 +23,7 @@ console.log(`Start time: ${ new Date().toISOString()}`);
 api.login(config.zh.main.name, config.zh.main.password)
 	.then(console.log, console.error)
 	.then(async () => {
-		const { data:{ query:{ pages } } } = await api.get({
+		const { data:{ query:{ pages } } } = await api.post({
 			prop: 'revisions',
 			titles: 'Module:UserGroup/data',
 			rvprop: 'content',
@@ -33,7 +33,7 @@ api.login(config.zh.main.name, config.zh.main.password)
 		);
 		let watchlist = [ ...sysop, ...patroller, ...techeditor, ...staff ].map((username) => `User:${username}`);
 
-		const { data:{ query:{ categorymembers } } } = await api.get({
+		const { data:{ query:{ categorymembers } } } = await api.post({
 			list: 'categorymembers',
 			cmpageid: '374746',
 			cmprop: 'title',
@@ -48,7 +48,7 @@ api.login(config.zh.main.name, config.zh.main.password)
 		}
 
 		if (moment().utc().format('dddd') === 'Sunday') {
-			const { data:{ watchlistraw: talklist } } = await api.get({
+			const { data:{ watchlistraw: talklist } } = await api.post({
 				list: 'watchlistraw',
 				wrnamespace: '5',
 				wrlimit: 'max',
