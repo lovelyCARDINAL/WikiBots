@@ -31,7 +31,7 @@ api.login(config.zh.main.name, config.zh.main.password)
 		const { sysop, patroller, techeditor, staff } = JSON.parse(
 			pages[0]?.revisions[0]?.content,
 		);
-		let watchlist = [...sysop, ...patroller, ...techeditor, ...staff].map((username) => `User:${username}`);
+		let watchlist = [ ...sysop, ...patroller, ...techeditor, ...staff ].map((username) => `User:${username}`);
 
 		const { data:{ query:{ categorymembers } } } = await api.get({
 			list: 'categorymembers',

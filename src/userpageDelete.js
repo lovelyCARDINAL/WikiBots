@@ -63,7 +63,7 @@ async function cannotDelete(pageid) {
 api.login(config.zh.abot.name, config.zh.abot.password)
 	.then(console.log, console.error)
 	.then(async () => {
-		const [usergroup, botlist] = await Promise.all([
+		const [ usergroup, botlist ] = await Promise.all([
 			api.get({
 				prop: 'revisions',
 				titles: 'Module:UserGroup/data',
@@ -79,7 +79,7 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 			usergroup.data.query.pages[0].revisions[0].content,
 		);
 		const bot = botlist.data.query.allusers.map((user) => user.name);
-		const maintainlist = [...sysop, ...patroller, ...staff, ...bot];
+		const maintainlist = [ ...sysop, ...patroller, ...staff, ...bot ];
 		
 		const data = await api.get({
 			action: 'query',
