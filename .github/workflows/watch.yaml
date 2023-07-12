@@ -2,7 +2,7 @@ name: "[MAIN] watch"
 
 on:
   schedule:
-    - cron: "5 16 * * *"
+    - cron: "5 16 * * *" # 00:05 CST
   workflow_dispatch:
 
 jobs:
