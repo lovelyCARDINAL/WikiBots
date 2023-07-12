@@ -43,7 +43,7 @@ async function editTimeData(origin, type, string) {
 			owner: 'lovelyCARDINAL',
 			repo: 'WikiBots',
 			path: 'data/time.yaml',
-			message: 'auto: Record time data',
+			message: `auto: record last run time of ${type}`,
 			content: Buffer.from(content, 'utf-8').toString('base64'),
 			sha,
 		});
