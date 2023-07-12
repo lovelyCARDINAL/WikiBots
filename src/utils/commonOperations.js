@@ -8,4 +8,6 @@ function splitAndJoin(list, chunkSize) {
 	return chunks;
 }
 
-export default splitAndJoin;
+export {
+	splitAndJoin,
+};
