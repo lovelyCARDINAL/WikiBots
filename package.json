@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "node ./src/actiontest.js",
-    "lint": "eslint src && prettier --check '**/*.yaml' '**/*.json' '!data/*.yaml'",
+    "lint": "eslint src && prettier --check '**/*.yaml' '!data/*.yaml'",
     "format": "eslint src --fix && prettier --write '**/*.yaml' '**/*.json' '!data/*.yaml'"
   },
   "author": "hoshimi",

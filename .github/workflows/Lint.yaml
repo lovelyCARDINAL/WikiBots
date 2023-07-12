@@ -7,15 +7,13 @@ on:
     paths:
       - "**/*.yaml"
       - "**/*.js"
-      - "**/*.json"
       - "!data/*.yaml"
   pull_request:
     branches:
       - main
     paths:
-      - "**/*.yaml"
+      - ".github/workflows/*.yaml"
       - "**/*.js"
-      - "**/*.json"
       - "!data/*.yaml"
 
 jobs:
