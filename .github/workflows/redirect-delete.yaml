@@ -23,6 +23,7 @@ jobs:
 
       - name: Run Script
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/redirectDelete.js

@@ -1,5 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
+import { getTimeData, editTimeData } from './utils/lastTime.js';
 
 const api = new MediaWikiApi(config.zh.api, {
 	headers: {
@@ -16,8 +17,6 @@ const NS_REASON_MAP = {
 	2: [ [ 0, 10, 4, 12 ], '自动删除移动用户页面残留重定向' ],
 	3: [ [ 1, 11, 5, 13 ], '自动删除移动用户讨论页面残留重定向' ],
 };
-const lestart = new Date(Date.now() - 3 * 60 * 1000).toISOString(),
-	leend = new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString();
 
 function ruleTest(item, targetns) {
 	const { params, comment } = item;
@@ -29,7 +28,7 @@ function ruleTest(item, targetns) {
 
 async function ruleTest2(item) {
 	const { title, timestamp } = item;
-	const { data:{ query:{ pages } } } = await api.get({
+	const { data:{ query:{ pages } } } = await api.post({
 		prop: 'revisions',
 		titles: title,
 		rvprop: 'ids|timestamp',
@@ -58,11 +57,15 @@ async function pageDelete(pageid, reason) {
 api.login(config.zh.abot.name, config.zh.abot.password)
 	.then(console.log, console.error)
 	.then(async () => {
+		const lastTime = await getTimeData();
+		const leend = lastTime['redirect-deletion'],
+			lestart = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+
 		await Promise.all(
 			NS_LIST.map(async (ns) => {
 				const [ targetns, reason ] = NS_REASON_MAP[ns] || [ [ parseInt(ns) ], '自动删除移动讨论页面残留重定向' ];
 
-				const { data :{ query:{ logevents: pagelist } } } = await api.get({
+				const { data: { query: { logevents: pagelist } } } = await api.post({
 					list: 'logevents',
 					letype: 'move',
 					leprop: 'title|type|user|timestamp|comment|details',
@@ -71,7 +74,7 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 					lestart,
 					leend,
 				});
-				
+
 				if (pagelist.length) {
 					await Promise.all(
 						pagelist.map(async (item) => {
@@ -88,5 +91,7 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 				}
 			}),
 		);
+
+		await editTimeData(lastTime, 'redirect-deletion', lestart);
 		console.log(`End time: ${new Date().toISOString()}`);
 	});
