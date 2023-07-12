@@ -2,7 +2,7 @@ name: "[ABOT] userpage-deletion"
 
 on:
   schedule:
-    - cron: "35 2-20/4 * * *"
+    - cron: "45 18,1,8,13 * * *" # 02:45, 09:45, 14:45, 21:45 CST
   workflow_dispatch:
 
 jobs:

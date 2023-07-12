@@ -2,7 +2,7 @@ name: "[BOT] nulledit-in-category"
 
 on:
   schedule:
-    - cron: "35 3-20/4 * * *"
+    - cron: "35 19,2,9,14 * * *" # 3:35, 10:35, 17:35, 22:35 CST
   workflow_dispatch:
 
 jobs:
