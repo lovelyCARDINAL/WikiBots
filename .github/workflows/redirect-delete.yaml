@@ -3,6 +3,7 @@ name: "[ABOT] redirect-deletion"
 on:
   schedule:
     - cron: "35 1-23/4 * * *"
+  workflow_dispatch:
 
 jobs:
   build:
