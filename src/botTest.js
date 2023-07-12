@@ -16,7 +16,7 @@ api.login(config.zh.bot.name, config.zh.bot.password)
 			action: 'edit',
 			title: 'User:星海子/test/001',
 			text: `${new Date().toISOString()}`,
-			summary: 'Github Actions Test - Cron',
+			summary: 'Github Actions Test',
 			bot: true,
 			minor: true,
 			tags: 'Bot',
