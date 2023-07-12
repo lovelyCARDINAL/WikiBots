@@ -1,9 +1,7 @@
-name: "[BOT] test"
+name: "Test"
 
 on:
-  schedule:
-    - cron: "59 23,15 * * *"
-    - cron: "0 0,16 * * *"
+  workflow_dispatch:
 
 jobs:
   build:
@@ -26,4 +24,4 @@ jobs:
         env:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: node src/actiontest.js
+        run: node src/botTest.js
