@@ -17,7 +17,7 @@
     "js-yaml": "^4.1.0",
     "moment": "^2.29.4",
     "tslib": "^2.6.0",
-    "wiki-saikou": "^1.4.1"
+    "wiki-saikou": "^2.0.0"
   },
   "type": "module",
   "devDependencies": {
