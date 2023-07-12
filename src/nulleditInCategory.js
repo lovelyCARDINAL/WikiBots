@@ -1,7 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 
-const SITE_LIST = ['zh', 'cm'];
+const SITE_LIST = [ 'zh', 'cm' ];
 
 console.log(`Start time: ${new Date().toISOString()}`);
 
@@ -24,7 +24,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 			});
 			await api.login(config[site].bot.name, config[site].bot.password);
 			
-			const catlist = [...setting[site], '尚未清空的已重定向分类', '尚未清空的消歧义分类'];
+			const catlist = [ ...setting[site], '尚未清空的已重定向分类', '尚未清空的消歧义分类' ];
 
 			await Promise.all(
 				catlist.map(async (title) => {

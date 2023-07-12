@@ -96,5 +96,12 @@ rules:
   object-curly-spacing:
     - warn
     - always
+  array-bracket-spacing:
+    - warn
+    - always
+  comma-spacing:
+    - warn
+    - before: false
+      after: true
 
 root: true
