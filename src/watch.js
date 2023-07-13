@@ -43,9 +43,11 @@ api.login(config.zh.main.name, config.zh.main.password)
 		watchlist.push(...categorymembers.map((member) => member.title));
 
 		watchlist = splitAndJoin(watchlist, 50);
-		for (const result of watchlist) {
-			await watch(result);
-		}
+		await Promise.all(
+			watchlist.map(
+				(result) => watch(result),
+			),
+		);
 
 		if (moment().utc().format('dddd') === 'Sunday') {
 			const { data:{ watchlistraw: talklist } } = await api.post({
@@ -60,9 +62,12 @@ api.login(config.zh.main.name, config.zh.main.password)
 					.filter((member) => member.title.includes('存档'))
 					.map((member) => member.title)
 				, 50);
-			for (const result of unwatchlist) {
-				await watch(result, true);
-			}
+			await Promise.all(
+				unwatchlist.map(
+					(result) => watch(result, true),
+				),
+			);
+
 		}
 		console.log(`End time: ${new Date().toISOString()}`);
 	});
