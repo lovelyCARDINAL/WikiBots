@@ -1,6 +1,8 @@
-name: "@cron 4x/d"
+name: "[cron] 4x/d @daily"
 
 on:
+  schedule:
+    - cron: "35 19,2,9,14 * * *"
   workflow_dispatch:
 
 jobs:
@@ -25,7 +27,7 @@ jobs:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/userpageDelete.js
-      
+
       - name: Run redirectDelete.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
