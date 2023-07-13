@@ -1,4 +1,4 @@
-export function splitAndJoin(list, chunkSize) {
+function splitAndJoin(list, chunkSize) {
 	const chunks = [];
 	for (let i = 0; i < list.length; i += chunkSize) {
 		const chunk = list.slice(i, i + chunkSize);
@@ -7,3 +7,5 @@ export function splitAndJoin(list, chunkSize) {
 	}
 	return chunks;
 }
+
+export default splitAndJoin;
