@@ -58,3 +58,8 @@ export {
 	getTimeData,
 	editTimeData,
 };
+
+export default {
+	getTimeData,
+	editTimeData,
+};
