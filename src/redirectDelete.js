@@ -44,14 +44,14 @@ async function ruleTest2(item) {
 }
 
 async function pageDelete(pageid, reason) {
-	const result = await api.postWithToken('csrf', {
+	const { data } = await api.postWithToken('csrf', {
 		action: 'delete',
 		pageid,
 		reason,
 		tags: 'Bot',
 		watchlist: 'nochange',
 	});
-	console.log(result.data);
+	console.log(data);
 }
 
 api.login(config.zh.abot.name, config.zh.abot.password)
