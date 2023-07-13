@@ -1,5 +1,6 @@
 name: "[schedule] 1x/d AM0"
 # watch.js
+# newsProtect.js @9th
 
 on:
   schedule:
@@ -30,12 +31,12 @@ jobs:
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
         run: node src/watch.js
 
-      - name: Run newsProtect.js on the 9th day of the month
+      - name: Run newsProtect.js @9th
         env:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: |
-          if [ "$(date '+%d')" -eq 13 ]; then
+          if [ "$(date '+%d')" -eq 09 ]; then
             echo "Running newsProtect.js on the 9th day of the month"
             node src/newsProtect.js
           else
