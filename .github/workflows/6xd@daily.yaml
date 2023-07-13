@@ -1,4 +1,4 @@
-name: "[schedule] 6x/d @daily"
+name: "[schedule] 6x/d"
 # invisibleCharacter.js
 
 on:
