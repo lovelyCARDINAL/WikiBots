@@ -9,14 +9,20 @@ const api = new MediaWikiApi(config.zh.api, {
 	},
 });
 
+const regexMap = {
+	'180e': /[\u2005-\u200C\u200E\u200F\u2028-\u202F\u205F\u2060-\u206E\u3164\uFEFF]+/g,
+	3164: /[\u180E\u2005-\u200C\u200E\u200F\u2028-\u202F\u205F\u2060-\u206E\uFEFF]+/g,
+	'default': /[\u180E\u2005-\u200C\u200E\u200F\u2028-\u202F\u205F\u2060-\u206E\u3164\uFEFF]+/g,
+};
+
 function replaceSpecialCharacters(wikitext, pageid, setting) {
 	switch (pageid) {
 		case setting['180e'].includes(pageid):
-			return wikitext.replace(/[\u2005-\u200C\u200E\u200F\u2028-\u202F\u205F\u2060-\u206E\u3164\uFEFF]+/g, '');
+			return wikitext.replace(regexMap['180e'], '');
 		case setting['3164'].includes(pageid):
-			return wikitext.replace(/[\u180E\u2005-\u200C\u200E\u200F\u2028-\u202F\u205F\u2060-\u206E\uFEFF]+/g, '');
+			return wikitext.replace(regexMap['3164'], '');
 		default:
-			return wikitext.replace(/[\u180E\u2005-\u200C\u200E\u200F\u2028-\u202F\u205F\u2060-\u206E\u3164\uFEFF]+/g, '');
+			return wikitext.replace(regexMap.default, '');
 	}
 }
 
@@ -67,21 +73,22 @@ api.login(config.zh.bot.name, config.zh.bot.password)
 			return;
 		}
 		await Promise.all(
-			pagelists.map((pagelist) =>
-				api.post({
+			pagelists.map(async(pagelist) => {
+				const { data: { query: { pages } } } = await api.post({
 					prop: 'revisions',
 					pageids: pagelist,
 					rvprop: 'content',
-				}).then(({ data: { query: { pages } } }) => {
-					pages.forEach(async (page) => {
+				});
+				await Promise.all(
+					pages.map(async (page) => {
 						const { pageid, revisions } = page;
 						if (revisions.length) {
 							const { content: wikitext } = revisions[0];
 							await removeChar(pageid, wikitext, setting);
 						}
-					});
-				}),
-			),
+					}),
+				);
+			}),
 		);
 
 		await editTimeData(lastTime, 'invisible-character', rcstart);
