@@ -54,7 +54,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 							}),
 						);
 					} else {
-						console.log(`Site:${site}: Category:${title} is empty.`);
+						console.log(`Site:${site} Category:${title} is empty.`);
 					}
 				}),
 			);
