@@ -1,12 +1,14 @@
-name: "[MAIN] watch"
+name: "[cron] 1x/d @daily"
+# watch.js
 
 on:
   schedule:
-    - cron: "5 16 * * *" # 00:05 CST
+    - cron: "35 16 * * *"
+    # 00:35 CST
   workflow_dispatch:
 
 jobs:
-  build:
+  run:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Script
+      - name: Run watch.js
         env:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
