@@ -45,8 +45,10 @@ console.log(`Start time: ${new Date().toISOString()}`);
 									appendtext: '',
 									minor: true,
 									bot: true,
+									nocreate: true,
 									tags: 'Bot',
 									summary: '空编辑以刷新分类表',
+									watchlist: 'nochange',
 								});
 								console.log(data);
 							}),
