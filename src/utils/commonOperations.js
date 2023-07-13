@@ -11,3 +11,7 @@ function splitAndJoin(list, chunkSize) {
 export {
 	splitAndJoin,
 };
+
+export default {
+	splitAndJoin,
+};
