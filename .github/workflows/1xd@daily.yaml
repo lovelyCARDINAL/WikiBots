@@ -1,4 +1,4 @@
-name: "[cron] 1x/d @daily"
+name: "[schedule] 1x/d @daily"
 # watch.js
 
 on:

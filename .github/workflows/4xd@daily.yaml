@@ -1,4 +1,4 @@
-name: "[cron] 4x/d @daily"
+name: "[schedule] 4x/d @daily"
 # userpageDelete.js
 # redirectDelete.js
 # nulleditInCategory.js

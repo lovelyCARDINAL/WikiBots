@@ -1,4 +1,4 @@
-name: "[cron] 6x/d @daily"
+name: "[schedule] 6x/d @daily"
 # invisibleCharacter.js
 
 on:
