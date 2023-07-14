@@ -1,10 +1,10 @@
-name: "[schedule] 1x/d AM0"
-# watch.js
+name: "[schedule] 1x/m"
+# newsProtect.js @9th
 
 on:
   schedule:
-    - cron: "35 16 * * *"
-    # 00:35 CST
+    - cron: "50 16 9 * *"
+    # 00:50 CST
   workflow_dispatch:
 
 jobs:
@@ -24,8 +24,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run watch.js
+      - name: Run newsProtect.js @9th
+        if: ${{ github.event.schedule == '50 16 9 * *' || github.event_name == 'workflow_dispatch'}}
         env:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
-          ZH_MAIN: ${{ secrets.ZH_MAIN }}
-        run: node src/watch.js
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
+        run: node src/newsProtect.js
