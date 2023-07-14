@@ -1,8 +1,10 @@
 name: "[schedule] 1x/m"
+# newsSubscriber.js @2nd
 # newsProtect.js @9th
 
 on:
   schedule:
+    - cron: "50 16 2 * *"
     - cron: "50 16 9 * *"
     # 00:50 CST
   workflow_dispatch:
@@ -23,6 +25,13 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: newsSubscriber.js @2nd
+        if: ${{ github.event.schedule == '50 16 2 * *' || github.event_name == 'workflow_dispatch'}}
+        env:
+          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+          ZH_BOT: ${{ secrets.ZH_BOT }}
+        run: node src/newsSubscriber.js
 
       - name: Run newsProtect.js @9th
         if: ${{ github.event.schedule == '50 16 9 * *' || github.event_name == 'workflow_dispatch'}}
