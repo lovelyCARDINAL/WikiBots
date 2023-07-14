@@ -14,7 +14,9 @@
   "license": "MIT",
   "dependencies": {
     "@octokit/core": "^5.0.0",
+    "axios": "^1.4.0",
     "js-yaml": "^4.1.0",
+    "jsonpath": "^1.1.1",
     "moment": "^2.29.4",
     "tslib": "^2.6.0",
     "wiki-saikou": "^2.0.0"
@@ -23,6 +25,7 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.5",
     "eslint": "^8.44.0",
+    "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-vue": "^9.15.1",
     "prettier": "^3.0.0"
   }

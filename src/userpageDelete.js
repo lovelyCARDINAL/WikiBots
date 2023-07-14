@@ -92,7 +92,6 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 		const pagedata = data.data.query.pages[0];
 		if (Object.prototype.hasOwnProperty.call(pagedata, 'transcludedin')){
 			const pagelist = pagedata.transcludedin;
-			console.log(pagedata);
 			await Promise.all(
 				pagelist.map(async (page) => {
 					const { title, pageid } = page;
