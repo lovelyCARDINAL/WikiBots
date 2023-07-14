@@ -10,28 +10,36 @@ on:
   workflow_dispatch:
 
 jobs:
-  run:
+  userpage-deletion:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
       - name: Set Node Version
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
           cache: "npm"
-
       - name: Install dependencies
         run: npm ci
-
       - name: Run userpageDelete.js
         env:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/userpageDelete.js
 
+  redirect-deletion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
       - name: Run redirectDelete.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -39,6 +47,18 @@ jobs:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/redirectDelete.js
 
+  nulledit-in-category:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
       - name: Run nulleditInCategory.js
         env:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
