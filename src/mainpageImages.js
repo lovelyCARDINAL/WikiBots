@@ -78,7 +78,6 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		partlist.map((part) => getMainpageJson(part)),
 	);
 	const imgSrcList = imgSrcGroup.flat();
-	//console.log(imgSrcList);
 
 	const imgNameList = [],
 		badImageInfo = '';
