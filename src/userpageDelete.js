@@ -2,11 +2,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 
-const api = new MediaWikiApi(config.zh.api, {
-	headers: {
-		'api-user-agent': config.apiuseragent || '',
-	},
-});
+const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
 
 console.log(`Start time: ${new Date().toISOString()}`);
 
@@ -36,7 +32,7 @@ async function pageDelete(pageid) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	});
-	console.log(data);
+	console.log(JSON.stringify(data));
 }
 
 async function cannotDelete(pageid) {
@@ -57,7 +53,7 @@ async function cannotDelete(pageid) {
 		bot: true,
 		summary: '无法自动删除，请至[[萌娘百科_talk:讨论版/操作申请]]提请维护人员删除。',
 	});
-	console.log(data);
+	console.log(JSON.stringify(data));
 }
 
 api.login(config.zh.abot.name, config.zh.abot.password)

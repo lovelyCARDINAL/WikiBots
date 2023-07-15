@@ -3,11 +3,7 @@ import moment from 'moment';
 import config from './utils/config.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
-const api = new MediaWikiApi(config.zh.api, {
-	headers: {
-		'api-user-agent': config.apiuseragent || '',
-	},
-});
+const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
 
 async function watch(titles, unwatch) {
 	const { data } = await api.postWithToken('watch', {
@@ -15,7 +11,7 @@ async function watch(titles, unwatch) {
 		titles,
 		...unwatch && { unwatch },
 	});
-	console.log(data);
+	console.log(JSON.stringify(data));
 }
 
 console.log(`Start time: ${ new Date().toISOString()}`);
@@ -67,7 +63,6 @@ api.login(config.zh.main.name, config.zh.main.password)
 					(result) => watch(result, true),
 				),
 			);
-
 		}
 		console.log(`End time: ${new Date().toISOString()}`);
 	});

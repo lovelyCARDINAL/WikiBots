@@ -6,9 +6,7 @@ const SITE_LIST = [ 'zh', 'cm' ];
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	const { data: { query: { pages } } } = await new MediaWikiApi(config.zh.api, {
-		headers: { 'api-user-agent': config.apiuseragent || '' },
-	}).post({
+	const { data: { query: { pages } } } = await new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } }).post({
 		prop: 'revisions',
 		titles: 'User:星海子/NulleditInCategory.json',
 		rvprop: 'content',
@@ -17,11 +15,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 	
 	await Promise.all(
 		SITE_LIST.map(async (site) => {
-			const api = new MediaWikiApi(config[site].api, {
-				headers: {
-					'api-user-agent': config.apiuseragent || '',
-				},
-			});
+			const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
 			await api.login(config[site].bot.name, config[site].bot.password);
 			
 			const catlist = [ ...setting[site], '尚未清空的已重定向分类', '尚未清空的消歧义分类' ];
@@ -50,7 +44,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 									summary: '空编辑以刷新分类表',
 									watchlist: 'nochange',
 								});
-								console.log(data);
+								console.log(JSON.stringify(data));
 							}),
 						);
 					} else {
