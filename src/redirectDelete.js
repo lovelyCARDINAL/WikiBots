@@ -2,13 +2,7 @@ import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 import { getTimeData, editTimeData } from './utils/lastTime.js';
 
-const api = new MediaWikiApi(config.zh.api, {
-	headers: {
-		'api-user-agent': config.apiuseragent || '',
-	},
-});
-
-console.log(`Start time: ${new Date().toISOString()}`);
+const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
 
 const NS_LIST = [ '1', '2', '3', '5', '9', '11', '13', '15', '275', '829' ];
 const NS_REASON_MAP = {
@@ -51,8 +45,10 @@ async function pageDelete(pageid, reason) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	});
-	console.log(data);
+	console.log(JSON.stringify(data));
 }
+
+console.log(`Start time: ${new Date().toISOString()}`);
 
 api.login(config.zh.abot.name, config.zh.abot.password)
 	.then(console.log, console.error)

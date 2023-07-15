@@ -2,11 +2,7 @@ import { MediaWikiApi } from 'wiki-saikou';
 import moment from 'moment';
 import config from './utils/config.js';
 
-const api = new MediaWikiApi(config.zh.api, {
-	headers: {
-		'api-user-agent': config.apiuseragent || '',
-	},
-});
+const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
 
 async function queryPages(apprefix, apprtype, apprlevel) {
 	const { data: { query: { allpages } } } = await api.post({
@@ -43,7 +39,7 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 		if (pagelist.length) {
 			await Promise.all(
 				pagelist.map(async (title) => {
-					const { data: { protect } } = await api.post({
+					const { data } = await api.post({
 						action: 'protect',
 						title,
 						protections: 'edit=patrolleredit|move=sysop',
@@ -52,7 +48,7 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 						tags: 'Bot',
 						watchlist: 'nochange',
 					});
-					console.log(protect);
+					console.log(JSON.stringify(data));
 				}),
 			);
 		} else {

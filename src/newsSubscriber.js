@@ -1,11 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 
-const api = new MediaWikiApi(config.zh.api, {
-	headers: {
-		'api-user-agent': config.apiuseragent || '',
-	},
-});
+const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
 
 async function isActive(user, ucend) {
 	const { data: { query: { usercontribs } } } = await api.post({
@@ -56,7 +52,7 @@ api.login(config.zh.bot.name, config.zh.bot.password)
 				nocreate: true,
 				watchlist: 'nochange',
 			});
-			console.log(data);
+			console.log(JSON.stringify(data));
 		}
 
 		console.log(`End time: ${new Date().toISOString()}`);
