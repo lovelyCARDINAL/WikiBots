@@ -23,6 +23,10 @@ const config = {
 			name: '机娘星海酱@tf',
 			password: env.CM_BOT,
 		},
+		abot: {
+			name: '星海-adminbot@tf',
+			password: env.CM_ABOT,
+		},
 	},
 	lb: {
 		api: 'https://library.moegirl.org.cn/api.php',
