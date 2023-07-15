@@ -24,6 +24,7 @@
   "type": "module",
   "devDependencies": {
     "@types/js-yaml": "^4.0.5",
+    "@types/jsonpath": "^0.2.0",
     "eslint": "^8.44.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-vue": "^9.15.1",
