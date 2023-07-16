@@ -6,6 +6,7 @@ This bot is running using GitHub Actions and is currently in the testing phase.
 
 ### Dependencies
  - [wiki-saikou](https://github.com/moegirlwiki/wiki-saikou)
+ - [wikiparser-node](https://github.com/bhsd-harry/wikiparser-node)
 
 ### Accounts
  - [星海子](https://mzh.moegirl.org.cn/_?curid=389564) (non-bot)
