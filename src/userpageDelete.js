@@ -59,7 +59,7 @@ async function cannotDelete(pageid) {
 api.login(config.zh.abot.name, config.zh.abot.password)
 	.then(console.log, console.error)
 	.then(async () => {
-		const [ usergroup, botlist ] = await Promise.all([
+		const [ { data: usergroup }, { data: botlist } ] = await Promise.all([
 			api.post({
 				prop: 'revisions',
 				titles: 'Module:UserGroup/data',
@@ -72,12 +72,12 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 			}),
 		]);
 		const { sysop, patroller, staff } = JSON.parse(
-			usergroup.data.query.pages[0].revisions[0].content,
+			usergroup.query.pages[0].revisions[0].content,
 		);
-		const bot = botlist.data.query.allusers.map((user) => user.name);
+		const bot = botlist.query.allusers.map((user) => user.name);
 		const maintainlist = [ ...sysop, ...patroller, ...staff, ...bot ];
 		
-		const data = await api.post({
+		const { data } = await api.post({
 			action: 'query',
 			prop: 'transcludedin',
 			titles: 'Template:Ns2d',
@@ -85,7 +85,7 @@ api.login(config.zh.abot.name, config.zh.abot.password)
 			tinamespace: '2',
 			tilimit: 'max',
 		});
-		const pagedata = data.data.query.pages[0];
+		const pagedata = data.query.pages[0];
 		if (Object.prototype.hasOwnProperty.call(pagedata, 'transcludedin')){
 			const pagelist = pagedata.transcludedin;
 			await Promise.all(
