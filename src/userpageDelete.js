@@ -56,51 +56,51 @@ async function cannotDelete(pageid) {
 	console.log(JSON.stringify(data));
 }
 
-api.login(config.zh.abot.name, config.zh.abot.password)
-	.then(console.log, console.error)
-	.then(async () => {
-		const [ { data: usergroup }, { data: botlist } ] = await Promise.all([
-			api.post({
-				prop: 'revisions',
-				titles: 'Module:UserGroup/data',
-				rvprop: 'content',
-			}),
-			api.post({
-				list: 'allusers',
-				augroup: 'bot',
-				aulimit: 'max',
-			}),
-		]);
-		const { sysop, patroller, staff } = JSON.parse(
-			usergroup.query.pages[0].revisions[0].content,
-		);
-		const bot = botlist.query.allusers.map((user) => user.name);
-		const maintainlist = [ ...sysop, ...patroller, ...staff, ...bot ];
-		
-		const { data } = await api.post({
-			action: 'query',
-			prop: 'transcludedin',
-			titles: 'Template:Ns2d',
-			tiprop: 'pageid|title',
-			tinamespace: '2',
-			tilimit: 'max',
-		});
-		const pagedata = data.query.pages[0];
-		if (Object.prototype.hasOwnProperty.call(pagedata, 'transcludedin')){
-			const pagelist = pagedata.transcludedin;
-			await Promise.all(
-				pagelist.map(async (page) => {
-					const { title, pageid } = page;
-					if (await ruleTest(title, pageid, maintainlist)) {
-						await pageDelete(pageid);
-					} else {
-						await cannotDelete(pageid);
-					}
-				}),
-			);
-		} else {
-			console.log('The pages that embed the {{ns2d}} do not exist currently.');
-		}
-		console.log(`End time: ${new Date().toISOString()}`);
-	},
+(async () => {
+	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log, console.error);
+
+	const [ { data: usergroup }, { data: botlist } ] = await Promise.all([
+		api.post({
+			prop: 'revisions',
+			titles: 'Module:UserGroup/data',
+			rvprop: 'content',
+		}),
+		api.post({
+			list: 'allusers',
+			augroup: 'bot',
+			aulimit: 'max',
+		}),
+	]);
+	const { sysop, patroller, staff } = JSON.parse(
+		usergroup.query.pages[0].revisions[0].content,
 	);
+	const bot = botlist.query.allusers.map((user) => user.name);
+	const maintainlist = [ ...sysop, ...patroller, ...staff, ...bot ];
+		
+	const { data } = await api.post({
+		action: 'query',
+		prop: 'transcludedin',
+		titles: 'Template:Ns2d',
+		tiprop: 'pageid|title',
+		tinamespace: '2',
+		tilimit: 'max',
+	});
+	const pagedata = data.query.pages[0];
+	if (Object.prototype.hasOwnProperty.call(pagedata, 'transcludedin')){
+		const pagelist = pagedata.transcludedin;
+		await Promise.all(
+			pagelist.map(async (page) => {
+				const { title, pageid } = page;
+				if (await ruleTest(title, pageid, maintainlist)) {
+					await pageDelete(pageid);
+				} else {
+					await cannotDelete(pageid);
+				}
+			}),
+		);
+	} else {
+		console.log('The pages that embed the {{ns2d}} do not exist currently.');
+	}
+	
+	console.log(`End time: ${new Date().toISOString()}`);
+})();
