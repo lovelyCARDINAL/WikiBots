@@ -16,7 +16,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 	await Promise.all(
 		SITE_LIST.map(async (site) => {
 			const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
-			await api.login(config[site].bot.name, config[site].bot.password);
+			await api.login(config[site].bot.name, config[site].bot.password).then(console.log, console.error);
 			
 			const catlist = [ ...setting[site], '尚未清空的已重定向分类', '尚未清空的消歧义分类' ];
 

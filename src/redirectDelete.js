@@ -50,44 +50,44 @@ async function pageDelete(pageid, reason) {
 
 console.log(`Start time: ${new Date().toISOString()}`);
 
-api.login(config.zh.abot.name, config.zh.abot.password)
-	.then(console.log, console.error)
-	.then(async () => {
-		const lastTime = await getTimeData();
-		const leend = lastTime['redirect-deletion'],
-			lestart = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+(async () => {
+	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log, console.error);
 
-		await Promise.all(
-			NS_LIST.map(async (ns) => {
-				const [ targetns, reason ] = NS_REASON_MAP[ns] || [ [ parseInt(ns) ], '自动删除移动讨论页面残留重定向' ];
+	const lastTime = await getTimeData();
+	const leend = lastTime['redirect-deletion'],
+		lestart = new Date(Date.now() - 3 * 60 * 1000).toISOString();
 
-				const { data: { query: { logevents: pagelist } } } = await api.post({
-					list: 'logevents',
-					letype: 'move',
-					leprop: 'title|type|user|timestamp|comment|details',
-					lenamespace: ns,
-					lelimit: 'max',
-					lestart,
-					leend,
-				});
+	await Promise.all(
+		NS_LIST.map(async (ns) => {
+			const [ targetns, reason ] = NS_REASON_MAP[ns] || [ [ parseInt(ns) ], '自动删除移动讨论页面残留重定向' ];
 
-				if (pagelist.length) {
-					await Promise.all(
-						pagelist.map(async (item) => {
-							if (ruleTest(item, targetns)) {
-								const pageid = await ruleTest2(item);
-								if (pageid) {
-									await pageDelete(pageid, reason);
-								}
+			const { data: { query: { logevents: pagelist } } } = await api.post({
+				list: 'logevents',
+				letype: 'move',
+				leprop: 'title|type|user|timestamp|comment|details',
+				lenamespace: ns,
+				lelimit: 'max',
+				lestart,
+				leend,
+			});
+
+			if (pagelist.length) {
+				await Promise.all(
+					pagelist.map(async (item) => {
+						if (ruleTest(item, targetns)) {
+							const pageid = await ruleTest2(item);
+							if (pageid) {
+								await pageDelete(pageid, reason);
 							}
-						}),
-					);
-				} else {
-					console.log(`No redirect in namespace ${ns}`);
-				}
-			}),
-		);
+						}
+					}),
+				);
+			} else {
+				console.log(`No redirect in namespace ${ns}`);
+			}
+		}),
+	);
 
-		await editTimeData(lastTime, 'redirect-deletion', lestart);
-		console.log(`End time: ${new Date().toISOString()}`);
-	});
+	await editTimeData(lastTime, 'redirect-deletion', lestart);
+	console.log(`End time: ${new Date().toISOString()}`);
+})();

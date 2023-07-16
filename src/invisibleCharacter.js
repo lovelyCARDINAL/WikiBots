@@ -39,54 +39,54 @@ async function removeChar(pageid, wikitext, setting) {
 
 console.log(`Start time: ${new Date().toISOString()}`);
 
-api.login(config.zh.bot.name, config.zh.bot.password)
-	.then(console.log, console.error)
-	.then(async () => {
-		const lastTime = await getTimeData();
-		const rcend = lastTime['invisible-character'],
-			rcstart = new Date().toISOString();
-        
-		const { data: { query: { recentchanges, pages: setdata } } } = await api.post({
-			prop: 'revisions',
-			titles: 'User:星海子/InvisibleCharacter.json',
-			rvprop: 'content',
-			list: 'recentchanges',
-			rcprop: 'timestamp|ids',
-			rcstart,
-			rcend,
-			rclimit: 'max',
-			rcnamespace: '*',
-			rctag: 'invisibleCharacter',
-			rctoponly: true,
-		});
-        
-		const setting = JSON.parse(setdata[0]?.revisions[0]?.content || '{}');
-		const pagelists = splitAndJoin(
-			recentchanges.map(({ pageid }) => pageid)
-			, 500);
-		if (!pagelists.length) {
-			console.log('No pages has invisible characters.');
-			return;
-		}
-		await Promise.all(
-			pagelists.map(async(pagelist) => {
-				const { data: { query: { pages } } } = await api.post({
-					prop: 'revisions',
-					pageids: pagelist,
-					rvprop: 'content',
-				});
-				await Promise.all(
-					pages.map(async (page) => {
-						const { pageid, revisions } = page;
-						if (revisions.length) {
-							const { content: wikitext } = revisions[0];
-							await removeChar(pageid, wikitext, setting);
-						}
-					}),
-				);
-			}),
-		);
+(async () => {
+	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log, console.error);
 
-		await editTimeData(lastTime, 'invisible-character', rcstart);
-		console.log(`End time: ${new Date().toISOString()}`);
+	const lastTime = await getTimeData();
+	const rcend = lastTime['invisible-character'],
+		rcstart = new Date().toISOString();
+        
+	const { data: { query: { recentchanges, pages: setdata } } } = await api.post({
+		prop: 'revisions',
+		titles: 'User:星海子/InvisibleCharacter.json',
+		rvprop: 'content',
+		list: 'recentchanges',
+		rcprop: 'timestamp|ids',
+		rcstart,
+		rcend,
+		rclimit: 'max',
+		rcnamespace: '*',
+		rctag: 'invisibleCharacter',
+		rctoponly: true,
 	});
+        
+	const setting = JSON.parse(setdata[0]?.revisions[0]?.content || '{}');
+	const pagelists = splitAndJoin(
+		recentchanges.map(({ pageid }) => pageid)
+		, 500);
+	if (!pagelists.length) {
+		console.log('No pages has invisible characters.');
+		return;
+	}
+	await Promise.all(
+		pagelists.map(async(pagelist) => {
+			const { data: { query: { pages } } } = await api.post({
+				prop: 'revisions',
+				pageids: pagelist,
+				rvprop: 'content',
+			});
+			await Promise.all(
+				pages.map(async (page) => {
+					const { pageid, revisions } = page;
+					if (revisions.length) {
+						const { content: wikitext } = revisions[0];
+						await removeChar(pageid, wikitext, setting);
+					}
+				}),
+			);
+		}),
+	);
+
+	await editTimeData(lastTime, 'invisible-character', rcstart);
+	console.log(`End time: ${new Date().toISOString()}`);
+})();

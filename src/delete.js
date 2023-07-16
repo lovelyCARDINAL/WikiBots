@@ -18,47 +18,47 @@ async function pageDelete(pageid, user, reason) {
 
 console.log(`Start time: ${new Date().toISOString()}`);
 
-api.login(config[site].main.name, config[site].main.password)
-	.then(console.log, console.error)
-	.then(async() => {
-		const { data : pagelist } = await api.post({
-			rvprop: 'user|content',
-			prop: 'revisions',
-			generator: 'categorymembers',
-			gcmtitle: 'Category:即将删除的页面',
-			gcmprop: 'ids|title',
-			gcmtype: 'page|subcat|file',
-			gcmlimit: 'max',
-		});
-		if (!pagelist?.query?.pages || pagelist?.query?.pages?.length === 0) {
-			console.log('No pages need to be deleted.');
+(async () => {
+	await api.login(config[site].main.name, config[site].main.password).then(console.log, console.error);
+
+	const { data : pagelist } = await api.post({
+		rvprop: 'user|content',
+		prop: 'revisions',
+		generator: 'categorymembers',
+		gcmtitle: 'Category:即将删除的页面',
+		gcmprop: 'ids|title',
+		gcmtype: 'page|subcat|file',
+		gcmlimit: 'max',
+	});
+	if (!pagelist?.query?.pages || pagelist?.query?.pages?.length === 0) {
+		console.log('No pages need to be deleted.');
+		return;
+	}
+
+	const { data: { query: { allusers } } } = await api.post({
+		action: 'query',
+		list: 'allusers',
+		aurights: 'rollback',
+		aulimit: 'max',
+	});
+	const userlist = allusers.map(({ name }) => name);
+		
+	await Promise.all(pagelist.query.pages.map(async ({ pageid, revisions }) => {
+		const { user: lastEditUser, content } = revisions[0];
+		if (!content || !userlist.includes(lastEditUser)) {
 			return;
 		}
+		const wikitext = Parser.parse(content);
+		const templateUser = wikitext.querySelector('template#Template:即将删除').getValue('user');
+		if (lastEditUser !== templateUser || !userlist.includes(templateUser)) {
+			return;
+		}
+		const reason = wikitext.querySelector('template#Template:即将删除').getValue('1');
+		if (!reason) {
+			return;
+		}
+		await pageDelete(pageid, lastEditUser, reason);
+	}));
 
-		const { data: { query: { allusers } } } = await api.post({
-			action: 'query',
-			list: 'allusers',
-			aurights: 'rollback',
-			aulimit: 'max',
-		});
-		const userlist = allusers.map(({ name }) => name);
-		
-		await Promise.all(pagelist.query.pages.map(async ({ pageid, revisions }) => {
-			const { user: lastEditUser, content } = revisions[0];
-			if (!content || !userlist.includes(lastEditUser)) {
-				return;
-			}
-			const wikitext = Parser.parse(content);
-			const templateUser = wikitext.querySelector('template#Template:即将删除').getValue('user');
-			if (lastEditUser !== templateUser || !userlist.includes(templateUser)) {
-				return;
-			}
-			const reason = wikitext.querySelector('template#Template:即将删除').getValue('1');
-			if (!reason) {
-				return;
-			}
-			await pageDelete(pageid, lastEditUser, reason);
-		}));
-
-		console.log(`End time: ${new Date().toISOString()}`);
-	});
+	console.log(`End time: ${new Date().toISOString()}`);
+})();
