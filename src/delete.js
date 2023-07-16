@@ -21,7 +21,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 api.login(config[site].main.name, config[site].main.password)
 	.then(console.log, console.error)
 	.then(async() => {
-		const { data :{ query: { pages } } } = await api.post({
+		const { data : pagelist } = await api.post({
 			rvprop: 'user|content',
 			prop: 'revisions',
 			generator: 'categorymembers',
@@ -30,7 +30,7 @@ api.login(config[site].main.name, config[site].main.password)
 			gcmtype: 'page|subcat|file',
 			gcmlimit: 'max',
 		});
-		if (pages.length === 0) {
+		if (!pagelist?.query?.pages || pagelist?.query?.pages?.length === 0) {
 			console.log('No pages need to be deleted.');
 			return;
 		}
@@ -43,7 +43,7 @@ api.login(config[site].main.name, config[site].main.password)
 		});
 		const userlist = allusers.map(({ name }) => name);
 		
-		await Promise.all(pages.map(async ({ pageid, revisions }) => {
+		await Promise.all(pagelist.query.pages.map(async ({ pageid, revisions }) => {
 			const { user: lastEditUser, content } = revisions[0];
 			if (!content || !userlist.includes(lastEditUser)) {
 				return;
