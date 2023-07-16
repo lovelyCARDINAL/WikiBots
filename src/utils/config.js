@@ -13,7 +13,7 @@ const config = {
 			password: env.ZH_ABOT,
 		},
 		main: {
-			name: '星海子@watch',
+			name: '星海子@gha',
 			password: env.ZH_MAIN,
 		},
 	},
@@ -26,6 +26,10 @@ const config = {
 		abot: {
 			name: '星海-adminbot@tf',
 			password: env.CM_ABOT,
+		},
+		main: {
+			name: '星海子@gha',
+			password: env.CM_MAIN,
 		},
 	},
 	lb: {
