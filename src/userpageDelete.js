@@ -78,7 +78,6 @@ async function cannotDelete(pageid) {
 	const maintainlist = [ ...sysop, ...patroller, ...staff, ...bot ];
 		
 	const { data } = await api.post({
-		action: 'query',
 		prop: 'transcludedin',
 		titles: 'Template:Ns2d',
 		tiprop: 'pageid|title',

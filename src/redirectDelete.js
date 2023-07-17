@@ -22,13 +22,12 @@ function ruleTest(item, targetns) {
 
 async function ruleTest2(item) {
 	const { title, timestamp } = item;
-	const { data:{ query:{ pages } } } = await api.post({
+	const { data:{ query:{ pages: [ { missing, revisions, pageid } ] } } } = await api.post({
 		prop: 'revisions',
 		titles: title,
 		rvprop: 'ids|timestamp',
 		rvlimit: '2',
 	});
-	const { missing, revisions, pageid } = pages[0];
 	if (missing || revisions.length > 1) {
 		return false;
 	}

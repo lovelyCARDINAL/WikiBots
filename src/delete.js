@@ -36,7 +36,6 @@ console.log(`Start time: ${new Date().toISOString()}`);
 	}
 
 	const { data: { query: { allusers } } } = await api.post({
-		action: 'query',
 		list: 'allusers',
 		aurights: 'rollback',
 		aulimit: 'max',
