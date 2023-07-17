@@ -57,12 +57,12 @@ console.log(`Start time: ${new Date().toISOString()}`);
 (async () => {
 	await zhapi.login(config.zh.bot.name, config.zh.bot.password).then(console.log, console.error);
 
-	const { data: { query: { pages: settingdata } } } = await zhapi.post({
+	const { data: { query: { pages: [ { revisions: [ { content } ] } ] } } } = await zhapi.post({
 		prop: 'revisions',
 		titles: 'User:星海子/IncorrectFileInfo.json',
 		rvprop: 'content',
 	});
-	const setting = JSON.parse(settingdata[0].revisions[0].content);
+	const setting = JSON.parse(content);
 	const catData = await (async() => {
 		const set = new Set(),
 			prefixes = [ 'Category:', '分类:', 'Category:作者:', '分类:作者:' ],

@@ -6,12 +6,12 @@ const SITE_LIST = [ 'zh', 'cm' ];
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	const { data: { query: { pages } } } = await new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } }).post({
+	const { data: { query: { pages: [ { revisions:[ { content } ] } ] } } } = await new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } }).post({
 		prop: 'revisions',
 		titles: 'User:星海子/NulleditInCategory.json',
 		rvprop: 'content',
 	});
-	const setting = JSON.parse(pages[0]?.revisions[0]?.content || '{}');
+	const setting = JSON.parse(content || '{}');
 	
 	await Promise.all(
 		SITE_LIST.map(async (site) => {
