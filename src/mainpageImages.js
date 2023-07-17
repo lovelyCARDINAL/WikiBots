@@ -1,11 +1,19 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import axios from 'axios';
+import axiosRetry from 'axios-retry';
 import jsonpath from 'jsonpath';
 import config from './utils/config.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
 const zhapi = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } }),
 	cmapi = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
+
+axiosRetry(axios, {
+	retries: 3,
+	retryDelay: (retryCount) => {
+		return retryCount * 1000;
+	},
+});
 
 function findImageSrc(data) {
 	const matches = jsonpath.query(data, '$..imageSrc');
