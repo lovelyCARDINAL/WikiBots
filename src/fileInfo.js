@@ -47,7 +47,6 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		summary,
 		watchlist: 'nochange',
 		bot: true,
-		minor: true,
 	});
 	console.log(JSON.stringify(data));
 }
@@ -167,7 +166,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 			if (foundLink) {
 				linkUser.add(user);
 				if (!noBotsUser.has(user)) {
-					await pageEdit(`User talk:${user}`, `{{subst:User:星海子/BotMessages/FileLink|filename=${title}|link=<code><nowiki>{foundLink}</nowiki></code>}}`, '关于您近期上传的文件～', '关于您近期上传的文件');
+					await pageEdit(`User talk:${user}`, `{{subst:User:星海子/BotMessages/FileLink|filename=${title}|link=<code><nowiki>${foundLink}</nowiki></code>}}`, '关于您近期上传的文件～', '关于您近期上传的文件');
 				}
 				appendtext += `\n|-\n|{{user|${user}}} || [[cm:${title}|${title}]] || 源地址 || <code><nowiki>${foundLink}</nowiki></code> ||${noBotsUser.has(user) ? ' {{tlx|bots}}' : ''}`;
 			}
@@ -178,7 +177,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		const { data } = await zhapi.postWithToken('csrf', {
 			action: 'edit',
 			pageid: '541069',
-			summary: 'log: file-info // test',
+			summary: 'log: file-info',
 			appendtext,
 			tags: 'Bot',
 			bot: true,
