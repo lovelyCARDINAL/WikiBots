@@ -9,7 +9,7 @@ const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': co
 async function pageDelete(pageid, user, reason) {
 	const { data } = await api.postWithToken('csrf', {
 		action: 'delete',
-		reason: `批量删除[[Cat:即将删除的页面]]：（[[User_talk:${user}|${user}]]的挂删理由：${reason} ）`,
+		reason: `批量删除[[Cat:即将删除的页面]]（[[User_talk:${user}|${user}]]的挂删理由：${reason} ）`,
 		pageid,
 		tags: 'Automation tool',
 	});
@@ -53,7 +53,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		if (lastEditUser !== templateUser || !userlist.includes(templateUser)) {
 			return;
 		}
-		const reason = wikitext.querySelector('template#Template:即将删除').getValue('1');
+		const reason = wikitext.querySelector('template#Template:即将删除').getValue('1').trim();
 		if (!reason) {
 			return;
 		}
