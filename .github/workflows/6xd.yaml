@@ -27,7 +27,7 @@ jobs:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_BOT: ${{ secrets.ZH_BOT }}
         run: node src/invisibleCharacter.js
-  
+
   file-info:
     runs-on: ubuntu-latest
     steps:
