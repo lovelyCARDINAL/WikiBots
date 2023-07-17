@@ -1,0 +1,27 @@
+name: "[schedule] 1x/d AM4"
+# sandbox.js
+
+on:
+  schedule:
+    - cron: "35 20 * * *"
+    # 04:35 CST
+  workflow_dispatch:
+
+jobs:
+  clean-sandbox:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run sandbox.js
+        env:
+          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
+        run: node src/sandbox.js
