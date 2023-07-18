@@ -103,7 +103,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		return set;
 	})();
 
-	const lastTime = await getTimeData();
+	const lastTime = await getTimeData('time2');
 	const leend = lastTime['file-info'],
 		lestart = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
@@ -187,7 +187,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		console.log(JSON.stringify(data));
 	}
 
-	await editTimeData(lastTime, 'file-info', lestart);
+	await editTimeData(lastTime, 'file-info', lestart, 'time2');
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
