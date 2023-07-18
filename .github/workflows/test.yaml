@@ -19,5 +19,6 @@ jobs:
       - name: Run Script
         env:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
-          ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: node src/botTest.js
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+        run: node src/updateOverrideCategory.js
