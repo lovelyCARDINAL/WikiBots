@@ -22,16 +22,18 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		return result.flat();
 	})();
 	
-	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的极短页面（不超过15字节），以供维护人员检查。\n* 不含{{ns:2}}、{{ns:3}}、{{ns:8}}名字空间的页面。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable center plainlinks"\n|-\n! 页面ID !! 页面名 !! 操作\n';
+	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的极短页面（不超过15字节），以供维护人员检查。\n* 不含{{ns:2}}、{{ns:3}}、{{ns:8}}名字空间的页面。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable center plainlinks"\n|-\n! 序号 !! 页面ID !! 页面名 !! 操作\n';
 	const titleRegex = /^(?:模块|Help|Template):(?:Sandbox|沙盒)/;
-	await Promise.all(pages.map((page) => {
+	let count = 1;
+	for (const page of pages) {
 		const { pageid, title } = page;
 		if (titleRegex.test(title)) {
-			return;
+			continue;
 		}
 		const linkText = `[{{canonicalurl:${title}|action=edit}} 编辑]｜[{{canonicalurl:${title}|action=history}} 历史]<span class="sysop-show">｜[{{canonicalurl:${title}|action=delete}} 删除]</span>`;
-		text += `|-\n| ${pageid} || [[:${title}]] || ${linkText}\n`;
-	}));
+		text += `|-\n| ${count} || ${pageid} || [[:${title}]] || ${linkText}\n`;
+		count++;
+	}
 	text += '|}\n\n[[Category:萌娘百科数据报告]]';
 
 	const { data } = await api.postWithToken('csrf', {
