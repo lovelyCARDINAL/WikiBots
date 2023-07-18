@@ -108,9 +108,14 @@ rules:
   import/order:
     - warn
     - groups:
-        - ["builtin", "external"]
+        - builtin
+        - external
         - internal
-        - ["parent", "sibling"]
+        - parent
+        - sibling
         - index
+      alphabetize:
+        order: asc
+        caseInsensitive: false
 
 root: true

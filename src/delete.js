@@ -1,6 +1,6 @@
+import { env } from 'process';
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
-import { env } from 'process';
 import config from './utils/config.js';
 
 const site = env.SITE;

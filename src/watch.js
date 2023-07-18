@@ -1,5 +1,5 @@
-import { MediaWikiApi } from 'wiki-saikou';
 import moment from 'moment';
+import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
