@@ -44,7 +44,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		text,
 		summary: '更新数据报告',
 		bot: true,
-		notmior: true,
+		notminor: true,
 		tags: 'Bot',
 		watchlist: 'nochange',
 	});
