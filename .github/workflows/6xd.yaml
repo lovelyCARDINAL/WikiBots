@@ -29,6 +29,7 @@ jobs:
         run: node src/invisibleCharacter.js
 
   file-info:
+    needs: invisible-character
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
