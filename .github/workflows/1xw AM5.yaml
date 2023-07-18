@@ -1,0 +1,28 @@
+name: "[schedule] 1x/w AM5"
+# mostTranscludedPages.js
+
+on:
+  schedule:
+    - cron: "35 21 * * 1"
+    # 05:35 CST
+  workflow_dispatch:
+
+jobs:
+  most-transcluded-pages:
+    if: ${{ github.event.schedule == '35 21 * * 1' || github.event_name == 'workflow_dispatch'}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run mostTranscludedPages.js
+        env:
+          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+        run: node src/mostTranscludedPages.js
