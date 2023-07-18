@@ -51,7 +51,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 			repo: 'WikiBots',
 			path: 'data/overrideCategory.json',
 			message: 'auto: update override category data',
-			content: Buffer.from(JSON.stringify(data), 'utf-8').toString('base64'),
+			content: Buffer.from(JSON.stringify(data, null, '\t'), 'utf-8').toString('base64'),
 			sha,
 		});
 		console.log('SUCCESS!');

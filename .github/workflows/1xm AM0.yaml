@@ -1,11 +1,13 @@
 name: "[schedule] 1x/m"
 # newsSubscriber.js @2nd
 # newsProtect.js @9th
+# updateOverrideCategory.js @3rd
 
 on:
   schedule:
     - cron: "50 16 1 * *" # 2nd
     - cron: "50 16 8 * *" # 9th
+    - cron: "50 16 2 * *" # 3rd
     # 00:50 CST
   workflow_dispatch:
 
@@ -47,3 +49,23 @@ jobs:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/newsProtect.js
+
+  update-override-category:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.schedule == '50 16 2 * *' || github.event_name == 'workflow_dispatch'}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run updateOverrideCategory.js @3rd
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+        run: node src/updateOverrideCategory.js
