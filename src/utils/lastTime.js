@@ -7,12 +7,12 @@ const octokit = new Octokit({
 	auth: env.GITHUB_TOKEN,
 });
 
-async function getTimeData() {
+async function getTimeData(name = 'time') {
 	try {
 		const { data } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
 			owner: 'lovelyCARDINAL',
 			repo: 'WikiBots',
-			path: 'data/time.yaml',
+			path: `data/${name}.yaml`,
 			mediaType: {
 				format: 'raw',
 			},
@@ -23,12 +23,12 @@ async function getTimeData() {
 	}
 }
 
-async function editTimeData(origin, type, string) {
+async function editTimeData(origin, type, string, name = 'time') {
 	try {
 		const { data: { sha } } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
 			owner: 'lovelyCARDINAL',
 			repo: 'WikiBots',
-			path: 'data/time.yaml',
+			path: `data/${name}.yaml`,
 		});
 
 		const obj = { ...origin };
@@ -42,7 +42,7 @@ async function editTimeData(origin, type, string) {
 		await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
 			owner: 'lovelyCARDINAL',
 			repo: 'WikiBots',
-			path: 'data/time.yaml',
+			path: `data/${name}.yaml`,
 			message: `auto: record last run time of ${type}`,
 			content: Buffer.from(content, 'utf-8').toString('base64'),
 			sha,
