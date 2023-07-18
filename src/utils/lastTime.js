@@ -28,7 +28,7 @@ async function editTimeData(origin, type, string) {
 		const { data: { sha } } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
 			owner: 'lovelyCARDINAL',
 			repo: 'WikiBots',
-			path: `data/${name}.yaml`,
+			path: 'data/time.yaml',
 		});
 
 		const obj = { ...origin };
