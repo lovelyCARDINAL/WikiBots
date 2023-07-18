@@ -4,15 +4,15 @@ name: "[schedule] 1x/m"
 
 on:
   schedule:
-    - cron: "50 16 2 * *"
-    - cron: "50 16 9 * *"
+    - cron: "50 16 1 * *" # 2nd
+    - cron: "50 16 8 * *" # 9th
     # 00:50 CST
   workflow_dispatch:
 
 jobs:
   news-subscriber:
     runs-on: ubuntu-latest
-    if: ${{ github.event.schedule == '50 16 2 * *' || github.event_name == 'workflow_dispatch'}}
+    if: ${{ github.event.schedule == '50 16 1 * *' || github.event_name == 'workflow_dispatch'}}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -31,7 +31,7 @@ jobs:
 
   news-protection:
     runs-on: ubuntu-latest
-    if: ${{ github.event.schedule == '50 16 9 * *' || github.event_name == 'workflow_dispatch'}}
+    if: ${{ github.event.schedule == '50 16 8 * *' || github.event_name == 'workflow_dispatch'}}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
