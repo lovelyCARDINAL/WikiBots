@@ -1,7 +1,7 @@
-import { MediaWikiApi } from 'wiki-saikou';
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import jsonpath from 'jsonpath';
+import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 

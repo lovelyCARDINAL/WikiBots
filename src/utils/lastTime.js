@@ -1,7 +1,7 @@
-import { Octokit } from '@octokit/core';
-import { load, dump } from 'js-yaml';
 import { Buffer } from 'buffer';
 import { env } from 'process';
+import { Octokit } from '@octokit/core';
+import { load, dump } from 'js-yaml';
 import readData from './readData.js';
 
 async function getTimeData() {
