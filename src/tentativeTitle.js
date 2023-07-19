@@ -40,17 +40,19 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		return result;
 	})();
 
-	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的嵌入了{{tlx|暂定标题}}的条目。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable" width=100%\n|-\n! 序号 || 条目名 || 原因 || style="width:35%"|部分所属分类 || style="min-width:50px"|最后版本\n';
+	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的嵌入了{{tlx|暂定标题}}的条目。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable" width=100%\n|-\n! 序号 || 条目名 || 原因 || style="width:35%"|部分所属分类 || style="min-width:80px"|最后版本\n';
 	let count = 1;
 	for (const page of pages) {
 		const { title, revisions: [ { timestamp, content } ], categories } = page;
-		const category = categories
+		const category = categories ? categories
 			.map(({ title }) => title)
 			.filter((title) => !overrideCategory.includes(title))
 			.map((title) => `[[:${title}]]`)
-			.join('，');
-		const wikitext = Parser.parse(content.replace(/[暂暫]定[標标][题題]/, '暂定标题'));
-		const reason = wikitext.querySelector('template#Template:暂定标题').getValue('1')?.trim() || 'data-sort-value="*" | <i style="color:red;">无</i>';
+			.join('，')
+			: 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
+		const wikitext = Parser.parse(content.replace(/\n/g, '').replace(/[暂暫]定[標标][题題]/, '暂定标题'));
+		const template = wikitext.querySelector('template#Template:暂定标题');
+		const reason = template?.getValue('1')?.trim() || (template ? 'data-sort-value="*" | <i style="color:red;">无</i>' : 'data-sort-value="*" | <i style="color:red;">找不到目标模板</i>');
 		const time = `${moment(timestamp).utcOffset('+08:00').format('YYYY-MM-DD HH:mm')} (CST)`;
 		text += `|-\n| ${count} || -{[[${title}]]}- || ${reason} || ${category} || ${time}\n`;
 		count++;
