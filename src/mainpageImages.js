@@ -46,8 +46,6 @@ function findImageName(imgSrc) {
 			result.image_name = decodeURIComponent(imgSrcSplit[6]);
 			return result;
 		}
-		result.bad_image_info = `* 非法图片：<code><nowiki>${imgSrc}</nowiki></code>\n`;
-		return result;
 	}
 	result.bad_image_info = `* 非法图片：<code><nowiki>${imgSrc}</nowiki></code>\n`;
 	return result;
