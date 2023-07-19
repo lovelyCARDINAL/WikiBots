@@ -64,7 +64,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		if (lastEditUser !== templateUser || !userlist.includes(templateUser)) {
 			return;
 		}
-		const reason = (wikitext.querySelector('template#Template:即将删除').getValue('1') || '').trim();
+		const reason = wikitext.querySelector('template#Template:即将删除').getValue('1')?.trim() || '';
 		if (!reason) {
 			return;
 		}

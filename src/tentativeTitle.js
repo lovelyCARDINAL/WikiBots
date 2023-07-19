@@ -50,7 +50,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 			.map((title) => `[[:${title}]]`)
 			.join('，');
 		const wikitext = Parser.parse(content.replace(/[暂暫]定[標标][题題]/, '暂定标题'));
-		const reason = (wikitext.querySelector('template#Template:暂定标题').getValue('1') || 'data-sort-value="*" | <i style="color:red;">无</i>').trim();
+		const reason = wikitext.querySelector('template#Template:暂定标题').getValue('1')?.trim() || 'data-sort-value="*" | <i style="color:red;">无</i>';
 		const time = `${moment(timestamp).utcOffset('+08:00').format('YYYY-MM-DD HH:mm')} (CST)`;
 		text += `|-\n| ${count} || -{[[${title}]]}- || ${reason} || ${category} || ${time}\n`;
 		count++;
@@ -68,7 +68,6 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		watchlist: 'nochange',
 	});
 	console.log(JSON.stringify(data));
-	console.log(text);
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
