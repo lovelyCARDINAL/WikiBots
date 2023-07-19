@@ -2,11 +2,14 @@ name: "[schedule] weekly"
 # mostTranscludedPages.js @Tuesday
 # shortPages.js @Wednesday
 # tentativeTitle.js @Wednesday
+# needImprove.js @Friday
+# needImproveWelcome.js @Friday
 
 on:
   schedule:
     - cron: "55 21 * * 1" # Tuesday 05:55 CST
     - cron: "55 21 * * 2" # Wednesday 05:55 CST
+    - cron: "55 21 * * 4" # Friday 05:55 CST
   workflow_dispatch:
 
 jobs:
@@ -66,3 +69,41 @@ jobs:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/tentativeTitle.js
+
+  need-improve:
+    if: ${{ github.event.schedule == '35 21 * * 4' || github.event_name == 'workflow_dispatch'}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run needImprove.js
+        env:
+          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+        run: node src/needImprove.js
+
+  need-improve-welcome:
+    if: ${{ github.event.schedule == '35 21 * * 4' || github.event_name == 'workflow_dispatch'}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run needImproveWelcome.js
+        env:
+          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+        run: node src/needImproveWelcome.js
