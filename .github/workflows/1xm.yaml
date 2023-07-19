@@ -5,10 +5,9 @@ name: "[schedule] monthly"
 
 on:
   schedule:
-    - cron: "50 16 1 * *" # 2nd
-    - cron: "50 16 8 * *" # 9th
-    - cron: "50 16 2 * *" # 3rd
-    # 00:50 CST
+    - cron: "50 16 1 * *" # 2nd 00:50 CST
+    - cron: "50 16 8 * *" # 9th 00:50 CST
+    - cron: "50 16 2 * *" # 3rd 00:50 CST
   workflow_dispatch:
 
 jobs:

@@ -3,8 +3,8 @@ name: "[schedule] 1x/daily @early morning"
 
 on:
   schedule:
-    - cron: "35 20 * * *"
-    # 04:35 CST
+    - cron: "50 20 * * *"
+    # 04:50 CST
   workflow_dispatch:
 
 jobs:

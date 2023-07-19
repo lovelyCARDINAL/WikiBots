@@ -4,9 +4,8 @@ name: "[schedule] weekly"
 
 on:
   schedule:
-    - cron: "35 21 * * 1" # Tuesday
-    - cron: "35 21 * * 2" # Wednesday
-    # 05:35 CST
+    - cron: "55 21 * * 1" # Tuesday 05:55 CST
+    - cron: "55 21 * * 2" # Wednesday 05:55 CST
   workflow_dispatch:
 
 jobs:
