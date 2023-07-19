@@ -9,7 +9,7 @@ const zhapi = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': con
 	cmapi = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
 
 axiosRetry(axios, {
-	retries: 3,
+	retries: 5,
 	retryDelay: (retryCount) => {
 		return retryCount * 1000;
 	},
