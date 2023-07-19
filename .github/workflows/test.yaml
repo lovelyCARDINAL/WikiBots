@@ -15,15 +15,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Get changed files
-        id: changed_files
-        run: |
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} > changed_files.txt
-
-      - name: Read changed files
         id: get_files
         run: |
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} > changed_files.txt
           mapfile -t files < changed_files.txt
           echo "::set-output name=files::${files[*]}"
 
