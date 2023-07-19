@@ -2,9 +2,11 @@ name: "Code Analysis"
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
   schedule:
     - cron: "59 23 * * *"
   workflow_dispatch:
