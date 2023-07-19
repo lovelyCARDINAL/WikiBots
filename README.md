@@ -1,7 +1,7 @@
 # WikiBots
 
-[![Lint](https://github.com/lovelyCARDINAL/WikiBots/actions/workflows/Lint.yaml/badge.svg)](https://github.com/lovelyCARDINAL/WikiBots/actions/workflows/Lint.yaml)
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/lovelyCARDINAL/WikiBots/main)
+[![Code Analysis](https://github.com/lovelyCARDINAL/WikiBots/actions/workflows/Code%20Analysis.yaml/badge.svg)](https://github.com/lovelyCARDINAL/WikiBots/actions/workflows/Code%20Analysis.yaml)
+[![Maintainability](https://api.codeclimate.com/v1/badges/4818bbc1d7ce330e0f70/maintainability)](https://codeclimate.com/github/lovelyCARDINAL/WikiBots/maintainability)
 
 This bot is running using GitHub Actions and is currently in the testing phase.
 
