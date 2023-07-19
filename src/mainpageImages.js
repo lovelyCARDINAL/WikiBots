@@ -32,18 +32,22 @@ function findImageName(imgSrc) {
 		bad_image_info: '',
 		image_name: '',
 	};
-  
 	if (imgSrc.startsWith('https://commons.moegirl.org.cn/thumb.php')) {
 		result.image_name = decodeURIComponent(imgSrc.split('=')[1].split('&')[0]);
-	} else if (imgSrc.startsWith('https://img.moegirl.org.cn/common/')) {
+		return result;
+	}
+	if (imgSrc.startsWith('https://img.moegirl.org.cn/common/')) {
 		const imgSrcSplit = imgSrc.split('/');
-		if (imgSrcSplit[4] === 'thumb' && imgSrcSplit.slice(-1)[0][0].match(/\d/)) {
+		if (imgSrcSplit[4] === 'thumb' && isNaN(imgSrcSplit.slice(-1)[0][0])) {
 			result.image_name = decodeURIComponent(imgSrcSplit[7]);
-		} else if (imgSrcSplit[4] !== 'thumb') {
-			result.image_name = decodeURIComponent(imgSrcSplit[6]);
-		} else {
-			result.bad_image_info = `* 非法图片：<code><nowiki>${imgSrc}</nowiki></code>\n`;
+			return result;
 		}
+		if (imgSrcSplit[4] !== 'thumb') {
+			result.image_name = decodeURIComponent(imgSrcSplit[6]);
+			return result;
+		}
+		result.bad_image_info = `* 非法图片：<code><nowiki>${imgSrc}</nowiki></code>\n`;
+		return result;
 	}
 	result.bad_image_info = `* 非法图片：<code><nowiki>${imgSrc}</nowiki></code>\n`;
 	return result;

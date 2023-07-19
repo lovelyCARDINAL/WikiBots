@@ -22,10 +22,6 @@ async function editTimeData(origin, type, string) {
 
 		const obj = { ...origin };
 		obj[type] = string;
-		if (JSON.stringify(obj) === JSON.stringify(origin)) {
-			console.log('No change');
-			return;
-		}
 
 		const content = dump(obj);
 		await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
