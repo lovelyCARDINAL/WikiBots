@@ -58,3 +58,22 @@ jobs:
         uses: github/codeql-action/analyze@v2
         with:
           category: "/language:javascript"
+
+  MSDO:
+    runs-on: windows-latest
+    needs: Lint
+    if: ${{contains(github.event.head_commit.modified, '.js') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'}}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: |
+            5.0.x
+            6.0.x
+      - name: Run Microsoft Security DevOps
+        uses: microsoft/security-devops-action@v1.6.0
+        id: msdo
+      - name: Upload results to Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: ${{ steps.msdo.outputs.sarifFile }}
