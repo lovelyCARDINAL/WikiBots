@@ -21,16 +21,29 @@ console.log(`Start time: ${new Date().toISOString()}`);
 (async () => {
 	await api.login(config[site].main.name, config[site].main.password).then(console.log, console.error);
 
-	const { data : pagelist } = await api.post({
-		rvprop: 'user|content',
-		prop: 'revisions',
-		generator: 'categorymembers',
-		gcmtitle: 'Category:即将删除的页面',
-		gcmprop: 'ids|title',
-		gcmtype: 'page|subcat|file',
-		gcmlimit: 'max',
-	});
-	if (!pagelist?.query?.pages || pagelist?.query?.pages?.length === 0) {
+	const pagelist = await (async () => {
+		const result = [];
+		const eol = Symbol();
+		let gcmcontinue = undefined;
+		while (gcmcontinue !== eol) {
+			const { data } = await api.post({
+				rvprop: 'user|content',
+				prop: 'revisions',
+				generator: 'categorymembers',
+				gcmtitle: 'Category:即将删除的页面',
+				gcmprop: 'ids|title',
+				gcmtype: 'page|subcat|file',
+				gcmlimit: 'max',
+				...gcmcontinue && { gcmcontinue },
+			});
+			gcmcontinue = data.continue ? data.continue.gcmcontinue : eol;
+			if (data?.query?.pages) {
+				result.push(...Object.values(data.query.pages));
+			}
+		}
+		return result;
+	})();
+	if (pagelist.length === 0) {
 		console.log('No pages need to be deleted.');
 		return;
 	}
@@ -42,8 +55,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 	});
 	const userlist = allusers.map(({ name }) => name);
 		
-	await Promise.all(pagelist.query.pages.map(async ({ pageid, revisions }) => {
-		const { user: lastEditUser, content } = revisions[0];
+	await Promise.all(pagelist.map(async ({ pageid, revisions: [ { user: lastEditUser, content } ] }) => {
 		if (!content || !userlist.includes(lastEditUser)) {
 			return;
 		}
@@ -52,7 +64,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		if (lastEditUser !== templateUser || !userlist.includes(templateUser)) {
 			return;
 		}
-		const reason = wikitext.querySelector('template#Template:即将删除').getValue('1').trim();
+		const reason = (wikitext.querySelector('template#Template:即将删除').getValue('1') || '').trim();
 		if (!reason) {
 			return;
 		}
