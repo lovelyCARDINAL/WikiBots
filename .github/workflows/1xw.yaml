@@ -1,6 +1,7 @@
 name: "[schedule] weekly"
-# mostTranscludedPages.js
-# shortPages.js
+# mostTranscludedPages.js @Tuesday
+# shortPages.js @Wednesday
+# tentativeTitle.js @Wednesday
 
 on:
   schedule:
@@ -46,3 +47,22 @@ jobs:
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/shortPages.js
+
+  tentative-title:
+    if: ${{ github.event.schedule == '35 21 * * 2' || github.event_name == 'workflow_dispatch'}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tentativeTitle.js
+        env:
+          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+        run: node src/tentativeTitle.js
