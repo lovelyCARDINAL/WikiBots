@@ -44,7 +44,7 @@ jobs:
   CodeQL:
     needs: Lint
     runs-on: ubuntu-latest
-    if: ${{contains(github.event.head_commit.modified, '.js')}} || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: contains(github.event.head_commit.modified, '.js') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
