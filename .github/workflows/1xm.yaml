@@ -1,4 +1,4 @@
-name: "[schedule] 1x/m"
+name: "[schedule] monthly"
 # newsSubscriber.js @2nd
 # newsProtect.js @9th
 # updateOverrideCategory.js @3rd
