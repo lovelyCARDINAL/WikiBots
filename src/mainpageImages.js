@@ -38,7 +38,7 @@ function findImageName(imgSrc) {
 	}
 	if (imgSrc.startsWith('https://img.moegirl.org.cn/common/')) {
 		const imgSrcSplit = imgSrc.split('/');
-		if (imgSrcSplit[4] === 'thumb' && isNaN(imgSrcSplit.slice(-1)[0][0])) {
+		if (imgSrcSplit[4] === 'thumb' && /\d/.test(imgSrcSplit.slice(-1)[0][0])) {
 			result.image_name = decodeURIComponent(imgSrcSplit[7]);
 			return result;
 		}
