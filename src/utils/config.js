@@ -31,6 +31,10 @@ const config = {
 			name: '星海-adminbot@tf',
 			password: env.CM_ABOT,
 		},
+		ibot: {
+			name: '星海-interfacebot@tf',
+			password: env.CM_IBOT,
+		},
 		main: {
 			name: '星海子@gha',
 			password: env.CM_MAIN,
