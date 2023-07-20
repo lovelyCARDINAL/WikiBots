@@ -5,15 +5,11 @@ on:
     branches:
       - main
     paths:
-      - ".github/**/**"
-      - "**/*.js"
       - "!data/**"
   pull_request:
     branches:
       - main
     paths:
-      - ".github/**/**"
-      - "**/*.js"
       - "!data/**"
   schedule:
     - cron: "59 23 * * *"
