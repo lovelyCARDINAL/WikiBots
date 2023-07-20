@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths:
-      - "!data/**"
+      - "**"
   pull_request:
     branches:
       - main
     paths:
-      - "!data/**"
+      - "**"
   schedule:
     - cron: "59 23 * * *"
   workflow_dispatch:
