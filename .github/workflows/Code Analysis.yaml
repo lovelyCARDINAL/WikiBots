@@ -60,6 +60,7 @@ jobs:
           done
           echo "::set-output name=contains_js::$contains_js"
           echo "Modified files: ${{ steps.get_files.outputs.files }}"
+          echo "Contains JS: $contains_js"
 
   CodeQL:
     needs: Lint
