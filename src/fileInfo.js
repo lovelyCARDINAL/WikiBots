@@ -125,7 +125,6 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		const titlesGroup = splitAndJoin(titleData, 500);
 		const result = await Promise.all(titlesGroup.map(async(titles) => {
 			const { data: { query:{ pages } } } = await cmapi.post({
-				action: 'query',
 				prop: 'revisions',
 				titles,
 				rvprop: 'content|ids|user',
