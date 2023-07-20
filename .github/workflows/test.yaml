@@ -42,7 +42,7 @@ jobs:
   use_var:
     runs-on: ubuntu-latest
     needs: check_files
-    if: !needs.check_files.outputs.contains_js
+    if: ${{ !needs.check_files.outputs.contains_js }}
 
     steps:
       - run: echo "Do something with ${{ needs.get_files.outputs.files }}"
