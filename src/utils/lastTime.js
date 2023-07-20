@@ -10,9 +10,7 @@ async function getTimeData() {
 }
 
 async function editTimeData(origin, type, string) {
-	const octokit = new Octokit({
-		auth: env.GITHUB_TOKEN,
-	});
+	const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 	try {
 		const { data: { sha } } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
 			owner: 'lovelyCARDINAL',
