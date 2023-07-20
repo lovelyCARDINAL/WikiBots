@@ -44,7 +44,6 @@ jobs:
         run: npm run lint
 
   CodeQL:
-    needs: Lint
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
