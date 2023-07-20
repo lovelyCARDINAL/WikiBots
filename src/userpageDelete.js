@@ -90,11 +90,7 @@ async function cannotDelete(pageid) {
 		await Promise.all(
 			pagelist.map(async (page) => {
 				const { title, pageid } = page;
-				if (await ruleTest(title, pageid, maintainlist)) {
-					await pageDelete(pageid);
-				} else {
-					await cannotDelete(pageid);
-				}
+				await ruleTest(title, pageid, maintainlist) ? await pageDelete(pageid) : await cannotDelete(pageid);
 			}),
 		);
 	} else {
