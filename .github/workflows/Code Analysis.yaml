@@ -42,29 +42,9 @@ jobs:
         run: npm ci
       - name: Run Lint
         run: npm run lint
-      - name: Get changed files
-        id: get_files
-        run: |
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }} > changed_files.txt
-          mapfile -t files < changed_files.txt
-          echo "::set-output name=files::${files[*]}"
-      - name: Check if array contains javascript files
-        id: is_js
-        run: |
-          contains_js=false
-          for file in "${{ steps.get_files.outputs.files }}"; do
-            if [[ $file == *.js ]]; then
-              contains_js=true
-              break
-            fi
-          done
-          echo "::set-output name=contains_js::$contains_js"
-          echo "Modified files: ${{ steps.get_files.outputs.files }}"
-          echo "Contains JS: $contains_js"
 
   CodeQL:
     needs: Lint
-    if: ${{ needs.Lint.outputs.contains_js }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
