@@ -14,7 +14,7 @@ on:
 
 jobs:
   most-transcluded-pages:
-    if: ${{ github.event.schedule == '35 21 * * 1' || github.event_name == 'workflow_dispatch'}}
+    if: ${{ github.event.schedule == '55 21 * * 1' || github.event_name == 'workflow_dispatch'}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -33,7 +33,7 @@ jobs:
         run: node src/mostTranscludedPages.js
 
   short-pages:
-    if: ${{ github.event.schedule == '35 21 * * 2' || github.event_name == 'workflow_dispatch'}}
+    if: ${{ github.event.schedule == '55 21 * * 2' || github.event_name == 'workflow_dispatch'}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -52,7 +52,7 @@ jobs:
         run: node src/shortPages.js
 
   tentative-title:
-    if: ${{ github.event.schedule == '35 21 * * 2' || github.event_name == 'workflow_dispatch'}}
+    if: ${{ github.event.schedule == '55 21 * * 2' || github.event_name == 'workflow_dispatch'}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -71,7 +71,7 @@ jobs:
         run: node src/tentativeTitle.js
 
   need-improve:
-    if: ${{ github.event.schedule == '35 21 * * 4' || github.event_name == 'workflow_dispatch'}}
+    if: ${{ github.event.schedule == '55 21 * * 4' || github.event_name == 'workflow_dispatch'}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -90,7 +90,7 @@ jobs:
         run: node src/needImprove.js
 
   need-improve-welcome:
-    if: ${{ github.event.schedule == '35 21 * * 4' || github.event_name == 'workflow_dispatch'}}
+    if: ${{ github.event.schedule == '55 21 * * 4' || github.event_name == 'workflow_dispatch'}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
