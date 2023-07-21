@@ -1,3 +1,8 @@
+/**
+ * @param {Array} list
+ * @param {number} chunkSize
+ * @returns {Array}
+ */
 function splitAndJoin(list, chunkSize) {
 	const chunks = [];
 	for (let i = 0; i < list.length; i += chunkSize) {

@@ -1,6 +1,11 @@
 import process from 'process';
 import config from './config.js';
 
+/**
+ * @param {import('../src').MediaWikiApi} api
+ * @param {string} username
+ * @param {string} [password=config.password]
+ */
 // eslint-disable-next-line require-await
 async function clientLogin(api, username, password = config.password) {
 	return api
@@ -10,7 +15,7 @@ async function clientLogin(api, username, password = config.password) {
 				action: 'clientlogin',
 				username,
 				password,
-				loginreturnurl: 'https://zh.moegirl.org.cn',
+				loginreturnurl: config.zh.api,
 			},
 			{ tokenName: 'logintoken' },
 		)
