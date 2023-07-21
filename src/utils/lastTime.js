@@ -9,6 +9,11 @@ async function getTimeData() {
 	return load(data);
 }
 
+/**
+ * @param {Object} origin
+ * @param {string} type
+ * @param {string} string
+ */
 async function editTimeData(origin, type, string) {
 	const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 	try {

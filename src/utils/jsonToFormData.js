@@ -1,3 +1,7 @@
+/**
+ * @param {Object} json
+ * @returns {FormData}
+ */
 function jsonToFormData(json) {
 	const formData = new FormData();
 	Object.keys(json).forEach((key) => {
