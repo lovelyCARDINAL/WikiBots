@@ -3,13 +3,15 @@ import config from './utils/config.js';
 
 const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
 
-async function isActive(user, ucend) {
+const time = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+
+async function isActive(user) {
 	const { data: { query: { usercontribs } } } = await api.post({
 		list: 'usercontribs',
 		ucuser: user,
 		ucnamespace: '*',
 		uclimit: '1',
-		ucend,
+		ucend: time,
 	});
 	return !usercontribs.length;
 }
@@ -25,16 +27,19 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		prop: 'wikitext',
 		section: '1',
 	});
-	const time = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-	const userlist = [];
-	const regex = /\[\[User talk:(.+?)(?:\/.+?)?\]\]/g;
-	const matches = Array.from(wikitext.matchAll(regex));
-	await Promise.all(matches.map(async (match) => {
-		const user = match[1];
-		if (await isActive(user, time)) {
-			userlist.push(user);
-		}
-	}));
+
+	const userlist = await (async () => {
+		const data = [];
+		const regex = /\[\[User talk:(.+?)(?:\/.+?)?\]\]/g;
+		const matches = Array.from(wikitext.matchAll(regex));
+		await Promise.all(matches.map(async (match) => {
+			const user = match[1];
+			if (await isActive(user)) {
+				data.push(user);
+			}
+		}));
+		return data;
+	})();
 		
 	if (userlist.length) {
 		const userRegex = new RegExp(`#[ _]\\[\\[User[ _]talk:(${userlist.join('|')})(\\/[^\\]]+)?\\]\\]\n`, 'gi');
