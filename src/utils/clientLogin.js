@@ -1,23 +1,30 @@
 import process from 'process';
 import config from './config.js';
 
+// eslint-disable-next-line require-await
 async function clientLogin(api, username, password = config.password) {
-	try {
-		const { data } = await api.postWithToken('login', {
-			action: 'clientlogin',
-			username,
-			password,
-			loginreturnurl: config.zh.api,
-		}, { tokenName: 'logintoken' });
-		if (data.clientlogin?.status !== 'PASS' || data.error) {
-			throw new Error(data.error || data?.clientlogin?.message);
-		} else {
-			console.log(data);
-		}
-	} catch (e) {
-		console.error(e);
-		process.exit(1);
-	}
+	return api
+		.postWithToken(
+			'login',
+			{
+				action: 'clientlogin',
+				username,
+				password,
+				loginreturnurl: 'https://zh.moegirl.org.cn',
+			},
+			{ tokenName: 'logintoken' },
+		)
+		.then(({ data }) => {
+			if (data.clientlogin.status === 'PASS') {
+				console.log('登录成功', data);
+				return data;
+			}
+			throw new Error(data.clientlogin.message);
+		})
+		.catch((err) => {
+			console.error('登录异常', err);
+			process.exit(1);
+		});
 }
 
 export default clientLogin;
