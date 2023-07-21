@@ -4,13 +4,9 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "**"
   pull_request:
     branches:
       - main
-    paths:
-      - "**"
   schedule:
     - cron: "59 23 * * *"
   workflow_dispatch:
