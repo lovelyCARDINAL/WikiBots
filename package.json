@@ -20,7 +20,7 @@
     "jsonpath": "^1.1.1",
     "moment": "^2.29.4",
     "tslib": "^2.6.0",
-    "wiki-saikou": "^3.0.0-rc.1",
+    "wiki-saikou": "^3.0.0",
     "wikiparser-node": "^0.11.0"
   },
   "type": "module",
