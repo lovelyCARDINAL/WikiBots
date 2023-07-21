@@ -105,6 +105,9 @@ rules:
     - warn
     - before: false
       after: true
+  space-in-parens:
+    - warn
+    - never
   import/order:
     - warn
     - groups:
