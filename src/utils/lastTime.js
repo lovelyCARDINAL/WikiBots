@@ -4,6 +4,9 @@ import { Octokit } from '@octokit/core';
 import { load, dump } from 'js-yaml';
 import readData from './readData.js';
 
+/**
+ * @returns {Promise<Object>}
+ */
 async function getTimeData() {
 	const data = await readData('time.yaml');
 	return load(data);
