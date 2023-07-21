@@ -1,12 +1,12 @@
 import process from 'process';
 import config from './config.js';
 
-async function clientLogin(api, account, password) {
+async function clientLogin(api, username, password = config.password) {
 	try {
 		const { data } = await api.postWithToken('login', {
 			action: 'clientlogin',
-			username: account,
-			password: config.password || password,
+			username,
+			password,
 			loginreturnurl: config.zh.api,
 		}, { tokenName: 'logintoken' });
 		if (data.clientlogin?.status !== 'PASS' || data.error) {
