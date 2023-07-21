@@ -19,7 +19,7 @@ async function pageDelete(pageid, user, reason) {
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await api.login(config[site].main.name, config[site].main.password).then(console.log, console.error);
+	await api.login(config[site].main.name, config[site].main.password).then(console.log);
 
 	const pagelist = await (async () => {
 		const result = [];

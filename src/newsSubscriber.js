@@ -19,7 +19,7 @@ async function isActive(user) {
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log, console.error);
+	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
 
 	const { data: { parse: { wikitext } } } = await api.post({
 		action: 'parse',

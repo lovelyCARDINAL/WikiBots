@@ -57,7 +57,7 @@ async function cannotDelete(pageid) {
 }
 
 (async () => {
-	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log, console.error);
+	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 
 	const maintainlist = await (async () => {
 		const [ { data: { query: { pages: [ { revisions: [ { content } ] } ] } } },

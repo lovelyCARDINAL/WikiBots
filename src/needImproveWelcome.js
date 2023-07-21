@@ -9,7 +9,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await api.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log, console.error);
+	await api.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log);
 	
 	const overrideCategory = await (async () => {
 		const data = JSON.parse(await readData('overrideCategory.json'));

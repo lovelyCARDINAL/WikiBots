@@ -6,7 +6,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await api.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log, console.error);
+	await api.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log);
 
 	const pages = await (async () => {
 		const NS_LIST = [ '0', '1', '4', '5', '6', '7', '9', '10', '11', '12', '13', '14', '15', '274', '275', '711', '828', '829' ];

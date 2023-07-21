@@ -40,7 +40,7 @@ async function removeChar(pageid, wikitext, setting) {
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log, console.error);
+	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
 
 	const lastTime = await getTimeData();
 	const rcend = lastTime['invisible-character'],
