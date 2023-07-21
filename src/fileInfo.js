@@ -54,7 +54,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await zhapi.login(config.zh.bot.name, config.zh.bot.password).then(console.log, console.error);
+	await zhapi.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
 
 	const { data: { query: { pages: [ { revisions: [ { content } ] } ] } } } = await zhapi.post({
 		prop: 'revisions',
@@ -107,7 +107,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 	const leend = lastTime['file-info'],
 		lestart = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
-	await cmapi.login(config.cm.bot.name, config.cm.bot.password).then(console.log, console.error);
+	await cmapi.login(config.cm.bot.name, config.cm.bot.password).then(console.log);
 
 	const fileData = await (async () => {
 		const { data: { query: { logevents } } } = await cmapi.post({

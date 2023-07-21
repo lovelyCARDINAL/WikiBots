@@ -6,7 +6,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log, console.error);
+	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
 
 	const { data } = await api.postWithToken('csrf', {
 		action: 'edit',

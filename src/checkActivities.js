@@ -110,7 +110,7 @@ async function updateData(pageid, text) {
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await zhapi.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log, console.error);
+	await zhapi.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log);
 	
 	const userData = await (async () => {
 		const [ { data: { query: { pages: [ { revisions: [ { content } ] } ] } } },
@@ -132,7 +132,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		return data;
 	})();
 
-	await cmapi.login(config.cm.ibot.name, config.cm.ibot.password).then(console.log, console.error);
+	await cmapi.login(config.cm.ibot.name, config.cm.ibot.password).then(console.log);
 
 	const maintainTable = async () => {
 		const userStr = [ ...userData.sysop, ...userData.patroller ].join('|');

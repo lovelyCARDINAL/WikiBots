@@ -60,7 +60,7 @@ async function pageEdit(title) {
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log, console.error);
+	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 
 	const { data :{ query: { pages } } } = await api.post({
 		prop: 'revisions|info',

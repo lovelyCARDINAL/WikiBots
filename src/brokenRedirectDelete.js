@@ -6,7 +6,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log, console.error);
+	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 		
 	const { data :{ query: { querypage: { results } } } } = await api.post({
 		list: 'querypage',

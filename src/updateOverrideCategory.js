@@ -10,7 +10,7 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await api.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log, console.error);
+	await api.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log);
     
 	const { data: { query: { pages: [ { revisions:[ { content } ] } ] } } } = await api.post({
 		prop: 'revisions',
