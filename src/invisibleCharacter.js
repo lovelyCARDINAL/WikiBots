@@ -3,7 +3,7 @@ import config from './utils/config.js';
 import { getTimeData, editTimeData } from './utils/lastTime.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
-const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
+const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } });
 
 const regexMap = {
 	'180e': /[\u2005-\u200C\u200E\u200F\u2028-\u202F\u205F\u2060-\u206E\u3164\uFEFF]+/g,

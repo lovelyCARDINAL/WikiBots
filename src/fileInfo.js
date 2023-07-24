@@ -3,8 +3,8 @@ import config from './utils/config.js';
 import { getTimeData, editTimeData } from './utils/lastTime.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
-const zhapi = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent || '' } }),
-	cmapi = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent || '' } });
+const zhapi = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } }),
+	cmapi = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent } });
 
 const titleRegex = new RegExp('^File:(.+?)\\..{3,4}$'),
 	nameRegex = new RegExp('^[A-z0-9.\\-@\\+]+$'),
