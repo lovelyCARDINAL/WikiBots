@@ -12,7 +12,7 @@ const regexMap = {
 };
 
 function replaceSpecialCharacters(wikitext, pageid, setting) {
-	switch (pageid) {
+	switch (true) {
 		case setting['180e'].includes(pageid):
 			return wikitext.replace(regexMap['180e'], '');
 		case setting['3164'].includes(pageid):
