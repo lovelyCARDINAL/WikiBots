@@ -2,12 +2,31 @@ name: "[manually] deletion"
 
 on:
   workflow_dispatch:
+    inputs:
+      task:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "deletion"
+          - "none"
+      site:
+        type: choice
+        required: false
+        default: "all"
+        options:
+          - "zh"
+          - "cm"
+          - "all"
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
 
 jobs:
   zh-deletion:
+    if: |
+      github.event.inputs.task == 'deletion' &&
+      (github.event.inputs.site == 'zh' || github.event.inputs.site == 'all')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,6 +45,9 @@ jobs:
         run: node src/delete.js
 
   cm-deletion:
+    if: |
+      github.event.inputs.task == 'deletion' &&
+      (github.event.inputs.site == 'cm' || github.event.inputs.site == 'all')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
