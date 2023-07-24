@@ -8,6 +8,10 @@ on:
     # 2:35, 7:35, 12:35, 16:35, 20:35, 23:35 CST
   workflow_dispatch:
 
+env:
+  MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   invisible-character:
     runs-on: ubuntu-latest
@@ -23,8 +27,6 @@ jobs:
         run: npm ci
       - name: Run invisibleCharacter.js
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_BOT: ${{ secrets.ZH_BOT }}
         run: node src/invisibleCharacter.js
 
@@ -43,8 +45,6 @@ jobs:
         run: npm ci
       - name: Run fileInfo.js
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_BOT: ${{ secrets.ZH_BOT }}
           CM_BOT: ${{ secrets.CM_BOT }}
         run: node src/fileInfo.js

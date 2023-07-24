@@ -10,6 +10,10 @@ on:
     - cron: "50 16 2 * *" # 3rd 00:50 CST
   workflow_dispatch:
 
+env:
+  MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   news-subscriber:
     runs-on: ubuntu-latest
@@ -26,7 +30,6 @@ jobs:
         run: npm ci
       - name: Run newsSubscriber.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_BOT: ${{ secrets.ZH_BOT }}
         run: node src/newsSubscriber.js
 
@@ -45,7 +48,6 @@ jobs:
         run: npm ci
       - name: Run newsProtect.js @9th
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/newsProtect.js
 
@@ -64,7 +66,5 @@ jobs:
         run: npm ci
       - name: Run updateOverrideCategory.js @3rd
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/updateOverrideCategory.js
