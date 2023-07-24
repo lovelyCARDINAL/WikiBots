@@ -7,6 +7,22 @@ on:
     - cron: "35 18,23,4,8,12,15 * * *"
     # 2:35, 7:35, 12:35, 16:35, 20:35, 23:35 CST
   workflow_dispatch:
+    inputs:
+      task:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "invisible-character"
+          - "file-info"
+      group:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "all"
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -14,6 +30,10 @@ env:
 
 jobs:
   invisible-character:
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.task == 'invisible-character' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,6 +52,11 @@ jobs:
 
   file-info:
     needs: invisible-character
+    if: |
+      always() && (
+      github.event_name == 'schedule' ||
+      github.event.inputs.task == 'file-info' ||
+      github.event.inputs.group == 'all')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

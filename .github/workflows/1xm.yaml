@@ -9,6 +9,24 @@ on:
     - cron: "50 16 8 * *" # 9th 00:50 CST
     - cron: "50 16 2 * *" # 3rd 00:50 CST
   workflow_dispatch:
+    inputs:
+      task:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "news-subscriber"
+          - "news-protection"
+          - "update-override-category"
+      group:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "news"
+          - "all"
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -17,7 +35,11 @@ env:
 jobs:
   news-subscriber:
     runs-on: ubuntu-latest
-    if: ${{ github.event.schedule == '50 16 1 * *' || github.event_name == 'workflow_dispatch'}}
+    if: |
+      github.event.schedule == '50 16 1 * *' || 
+      github.event.inputs.task == 'news-subscriber' ||
+      github.event.inputs.group == 'news' ||
+      github.event.inputs.group == 'all'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -35,7 +57,11 @@ jobs:
 
   news-protection:
     runs-on: ubuntu-latest
-    if: ${{ github.event.schedule == '50 16 8 * *' || github.event_name == 'workflow_dispatch'}}
+    if: |
+      github.event.schedule == '50 16 8 * *' || 
+      github.event.inputs.task == 'news-protection' ||
+      github.event.inputs.group == 'news' ||
+      github.event.inputs.group == 'all'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -53,7 +79,10 @@ jobs:
 
   update-override-category:
     runs-on: ubuntu-latest
-    if: ${{ github.event.schedule == '50 16 2 * *' || github.event_name == 'workflow_dispatch'}}
+    if: |
+      github.event.schedule == '50 16 2 * *' ||
+      github.event.inputs.task == 'update-override-category' ||
+      github.event.inputs.group == 'all'
     steps:
       - name: Checkout
         uses: actions/checkout@v3

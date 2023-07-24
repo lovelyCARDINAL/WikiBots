@@ -8,6 +8,24 @@ on:
     - cron: "35 19,2,9,14 * * *"
     # 3:35, 10:35, 17:35, 22:35 CST
   workflow_dispatch:
+    inputs:
+      task:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "userpage-deletion"
+          - "redirect-deletion"
+          - "nulledit-in-category"
+      group:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "deletion"
+          - "all"
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -15,6 +33,11 @@ env:
 
 jobs:
   userpage-deletion:
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.task == 'userpage-deletion' ||
+      github.event.inputs.group == 'deletion' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,6 +55,11 @@ jobs:
         run: node src/userpageDelete.js
 
   redirect-deletion:
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.task == 'redirect-deletion' ||
+      github.event.inputs.group == 'deletion' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -49,6 +77,10 @@ jobs:
         run: node src/redirectDelete.js
 
   nulledit-in-category:
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.task == 'nulledit-in-category' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

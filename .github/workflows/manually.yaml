@@ -1,4 +1,4 @@
-name: "[manually] deletion"
+name: "[manually]"
 
 on:
   workflow_dispatch:
@@ -8,8 +8,8 @@ on:
         required: true
         default: "none"
         options:
-          - "deletion"
           - "none"
+          - "deletion"
       site:
         type: choice
         required: false

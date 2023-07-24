@@ -13,13 +13,37 @@ on:
     - cron: "55 21 * * 3" # Thursday 05:55 CST
     - cron: "55 21 * * 4" # Friday 05:55 CST
   workflow_dispatch:
+    inputs:
+      task:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "most-transcluded-pages"
+          - "short-pages"
+          - "tentative-title"
+          - "check-editgroup-activities"
+          - "need-improve"
+          - "need-improve-welcome"
+      group:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "need-improve"
+          - "all"
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
 
 jobs:
   most-transcluded-pages:
-    if: ${{ github.event.schedule == '55 21 * * 1' || github.event_name == 'workflow_dispatch'}}
+    if: |
+      github.event.schedule == '55 21 * * 1' || 
+      github.event.inputs.task == 'most-transcluded-pages' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,7 +61,10 @@ jobs:
         run: node src/mostTranscludedPages.js
 
   short-pages:
-    if: ${{ github.event.schedule == '55 21 * * 2' || github.event_name == 'workflow_dispatch'}}
+    if: |
+      github.event.schedule == '55 21 * * 2' || 
+      github.event.inputs.task == 'short-pages' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,7 +82,10 @@ jobs:
         run: node src/shortPages.js
 
   tentative-title:
-    if: ${{ github.event.schedule == '55 21 * * 2' || github.event_name == 'workflow_dispatch'}}
+    if: |
+      github.event.schedule == '55 21 * * 2' || 
+      github.event.inputs.task == 'tentative-title' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -73,7 +103,10 @@ jobs:
         run: node src/tentativeTitle.js
 
   check-editgroup-activities:
-    if: ${{ github.event.schedule == '55 21 * * 3' || github.event_name == 'workflow_dispatch'}}
+    if: |
+      github.event.schedule == '55 21 * * 3' || 
+      github.event.inputs.task == 'check-editgroup-activities' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -92,7 +125,11 @@ jobs:
         run: node src/checkEditgroupActivities.js
 
   need-improve:
-    if: ${{ github.event.schedule == '55 21 * * 4' || github.event_name == 'workflow_dispatch'}}
+    if: |
+      github.event.schedule == '55 21 * * 4' || 
+      github.event.inputs.task == 'need-improve' ||
+      github.event.inputs.group == 'need-improve' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -110,7 +147,11 @@ jobs:
         run: node src/needImprove.js
 
   need-improve-welcome:
-    if: ${{ github.event.schedule == '55 21 * * 4' || github.event_name == 'workflow_dispatch'}}
+    if: |
+      github.event.schedule == '55 21 * * 4' || 
+      github.event.inputs.task == 'need-improve-welcome' ||
+      github.event.inputs.group == 'need-improve' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
