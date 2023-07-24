@@ -53,10 +53,9 @@ jobs:
   file-info:
     needs: invisible-character
     if: |
-      always() && (
       github.event_name == 'schedule' ||
       github.event.inputs.task == 'file-info' ||
-      github.event.inputs.group == 'all')
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
