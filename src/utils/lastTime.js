@@ -22,7 +22,7 @@ async function getTimeData() {
 		});
 		return load(data);
 	} catch (error) {
-		console.error('ERROR:', error.message);
+		console.error('ERROR:', error);
 	}
 }
 
@@ -54,7 +54,7 @@ async function editTimeData(origin, type, string) {
 
 		console.log('SUCCESS!');
 	} catch (error) {
-		console.error('ERROR:', error.message);
+		console.error('ERROR:', error);
 	}
 }
 
