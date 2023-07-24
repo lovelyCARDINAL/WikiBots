@@ -2,14 +2,28 @@ import { Buffer } from 'buffer';
 import { env } from 'process';
 import { Octokit } from '@octokit/core';
 import { load, dump } from 'js-yaml';
-import readData from './readData.js';
+
+const octokit = new Octokit({
+	auth: env.GITHUB_TOKEN,
+});
 
 /**
  * @returns {Promise<Object>}
  */
 async function getTimeData() {
-	const data = await readData('time.yaml');
-	return load(data);
+	try {
+		const { data } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
+			owner: 'lovelyCARDINAL',
+			repo: 'WikiBots',
+			path: 'data/time.yaml',
+			mediaType: {
+				format: 'raw',
+			},
+		});
+		return load(data);
+	} catch (error) {
+		console.error('ERROR:', error.message);
+	}
 }
 
 /**
@@ -18,7 +32,6 @@ async function getTimeData() {
  * @param {string} string
  */
 async function editTimeData(origin, type, string) {
-	const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 	try {
 		const { data: { sha } } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
 			owner: 'lovelyCARDINAL',
