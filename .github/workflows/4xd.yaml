@@ -9,6 +9,10 @@ on:
     # 3:35, 10:35, 17:35, 22:35 CST
   workflow_dispatch:
 
+env:
+  MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   userpage-deletion:
     runs-on: ubuntu-latest
@@ -24,7 +28,6 @@ jobs:
         run: npm ci
       - name: Run userpageDelete.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/userpageDelete.js
 
@@ -42,8 +45,6 @@ jobs:
         run: npm ci
       - name: Run redirectDelete.js
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/redirectDelete.js
 
@@ -61,7 +62,6 @@ jobs:
         run: npm ci
       - name: Run nulleditInCategory.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_BOT: ${{ secrets.ZH_BOT }}
           CM_BOT: ${{ secrets.CM_BOT }}
         run: node src/nulleditInCategory.js

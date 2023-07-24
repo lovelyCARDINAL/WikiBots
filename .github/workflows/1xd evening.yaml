@@ -8,6 +8,9 @@ on:
     # 00:35 CST
   workflow_dispatch:
 
+env:
+  MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+
 jobs:
   watch:
     runs-on: ubuntu-latest
@@ -23,7 +26,6 @@ jobs:
         run: npm ci
       - name: Run watch.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
         run: node src/watch.js
 
@@ -41,7 +43,6 @@ jobs:
         run: npm ci
       - name: Run mainpageImages.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
           CM_ABOT: ${{ secrets.CM_ABOT }}
         run: node src/mainpageImages.js

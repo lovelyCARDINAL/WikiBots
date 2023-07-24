@@ -3,6 +3,9 @@ name: "[manually] deletion"
 on:
   workflow_dispatch:
 
+env:
+  MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+
 jobs:
   zh-deletion:
     runs-on: ubuntu-latest
@@ -19,7 +22,6 @@ jobs:
       - name: Run delete.js
         env:
           SITE: "zh"
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
         run: node src/delete.js
 
@@ -38,6 +40,5 @@ jobs:
       - name: Run delete.js
         env:
           SITE: "cm"
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           CM_MAIN: ${{ secrets.CM_MAIN }}
         run: node src/delete.js

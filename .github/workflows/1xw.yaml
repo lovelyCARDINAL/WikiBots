@@ -14,6 +14,9 @@ on:
     - cron: "55 21 * * 4" # Friday 05:55 CST
   workflow_dispatch:
 
+env:
+  MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+
 jobs:
   most-transcluded-pages:
     if: ${{ github.event.schedule == '55 21 * * 1' || github.event_name == 'workflow_dispatch'}}
@@ -30,7 +33,6 @@ jobs:
         run: npm ci
       - name: Run mostTranscludedPages.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/mostTranscludedPages.js
 
@@ -49,7 +51,6 @@ jobs:
         run: npm ci
       - name: Run shortPages.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/shortPages.js
 
@@ -68,7 +69,6 @@ jobs:
         run: npm ci
       - name: Run tentativeTitle.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/tentativeTitle.js
 
@@ -87,7 +87,6 @@ jobs:
         run: npm ci
       - name: Run checkEditgroupActivities.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
         run: node src/checkEditgroupActivities.js
@@ -107,7 +106,6 @@ jobs:
         run: npm ci
       - name: Run needImprove.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/needImprove.js
 
@@ -126,6 +124,5 @@ jobs:
         run: npm ci
       - name: Run needImproveWelcome.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/needImproveWelcome.js

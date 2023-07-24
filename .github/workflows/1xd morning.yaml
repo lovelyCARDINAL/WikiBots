@@ -9,6 +9,9 @@ on:
     # 04:50 CST
   workflow_dispatch:
 
+env:
+  MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+
 jobs:
   clean-sandbox:
     runs-on: ubuntu-latest
@@ -24,7 +27,6 @@ jobs:
         run: npm ci
       - name: Run sandbox.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/sandbox.js
 
@@ -42,7 +44,6 @@ jobs:
         run: npm ci
       - name: Run brokenRedirectDelete.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/brokenRedirectDelete.js
 
@@ -60,7 +61,6 @@ jobs:
         run: npm ci
       - name: Run checkActivities.js
         env:
-          MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
         run: node src/checkActivities.js
