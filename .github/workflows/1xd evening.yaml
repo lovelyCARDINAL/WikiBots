@@ -7,12 +7,32 @@ on:
     - cron: "35 16 * * *"
     # 00:35 CST
   workflow_dispatch:
+    inputs:
+      task:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "watch"
+          - "mainpage-image-protection"
+      group:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "all"
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
 
 jobs:
   watch:
+    if: |
+      github.event_name == 'schedule' || 
+      github.event.inputs.task == 'watch' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,6 +50,10 @@ jobs:
         run: node src/watch.js
 
   mainpage-image-protection:
+    if: |
+      github.event_name == 'schedule' || 
+      github.event.inputs.task == 'mainpage-image-protection' ||
+      github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
