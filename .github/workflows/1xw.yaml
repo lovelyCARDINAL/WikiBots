@@ -1,4 +1,5 @@
 name: "[schedule] weekly"
+# badFileName.js @Monday
 # mostTranscludedPages.js @Tuesday
 # shortPages.js @Wednesday
 # tentativeTitle.js @Wednesday
@@ -8,6 +9,7 @@ name: "[schedule] weekly"
 
 on:
   schedule:
+    - cron: "55 21 * * 0" # Monday 05:55 CST
     - cron: "55 21 * * 1" # Tuesday 05:55 CST
     - cron: "55 21 * * 2" # Wednesday 05:55 CST
     - cron: "55 21 * * 3" # Thursday 05:55 CST
@@ -20,6 +22,7 @@ on:
         default: "none"
         options:
           - "none"
+          - "bad-file-name"
           - "most-transcluded-pages"
           - "short-pages"
           - "tentative-title"
@@ -39,6 +42,28 @@ env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
 
 jobs:
+  bad-file-name:
+    if: |
+      github.event.schedule == '55 21 * * 0' || 
+      github.event.inputs.task == 'bad-file-name' ||
+      github.event.inputs.group == 'all'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run mostTranscludedPages.js
+        env:
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+          CM_IBOT: ${{ secrets.CM_IBOT }}
+        run: node src/badFileName.js
+
   most-transcluded-pages:
     if: |
       github.event.schedule == '55 21 * * 1' || 
