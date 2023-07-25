@@ -101,6 +101,7 @@ async function updateData(pageid, text) {
 		summary: '更新活跃度数据',
 		bot: true,
 		notminor: true,
+		nocreate: true,
 		tags: 'Bot',
 		watchlist: 'nochange',
 	});
