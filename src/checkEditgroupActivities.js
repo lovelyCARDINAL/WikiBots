@@ -34,6 +34,21 @@ async function queryContribs(api, ucuser) {
 	return result;
 }
 
+async function updateData(text) {
+	const { data } = await zhapi.postWithToken('csrf', {
+		action: 'edit',
+		pageid: '544630',
+		text,
+		summary: '更新活跃度数据',
+		bot: true,
+		notminor: true,
+		nocreate: true,
+		tags: 'Bot',
+		watchlist: 'nochange',
+	});
+	console.log(JSON.stringify(data));
+}
+
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
@@ -71,7 +86,8 @@ console.log(`Start time: ${new Date().toISOString()}`);
 	}
 
 	text += '|}\n</div>\n</div>\n\n[[Category:萌娘百科数据报告]]';
-	console.log(text);
+	
+	await updateData(text);
 	
 	console.log(new Date().toISOString());
 })();
