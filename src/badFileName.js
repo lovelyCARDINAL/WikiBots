@@ -12,7 +12,7 @@ const MAP = {
 	'0-1': [ '0', '1' ],
 	'2-4': [ '2', '3', '4' ],
 	'5-7': [ '5', '6', '7' ],
-	'8-9': [ '8', '9', '!', '?', '.', '&', '$', '@', '~', '(', ')', '%', "'", '"', '=', '-', '+', '。', '，', '？', '—', '“', '”', '…', '☆', '▽' ],
+	'8-9': [ '8', '9', '!', '?', '.', '&', '$', '@', '~', '(', ')', '%', "'", '"', '=', '-', '+', '。', '，', '？', '—', '“', '”', '…', '☆', '▽', '`', '^' ],
 };
 
 async function queryFiles(apprefix) {
@@ -35,14 +35,14 @@ async function queryFiles(apprefix) {
 }
 
 function isBadTitle(fulltitle) {
-	const title = fulltitle.replace(/^File:(.+?)\.[A-z0-9]{3,4}$/, '$1');
-	const isDoubleExtension = /\.[A-z0-9]{3,4}$/.test(title);
-	const isSymbolStart = /^(?![A-z0-9.])/.test(title);
+	const title = fulltitle.replace(/^File:(.+?)\.\w{3,4}$/, '$1');
+	const isDoubleExtension = /\.\w{3,4}$/.test(title);
+	const isSymbolStart = /^\W/.test(title);
 	if (isDoubleExtension || isSymbolStart) {
 		return true;
 	}
-	const name = title.replace(/(?![A-z0-9. ])/g, '');
-	return name.length > 15 && /^[A-z0-9.]+$/.test(name) && /\d/.test(name);
+	const name = title.replace(/[^\w. ]/g, '');
+	return name.length > 15 && /^[\w.]+$/.test(name) && /\d/.test(name);
 }
 
 async function updateData(title, text) {
