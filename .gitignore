@@ -197,5 +197,5 @@ dist
 
 
 # Personal
-src/test*
-src/utils/config.json
+*/test*
+src/utils/localConfig.js
