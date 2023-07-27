@@ -7,9 +7,9 @@ import config from './utils/config.js';
 const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } });
 const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 
-console.log(`Start time: ${new Date().toISOString()}`);
-
 (async () => {
+	console.log(`Start time: ${new Date().toISOString()}`);
+	
 	await api.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log);
     
 	const { data: { query: { pages: [ { revisions:[ { content } ] } ] } } } = await api.post({

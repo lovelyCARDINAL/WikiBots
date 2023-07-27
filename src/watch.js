@@ -14,9 +14,9 @@ async function watch(titles, unwatch) {
 	console.log(JSON.stringify(data));
 }
 
-console.log(`Start time: ${ new Date().toISOString()}`);
-
 (async () => {
+	console.log(`Start time: ${new Date().toISOString()}`);
+	
 	await api.login(config.zh.main.name, config.zh.main.password).then(console.log);
 
 	const { data:{ query:{ pages } } } = await api.post({

@@ -47,9 +47,9 @@ async function pageDelete(pageid, reason) {
 	console.log(JSON.stringify(data));
 }
 
-console.log(`Start time: ${new Date().toISOString()}`);
-
 (async () => {
+	console.log(`Start time: ${new Date().toISOString()}`);
+	
 	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 
 	const lastTime = await getTimeData();

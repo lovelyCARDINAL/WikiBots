@@ -51,9 +51,9 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	console.log(JSON.stringify(data));
 }
 
-console.log(`Start time: ${new Date().toISOString()}`);
-
 (async () => {
+	console.log(`Start time: ${new Date().toISOString()}`);
+	
 	await Promise.all([
 		zhapi.login(config.zh.bot.name, config.zh.bot.password).then(console.log),
 		cmapi.login(config.cm.bot.name, config.cm.bot.password).then(console.log),
