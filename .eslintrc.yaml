@@ -127,5 +127,12 @@ rules:
       alphabetize:
         order: asc
         caseInsensitive: false
-
+  implicit-arrow-linebreak:
+    - warn
+    - beside
+  function-call-argument-newline:
+    - warn
+    - consistent
+  no-extra-semi:
+    - error
 root: true
