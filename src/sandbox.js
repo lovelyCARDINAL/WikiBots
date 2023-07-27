@@ -62,9 +62,9 @@ async function pageEdit(title) {
 	
 	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 
-	const { data :{ query: { pages } } } = await api.post({
+	const { data: { query: { pages } } } = await api.post({
 		prop: 'revisions|info',
-		titles: Object.keys(PAGE_MAP).join('|'),
+		titles: Object.keys(PAGE_MAP),
 		rvprop: 'content',
 		inprop: 'protection',
 	});

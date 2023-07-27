@@ -74,7 +74,7 @@ async function queryLatestEvents(api, user, end) {
 		lestrat: time[0],
 		ucend: end,
 		leend: end,
-		ucnamespace:'*',
+		ucnamespace: '*',
 		ucuser: user,
 		leuser: user,
 		ucprop: 'timestamp',
@@ -137,10 +137,10 @@ async function updateData(pageid, text) {
 	})();
 
 	const maintainTable = async () => {
-		const userStr = [ ...userData.sysop, ...userData.patroller ].join('|');
+		const userList = [ ...userData.sysop, ...userData.patroller ];
 		const data = await Promise.all([
-			queryContribs(zhapi, userStr, '0|10|14|12|4|6', time[30]),
-			queryContribs(cmapi, userStr, '0|10|14|12|4|6', time[30]),
+			queryContribs(zhapi, userList, '0|10|14|12|4|6', time[30]),
+			queryContribs(cmapi, userList, '0|10|14|12|4|6', time[30]),
 		]).then((result) => result.flat());
 	
 		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的维护人员30日内中文萌娘百科与萌娘共享主、模板、分类、帮助、萌娘百科、文件名字空间下编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 管理员\n|-\n! 用户名 !! 编辑数 !! 最后编辑时间\n';
@@ -176,16 +176,16 @@ async function updateData(pageid, text) {
 		const { data: ghiaData } = await axios.get('https://raw.githubusercontent.com/MoegirlPediaInterfaceAdmins/MoegirlPediaInterfaceCodes/master/src/global/zh/MediaWiki:GHIAHistory.json');
 		const processData = [
 			Promise.all([
-				queryContribs(zhapi, userData.techeditor.join('|'), '10|828', time[180]),
-				queryContribs(cmapi, userData.techeditor.join('|'), '10|828', time[180]),
+				queryContribs(zhapi, userData.techeditor, '10|828', time[180]),
+				queryContribs(cmapi, userData.techeditor, '10|828', time[180]),
 			]).then((result) => result.flat()),
 			Promise.all([
-				queryContribs(zhapi, userData.scripteditor.join('|'), '10|828|274', time[90]),
-				queryContribs(cmapi, userData.scripteditor.join('|'), '10|828|274', time[90]),
+				queryContribs(zhapi, userData.scripteditor, '10|828|274', time[90]),
+				queryContribs(cmapi, userData.scripteditor, '10|828|274', time[90]),
 			]).then((result) => result.flat()),
 			Promise.all([
-				queryContribs(zhapi, userData['interface-admin'].join('|'), '10|828|8', time[90]),
-				queryContribs(cmapi, userData['interface-admin'].join('|'), '10|828|8', time[90]),
+				queryContribs(zhapi, userData['interface-admin'], '10|828|8', time[90]),
+				queryContribs(cmapi, userData['interface-admin'], '10|828|8', time[90]),
 			]).then((result) => result.flat()),
 		];
 		const data = {};
