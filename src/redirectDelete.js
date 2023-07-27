@@ -4,12 +4,12 @@ import { getTimeData, editTimeData } from './utils/lastTime.js';
 
 const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } });
 
-const NS_LIST = [ '1', '2', '3', '5', '9', '11', '13', '15', '275', '829' ];
+const NS_LIST = ['1', '2', '3', '5', '9', '11', '13', '15', '275', '829'];
 const NS_REASON_MAP = {
-	13: [ [ 13, 5 ], '自动删除移动讨论页面残留重定向' ],
-	5: [ [ 13, 5 ], '自动删除移动讨论页面残留重定向' ],
-	2: [ [ 0, 10, 4, 12 ], '自动删除移动用户页面残留重定向' ],
-	3: [ [ 1, 11, 5, 13 ], '自动删除移动用户讨论页面残留重定向' ],
+	13: [ [13, 5], '自动删除移动讨论页面残留重定向'],
+	5: [ [13, 5], '自动删除移动讨论页面残留重定向'],
+	2: [ [0, 10, 4, 12], '自动删除移动用户页面残留重定向'],
+	3: [ [1, 11, 5, 13], '自动删除移动用户讨论页面残留重定向'],
 };
 
 function ruleTest(item, targetns) {
@@ -22,7 +22,7 @@ function ruleTest(item, targetns) {
 
 async function ruleTest2(item) {
 	const { title, timestamp } = item;
-	const { data: { query: { pages: [ { missing, revisions, pageid } ] } } } = await api.post({
+	const { data: { query: { pages: [{ missing, revisions, pageid }] } } } = await api.post({
 		prop: 'revisions',
 		titles: title,
 		rvprop: 'ids|timestamp',
@@ -58,7 +58,7 @@ async function pageDelete(pageid, reason) {
 
 	await Promise.all(
 		NS_LIST.map(async (ns) => {
-			const [ targetns, reason ] = NS_REASON_MAP[ns] || [ [ parseInt(ns) ], '自动删除移动讨论页面残留重定向' ];
+			const [targetns, reason] = NS_REASON_MAP[ns] || [ [parseInt(ns)], '自动删除移动讨论页面残留重定向'];
 
 			const { data: { query: { logevents: pagelist } } } = await api.post({
 				list: 'logevents',

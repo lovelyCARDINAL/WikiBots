@@ -9,7 +9,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 	await api.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log);
 
 	const pages = await (async () => {
-		const NS_LIST = [ '0', '1', '4', '5', '6', '7', '9', '10', '11', '12', '13', '14', '15', '274', '275', '711', '828', '829' ];
+		const NS_LIST = ['0', '1', '4', '5', '6', '7', '9', '10', '11', '12', '13', '14', '15', '274', '275', '711', '828', '829'];
 		const result = await Promise.all(NS_LIST.map(async (ns) => {
 			const { data: { query: { allpages } } } = await api.post({
 				list: 'allpages',

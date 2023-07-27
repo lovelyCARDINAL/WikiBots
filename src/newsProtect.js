@@ -21,7 +21,7 @@ async function queryPages(apprefix, apprtype, apprlevel) {
 	
 	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 
-	const prefixlist = [ '萌娘百科月报/20', '萌娘百科月报/月饼/20' ];
+	const prefixlist = ['萌娘百科月报/20', '萌娘百科月报/月饼/20'];
 	let pagelist = await Promise.all(
 		prefixlist.map(
 			async (prefix) => {

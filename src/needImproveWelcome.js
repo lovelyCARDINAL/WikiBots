@@ -13,7 +13,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 	
 	const overrideCategory = await (async () => {
 		const data = JSON.parse(await readData('overrideCategory.json'));
-		return [ ...data.page, ...data.temp, ...data.cat ];
+		return [...data.page, ...data.temp, ...data.cat];
 	})();
 
 	const pages = await (async () => {
@@ -44,7 +44,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的嵌入了{{tlx|欢迎编辑}}并填写了改进方向的条目。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable" width=100%\n|-\n! 序号 || 条目名 || 改进方向 || style="width:30%"|部分所属分类 || style="min-width:50px"|代码长度 || style="min-width:80px"|最后版本\n';
 	let count = 1;
 	for (const page of pages) {
-		const { title, revisions: [ { timestamp, content, size } ], categories } = page;
+		const { title, revisions: [{ timestamp, content, size }], categories } = page;
 		const category = categories ? categories
 			.map(({ title }) => title)
 			.filter((title) => !overrideCategory.includes(title))
@@ -52,7 +52,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 			.join('，')
 			: 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
 		const wikitext = Parser.parse(content.replaceAll('\n', '').replace(/[欢歡]迎[編编][辑輯]|不完整/, '欢迎编辑'));
-		const value = wikitext.querySelector('template#Template:欢迎编辑')?.getValue() || [ 'data-sort-value="*" | <i style="color:red;">找不到目标模板</i>' ];
+		const value = wikitext.querySelector('template#Template:欢迎编辑')?.getValue() || ['data-sort-value="*" | <i style="color:red;">找不到目标模板</i>'];
 		const reason = Object.keys(value)
 			.filter((key) => !isNaN(key) && value[key]?.trim())
 			.map((key) => value[key]?.trim())

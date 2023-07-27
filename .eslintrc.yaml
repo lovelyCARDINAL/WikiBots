@@ -100,7 +100,10 @@ rules:
     - always
   array-bracket-spacing:
     - warn
-    - always
+    - never
+    - singleValue: false
+      objectsInArrays: false
+      arraysInArrays: true
   comma-spacing:
     - warn
     - before: false

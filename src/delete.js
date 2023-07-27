@@ -55,7 +55,7 @@ async function pageDelete(pageid, user, reason) {
 	});
 	const userlist = allusers.map(({ name }) => name);
 		
-	await Promise.all(pagelist.map(async ({ pageid, revisions: [ { user: lastEditUser, content } ] }) => {
+	await Promise.all(pagelist.map(async ({ pageid, revisions: [{ user: lastEditUser, content }] }) => {
 		if (!content || !userlist.includes(lastEditUser)) {
 			return;
 		}

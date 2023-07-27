@@ -84,7 +84,7 @@ async function queryLatestEvents(api, user, end) {
 	});
 	const contribsTimestamp = usercontribs.length
 		? timestampCST(usercontribs[0].timestamp)
-		: api === cmapi || [ 'AnnAngela-cbot', '星海-oversightbot', '萌百娘' ].includes(user)
+		: api === cmapi || ['AnnAngela-cbot', '星海-oversightbot', '萌百娘'].includes(user)
 			? '-'
 			: '<i style="color:red">无相关编辑</i>';
 	const logeventsTimestamp = logevents.length
@@ -117,8 +117,8 @@ async function updateData(pageid, text) {
 	]);
 	
 	const userData = await (async () => {
-		const [ { data: { query: { pages: [ { revisions: [ { content } ] } ] } } },
-			{ data: { query: { allusers } } } ] = await Promise.all([
+		const [{ data: { query: { pages: [{ revisions: [{ content }] }] } } },
+			{ data: { query: { allusers } } }] = await Promise.all([
 			zhapi.post({
 				prop: 'revisions',
 				titles: 'Module:UserGroup/data',
@@ -131,13 +131,13 @@ async function updateData(pageid, text) {
 			}),
 		]);
 		const data = JSON.parse(content);
-		const filterBots = [ '滥用过滤器', 'Abuse filter', '不正利用フィルター', 'Delete page script', '重定向修复器' ];
+		const filterBots = ['滥用过滤器', 'Abuse filter', '不正利用フィルター', 'Delete page script', '重定向修复器'];
 		data.bot = allusers.filter((user) => !filterBots.includes(user.name)).map((user) => user.name);
 		return data;
 	})();
 
 	const maintainTable = async () => {
-		const userList = [ ...userData.sysop, ...userData.patroller ];
+		const userList = [...userData.sysop, ...userData.patroller];
 		const data = await Promise.all([
 			queryContribs(zhapi, userList, '0|10|14|12|4|6', time[30]),
 			queryContribs(cmapi, userList, '0|10|14|12|4|6', time[30]),
@@ -214,7 +214,7 @@ async function updateData(pageid, text) {
 			if (nsContribsData.length || ghiaContribsCount) {
 				const nsLatestTimestamp = nsContribsData.length && moment.max(nsContribsData.map((item) => moment(item.timestamp)));
 				const ghiaLatestTimestamp = ghiaUserData?.length && moment.max(ghiaUserData.map((item) => moment(item.datetime))) || 0;
-				const latestTimestamp = moment.max([ nsLatestTimestamp, ghiaLatestTimestamp ]);
+				const latestTimestamp = moment.max([nsLatestTimestamp, ghiaLatestTimestamp]);
 				const timestamp = timestampCST(latestTimestamp);
 				text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
 			} else {
@@ -228,7 +228,7 @@ async function updateData(pageid, text) {
 				const ghiaLatestTimestamp = ghiaTimestamp?.isAfter(moment(time[365])) && ghiaTimestamp;
 
 				const latestTimestamp = nsLatestTimestamp && ghiaLatestTimestamp
-					? moment.max([ nsLatestTimestamp, ghiaLatestTimestamp ])
+					? moment.max([nsLatestTimestamp, ghiaLatestTimestamp])
 					: nsLatestTimestamp || ghiaLatestTimestamp;
 				const timestamp = latestTimestamp
 					? timestampCST(latestTimestamp)

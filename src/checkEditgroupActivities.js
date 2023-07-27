@@ -65,7 +65,7 @@ async function updateData(text) {
 		});
 		const regex = /{{User\|(.+?)}}/gi;
 		const data = Array.from(wikitext.matchAll(regex), (match) => match[1]);
-		return [ ...new Set(data) ].sort();
+		return [...new Set(data)].sort();
 	})();
 
 	const data = await Promise.all([

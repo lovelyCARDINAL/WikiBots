@@ -69,7 +69,7 @@ async function pageEdit(title) {
 		inprop: 'protection',
 	});
 
-	await Promise.all(pages.map(async ({ title, revisions: [ { content } ], protection, touched }) => {
+	await Promise.all(pages.map(async ({ title, revisions: [{ content }], protection, touched }) => {
 		if (protection.length === 0 || protection[0].type !== 'move' || protection[0].level !== 'sysop') {
 			await pageProtect(title);
 		}

@@ -5,14 +5,14 @@ const zhapi = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': con
 	cmapi = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent } });
 
 const MAP = {
-	'A-G': [ 'A', 'B', 'C', 'D', 'E', 'F', 'G' ],
-	'H-N': [ 'H', 'I', 'J', 'K', 'L', 'M', 'N' ],
-	'O-T': [ 'O', 'P', 'Q', 'R', 'S', 'T' ],
-	'U-Z': [ 'U', 'V', 'W', 'X', 'Y', 'Z' ],
-	'0-1': [ '0', '1' ],
-	'2-4': [ '2', '3', '4' ],
-	'5-7': [ '5', '6', '7' ],
-	'8-9': [ '8', '9', '!', '?', '.', '&', '$', '@', '~', '(', ')', '%', "'", '"', '=', '-', '+', '。', '，', '？', '—', '“', '”', '…', '☆', '▽', '`', '^' ],
+	'A-G': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+	'H-N': ['H', 'I', 'J', 'K', 'L', 'M', 'N'],
+	'O-T': ['O', 'P', 'Q', 'R', 'S', 'T'],
+	'U-Z': ['U', 'V', 'W', 'X', 'Y', 'Z'],
+	'0-1': ['0', '1'],
+	'2-4': ['2', '3', '4'],
+	'5-7': ['5', '6', '7'],
+	'8-9': ['8', '9', '!', '?', '.', '&', '$', '@', '~', '(', ')', '%', "'", '"', '=', '-', '+', '。', '，', '？', '—', '“', '”', '…', '☆', '▽', '`', '^'],
 };
 
 async function queryFiles(apprefix) {
@@ -29,7 +29,7 @@ async function queryFiles(apprefix) {
 			...apcontinue && { apcontinue },
 		});
 		apcontinue = data.continue ? data.continue.apcontinue : eol;
-		result.push(...data.query.allpages.map((page) => [ page.title, page.pageid ]));
+		result.push(...data.query.allpages.map((page) => [page.title, page.pageid]));
 	}
 	return result;
 }
@@ -68,13 +68,13 @@ async function updateData(title, text) {
 		cmapi.login(config.cm.ibot.name, config.cm.ibot.password).then(console.log),
 	]);
 
-	await Promise.all(Object.entries(MAP).map(async ([ key, value ]) => {
+	await Promise.all(Object.entries(MAP).map(async ([key, value]) => {
 		const pagelist = await Promise.all(value.map(async (char) => {
 			return await queryFiles(char);
 		})).then((result) => result.flat().filter((item) => isBadTitle(item[0])));
 
 		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的命名不当的文件名，以供维护人员检查。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable center plainlinks" style="word-break:break-all"\n|-\n! width=17%|页面ID !! 文件名 !! width=23%|操作\n';
-		for (const [ title, pageid ] of pagelist) {
+		for (const [title, pageid] of pagelist) {
 			text += `|-\n| ${pageid} || [[:${title}]] || [{{canonicalurl:cm:${title}}} 查看]｜[[Special:链入页面/${title}|链入]]\n`;
 		}
 		text += '|}\n\n[[Category:萌娘百科数据报告]]';

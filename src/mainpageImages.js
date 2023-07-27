@@ -83,7 +83,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
-	const partlist = [ 'banner-slider', 'topics-acgn', 'topics-weekly-bangumi', 'topics-vtubers', 'topics-music', 'topics-memes', 'topics-others' ];
+	const partlist = ['banner-slider', 'topics-acgn', 'topics-weekly-bangumi', 'topics-vtubers', 'topics-music', 'topics-memes', 'topics-others'];
 	const imgSrcGroup = await Promise.all(
 		partlist.map((part) => getMainpageJson(part)),
 	);
