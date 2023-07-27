@@ -12,7 +12,7 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 	
 	await api.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log);
     
-	const { data: { query: { pages: [ { revisions: [ { content } ] } ] } } } = await api.post({
+	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await api.post({
 		prop: 'revisions',
 		titles: 'User:星海子/OverrideCategory.json',
 		rvprop: 'content',

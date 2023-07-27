@@ -13,7 +13,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 	
 	const overrideCategory = await (async () => {
 		const data = JSON.parse(await readData('overrideCategory.json'));
-		return [ ...data.page, ...data.temp, ...data.cat ];
+		return [...data.page, ...data.temp, ...data.cat];
 	})();
 
 	const pages = await (async () => {
@@ -43,7 +43,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的嵌入了{{tlx|暂定标题}}的条目。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable" width=100%\n|-\n! 序号 || 条目名 || 原因 || style="width:35%"|部分所属分类 || style="min-width:80px"|最后版本\n';
 	let count = 1;
 	for (const page of pages) {
-		const { title, revisions: [ { timestamp, content } ], categories } = page;
+		const { title, revisions: [{ timestamp, content }], categories } = page;
 		const category = categories ? categories
 			.map(({ title }) => title)
 			.filter((title) => !overrideCategory.includes(title))

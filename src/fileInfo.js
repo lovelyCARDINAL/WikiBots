@@ -59,7 +59,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		cmapi.login(config.cm.bot.name, config.cm.bot.password).then(console.log),
 	]);
 
-	const { data: { query: { pages: [ { revisions: [ { content } ] } ] } } } = await zhapi.post({
+	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await zhapi.post({
 		prop: 'revisions',
 		titles: 'User:星海子/IncorrectFileInfo.json',
 		rvprop: 'content',
@@ -67,8 +67,8 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	const setting = JSON.parse(content);
 	const catData = await (async() => {
 		const set = new Set(),
-			prefixes = [ 'Category:', '分类:', 'Category:作者:', '分类:作者:' ],
-			overridePrefixes = [ 'Category:', '分类:' ],
+			prefixes = ['Category:', '分类:', 'Category:作者:', '分类:作者:'],
+			overridePrefixes = ['Category:', '分类:'],
 			categoryNames = setting.category,
 			overrideNames = setting.override;
 		await Promise.all(categoryNames.map((categoryName) => {
@@ -140,7 +140,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		titleUser = new Set(),
 		linkUser = new Set();
 	await Promise.all(fileData.map(async(item) => {
-		const { title, revisions: [ { content, user } ] } = item;
+		const { title, revisions: [{ content, user }] } = item;
 		
 		if (!titleUser.has(user) && !prefixRegex.test(title) && titleRuleTest(title)) {
 			titleUser.add(user);

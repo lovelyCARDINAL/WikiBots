@@ -46,7 +46,7 @@ async function removeChar(pageid, wikitext, setting) {
 	const rcend = lastTime['invisible-character'],
 		rcstart = new Date().toISOString();
         
-	const { data: { query: { recentchanges, pages: [ { revisions: [ { content } ] } ] } } } = await api.post({
+	const { data: { query: { recentchanges, pages: [{ revisions: [{ content }] }] } } } = await api.post({
 		prop: 'revisions',
 		titles: 'User:星海子/InvisibleCharacter.json',
 		rvprop: 'content',

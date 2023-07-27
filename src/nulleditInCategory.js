@@ -1,12 +1,12 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 
-const SITE_LIST = [ 'zh', 'cm' ];
+const SITE_LIST = ['zh', 'cm'];
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
-	const { data: { query: { pages: [ { revisions: [ { content } ] } ] } } } = await new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } }).post({
+	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } }).post({
 		prop: 'revisions',
 		titles: 'User:星海子/NulleditInCategory.json',
 		rvprop: 'content',
@@ -18,7 +18,7 @@ const SITE_LIST = [ 'zh', 'cm' ];
 			const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent } });
 			await api.login(config[site].bot.name, config[site].bot.password).then(console.log);
 			
-			const catlist = [ ...setting[site], '尚未清空的已重定向分类', '尚未清空的消歧义分类' ];
+			const catlist = [...setting[site], '尚未清空的已重定向分类', '尚未清空的消歧义分类'];
 
 			await Promise.all(
 				catlist.map(async (title) => {
