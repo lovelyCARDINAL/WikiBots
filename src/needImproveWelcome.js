@@ -33,9 +33,8 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 				geifilterredir: 'nonredirects',
 				geilimit: 'max',
 				...rvcontinue && { rvcontinue, clcontinue: `${rvcontinue.split('|')[0]}|` },
-			});
+			}, { retry: 10 });
 			rvcontinue = data.continue ? data.continue.rvcontinue : eol;
-			console.log(rvcontinue);
 			result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
 		}
 		return result;
@@ -62,7 +61,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 		text += `|-\n| ${count} || [[${title}]] || ${reason} || ${category} || ${size} || ${time}\n`;
 		count++;
 	}
-	text += '|}\n\n[[Category:萌娘百科数据报告]]';
+	text += '|}\n\n[[Category:萌娘百科数据报告]][[Category:积压工作]]';
 
 	const { data } = await api.postWithToken('csrf', {
 		action: 'edit',
