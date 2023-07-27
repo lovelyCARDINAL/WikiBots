@@ -37,9 +37,9 @@ async function removeChar(pageid, wikitext, setting) {
 	console.log(JSON.stringify(data));
 }
 
-console.log(`Start time: ${new Date().toISOString()}`);
-
 (async () => {
+	console.log(`Start time: ${new Date().toISOString()}`);
+	
 	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
 
 	const lastTime = await getTimeData();

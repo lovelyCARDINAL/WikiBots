@@ -3,9 +3,9 @@ import config from './utils/config.js';
 
 const SITE_LIST = [ 'zh', 'cm' ];
 
-console.log(`Start time: ${new Date().toISOString()}`);
-
 (async () => {
+	console.log(`Start time: ${new Date().toISOString()}`);
+
 	const { data: { query: { pages: [ { revisions:[ { content } ] } ] } } } = await new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } }).post({
 		prop: 'revisions',
 		titles: 'User:星海子/NulleditInCategory.json',

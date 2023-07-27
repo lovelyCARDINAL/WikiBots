@@ -6,9 +6,9 @@ import readData from './utils/readData.js';
 
 const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } });
 
-console.log(`Start time: ${new Date().toISOString()}`);
-
 (async () => {
+	console.log(`Start time: ${new Date().toISOString()}`);
+	
 	await api.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log);
 	
 	const overrideCategory = await (async () => {

@@ -108,9 +108,9 @@ async function updateData(pageid, text) {
 	console.log(JSON.stringify(data));
 }
 
-console.log(`Start time: ${new Date().toISOString()}`);
-
 (async () => {
+	console.log(`Start time: ${new Date().toISOString()}`);
+	
 	await Promise.all([
 		zhapi.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log),
 		cmapi.login(config.cm.ibot.name, config.cm.ibot.password).then(console.log),

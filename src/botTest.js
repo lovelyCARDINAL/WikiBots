@@ -3,9 +3,9 @@ import config from './utils/config.js';
 
 const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } });
 
-console.log(`Start time: ${new Date().toISOString()}`);
-
 (async () => {
+	console.log(`Start time: ${new Date().toISOString()}`);
+	
 	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
 
 	const { data } = await api.postWithToken('csrf', {

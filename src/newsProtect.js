@@ -16,9 +16,9 @@ async function queryPages(apprefix, apprtype, apprlevel) {
 	return allpages;
 }
 
-console.log(`Start time: ${new Date().toISOString()}`);
-
 (async () => {
+	console.log(`Start time: ${new Date().toISOString()}`);
+	
 	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 
 	const prefixlist = [ '萌娘百科月报/20', '萌娘百科月报/月饼/20' ];
