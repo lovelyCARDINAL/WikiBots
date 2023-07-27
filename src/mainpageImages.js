@@ -60,7 +60,7 @@ async function pageProtect(title, protections, reason) {
 		...protections && { expiry: 'infinite' },
 		tags: 'Bot',
 		watchlist: 'nochange',
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 }
 
@@ -76,7 +76,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		bot: true,
 		nocreate: true,
 		notminor: true,
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 }
 

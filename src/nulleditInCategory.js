@@ -43,7 +43,7 @@ const SITE_LIST = ['zh', 'cm'];
 									tags: 'Bot',
 									summary: '空编辑以刷新分类表',
 									watchlist: 'nochange',
-								});
+								}, { retry: 10, noCache: true });
 								console.log(JSON.stringify(data));
 							}),
 						);

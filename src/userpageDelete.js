@@ -29,7 +29,7 @@ async function pageDelete(pageid) {
 		reason: '自动删除悬挂{{[[Template:ns2d|ns2d]]}}的用户页面',
 		tags: 'Bot',
 		watchlist: 'nochange',
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 }
 
@@ -50,7 +50,7 @@ async function cannotDelete(pageid) {
 		minor: true,
 		bot: true,
 		summary: '无法自动删除，请至[[萌娘百科_talk:讨论版/操作申请]]提请维护人员删除。',
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 }
 

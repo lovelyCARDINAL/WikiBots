@@ -22,7 +22,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 					reason: '受损重定向',
 					tags: 'Bot',
 					watchlist: 'nochange',
-				});
+				}, { retry: 10, noCache: true });
 				console.log(JSON.stringify(data));
 			}
 		}));

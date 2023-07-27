@@ -47,7 +47,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		summary,
 		watchlist: 'nochange',
 		bot: true,
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 }
 
@@ -183,7 +183,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 			bot: true,
 			minor: true,
 			watchlist: 'nochange',
-		});
+		}, { retry: 10, noCache: true });
 		console.log(JSON.stringify(data));
 	}
 

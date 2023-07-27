@@ -16,6 +16,6 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 		bot: true,
 		minor: true,
 		tags: 'Bot',
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 })();

@@ -72,7 +72,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 		notminor: true,
 		tags: 'Bot',
 		watchlist: 'nochange',
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 
 	console.log(`End time: ${new Date().toISOString()}`);
