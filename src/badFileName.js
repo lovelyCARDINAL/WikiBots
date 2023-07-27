@@ -41,7 +41,7 @@ function isBadTitle(fulltitle) {
 	if (isDoubleExtension || isSymbolStart) {
 		return true;
 	}
-	const name = title.replace(/[^\w. ]/g, '');
+	const name = title.replaceAll(/[^\w. ]/g, '');
 	return name.length > 15 && /^[\w.]+$/.test(name) && /\d/.test(name);
 }
 

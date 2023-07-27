@@ -96,7 +96,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		await Promise.all(pages.map((page) => {
 			const user = page.title.replace('User talk:', ''),
 				{ content } = page.revisions[0];
-			if (regex.test(content.replace(/\s\n/g, ''))) {
+			if (regex.test(content.replaceAll(/\s\n/g, ''))) {
 				set.add(user);
 			}
 		}));

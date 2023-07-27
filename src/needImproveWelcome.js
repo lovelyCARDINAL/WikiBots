@@ -51,7 +51,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 			.map((title) => `[[:${title}]]`)
 			.join('，')
 			: 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
-		const wikitext = Parser.parse(content.replace(/\n/g, '').replace(/[欢歡]迎[編编][辑輯]|不完整/, '欢迎编辑'));
+		const wikitext = Parser.parse(content.replaceAll('\n', '').replace(/[欢歡]迎[編编][辑輯]|不完整/, '欢迎编辑'));
 		const value = wikitext.querySelector('template#Template:欢迎编辑')?.getValue() || [ 'data-sort-value="*" | <i style="color:red;">找不到目标模板</i>' ];
 		const reason = Object.keys(value)
 			.filter((key) => !isNaN(key) && value[key]?.trim())

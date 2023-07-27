@@ -10,7 +10,7 @@ const time = {
 };
 
 function userInfo(user) {
-	return `<img class="userlink-avatar-small" src="https://commons.moegirl.org.cn/extensions/Avatar/avatar.php?user=${user.replace(' ', '_')}">{{User|${user}}}`;
+	return `<img class="userlink-avatar-small" src="https://commons.moegirl.org.cn/extensions/Avatar/avatar.php?user=${user.replaceAll(' ', '_')}">{{User|${user}}}`;
 }
 
 async function queryContribs(api, ucuser) {
