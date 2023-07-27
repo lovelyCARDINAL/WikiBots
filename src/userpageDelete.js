@@ -7,7 +7,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 async function ruleTest(title, pageid, maintainlist) {
 	const rootuser = title.replace(/^User:(.+?)(?:\/.*)?$/, '$1');
 
-	const { data:{ query:{ pages } } } = await api.post({
+	const { data: { query: { pages } } } = await api.post({
 		prop: 'revisions',
 		pageids: pageid,
 		rvprop: 'user',
@@ -34,7 +34,7 @@ async function pageDelete(pageid) {
 }
 
 async function cannotDelete(pageid) {
-	const { data:{ query:{ pages } } } = await api.post({
+	const { data: { query: { pages } } } = await api.post({
 		prop: 'revisions',
 		pageids: pageid,
 		rvprop: 'content',

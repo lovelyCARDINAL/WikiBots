@@ -136,7 +136,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		console.log('No bad image!');
 	}
 
-	const { data: { parse:{ wikitext } } } = await zhapi.post({
+	const { data: { parse: { wikitext } } } = await zhapi.post({
 		action: 'parse',
 		page: 'User:星海子/MainpageImage.json',
 		prop: 'wikitext',

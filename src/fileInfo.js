@@ -125,7 +125,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 			.map((item) => item.title);
 		const titlesGroup = splitAndJoin(titleData, 500);
 		const result = await Promise.all(titlesGroup.map(async(titles) => {
-			const { data: { query:{ pages } } } = await cmapi.post({
+			const { data: { query: { pages } } } = await cmapi.post({
 				prop: 'revisions',
 				titles,
 				rvprop: 'content|ids|user',
