@@ -10,7 +10,7 @@ async function watch(titles, unwatch) {
 		action: 'watch',
 		titles,
 		...unwatch && { unwatch },
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 }
 

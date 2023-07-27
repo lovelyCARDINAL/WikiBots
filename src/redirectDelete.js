@@ -43,7 +43,7 @@ async function pageDelete(pageid, reason) {
 		reason,
 		tags: 'Bot',
 		watchlist: 'nochange',
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 }
 

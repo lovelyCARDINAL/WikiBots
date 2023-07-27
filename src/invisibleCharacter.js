@@ -33,7 +33,7 @@ async function removeChar(pageid, wikitext, setting) {
 		tags: 'Bot',
 		summary: '移除不可见字符',
 		watchlist: 'nochange',
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 }
 

@@ -56,7 +56,7 @@ async function isActive(user) {
 			bot: true,
 			nocreate: true,
 			watchlist: 'nochange',
-		});
+		}, { retry: 10, noCache: true });
 		console.log(JSON.stringify(data));
 	}
 

@@ -12,7 +12,7 @@ async function pageDelete(pageid, user, reason) {
 		reason: `批量删除[[Cat:即将删除的页面]]（[[User_talk:${user}|${user}]]的挂删理由：${reason} ）`,
 		pageid,
 		tags: 'Automation tool',
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 }
 

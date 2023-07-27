@@ -56,7 +56,7 @@ async function updateData(title, text) {
 		nocreate: true,
 		tags: 'Bot',
 		watchlist: 'nochange',
-	});
+	}, { retry: 10, noCache: true });
 	console.log(JSON.stringify(data));
 }
 
