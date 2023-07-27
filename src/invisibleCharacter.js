@@ -14,11 +14,11 @@ const regexMap = {
 function replaceSpecialCharacters(wikitext, pageid, setting) {
 	switch (true) {
 		case setting['180e'].includes(pageid):
-			return wikitext.replace(regexMap['180e'], '');
+			return wikitext.replaceAll(regexMap['180e'], '');
 		case setting['3164'].includes(pageid):
-			return wikitext.replace(regexMap['3164'], '');
+			return wikitext.replaceAll(regexMap['3164'], '');
 		default:
-			return wikitext.replace(regexMap.default, '');
+			return wikitext.replaceAll(regexMap.default, '');
 	}
 }
 

@@ -50,7 +50,7 @@ console.log(`Start time: ${new Date().toISOString()}`);
 			.map((title) => `[[:${title}]]`)
 			.join('，')
 			: 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
-		const wikitext = Parser.parse(content.replace(/\n/g, '').replace(/[暂暫]定[標标][题題]/, '暂定标题'));
+		const wikitext = Parser.parse(content.replaceAll('\n', '').replace(/[暂暫]定[標标][题題]/, '暂定标题'));
 		const template = wikitext.querySelector('template#Template:暂定标题');
 		const reason = template?.getValue('1')?.trim() || (template ? 'data-sort-value="*" | <i style="color:red;">无</i>' : 'data-sort-value="*" | <i style="color:red;">找不到目标模板</i>');
 		const time = `${moment(timestamp).utcOffset('+08:00').format('YYYY-MM-DD HH:mm')} (CST)`;

@@ -42,7 +42,7 @@ async function cannotDelete(pageid) {
 		rvprop: 'content',
 	});
 	let wikitext = pages[0].revisions[0].content;
-	wikitext = wikitext.replace(/(?:<noinclude>\s*)?{{\s*(?:T:|模板:|[样樣]板:|Template:)?\s*ns2d\s*}}(?:\s*<\/noinclude>)?/gi, '');
+	wikitext = wikitext.replaceAll(/(?:<noinclude>\s*)?{{\s*(?:T:|模板:|[样樣]板:|Template:)?\s*ns2d\s*}}(?:\s*<\/noinclude>)?/gi, '');
 	const { data } = await api.postWithToken('csrf', {
 		action: 'edit',
 		pageid,
