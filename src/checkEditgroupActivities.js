@@ -52,7 +52,10 @@ async function updateData(text) {
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await zhapi.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log);
+	await Promise.all([
+		zhapi.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log),
+		cmapi.login(config.cm.ibot.name, config.cm.ibot.password).then(console.log),
+	]);
 
 	const userlist = await (async () => {
 		const { data: { parse: { wikitext } } } = await zhapi.post({
@@ -64,8 +67,6 @@ console.log(`Start time: ${new Date().toISOString()}`);
 		const data = Array.from(wikitext.matchAll(regex), (match) => match[1]);
 		return [ ...new Set(data) ].sort();
 	})();
-
-	await cmapi.login(config.cm.ibot.name, config.cm.ibot.password).then(console.log);
 
 	const userStr = userlist.join('|');
 	const data = await Promise.all([

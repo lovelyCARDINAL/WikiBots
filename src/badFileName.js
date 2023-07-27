@@ -63,14 +63,16 @@ async function updateData(title, text) {
 console.log(`Start time: ${new Date().toISOString()}`);
 
 (async () => {
-	await zhapi.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log);
-	await cmapi.login(config.cm.ibot.name, config.cm.ibot.password).then(console.log);
+	await Promise.all([
+		zhapi.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log),
+		cmapi.login(config.cm.ibot.name, config.cm.ibot.password).then(console.log),
+	]);
 
 	await Promise.all(Object.entries(MAP).map(async ([ key, value ]) => {
 		const pagelist = await Promise.all(value.map(async (char) => {
 			return await queryFiles(char);
 		})).then((result) => result.flat().filter((item) => isBadTitle(item[0])));
-		
+
 		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的命名不当的文件名，以供维护人员检查。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable center plainlinks" style="word-break:break-all"\n|-\n! width=17%|页面ID !! 文件名 !! width=23%|操作\n';
 		for (const [ title, pageid ] of pagelist) {
 			text += `|-\n| ${pageid} || [[:${title}]] || [{{canonicalurl:cm:${title}}} 查看]｜[[Special:链入页面/${title}|链入]]\n`;

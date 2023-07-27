@@ -101,7 +101,10 @@ console.log(`Start time: ${new Date().toISOString()}`);
 	const newImgList = imgNameList.filter((value, index) => imgNameList.indexOf(value) === index);
 	newImgList.sort();
 
-	await cmapi.login(config.cm.abot.name, config.cm.abot.password).then(console.log);
+	await Promise.all([
+		cmapi.login(config.cm.abot.name, config.cm.abot.password).then(console.log),
+		zhapi.login(config.zh.abot.name, config.zh.abot.password).then(console.log),
+	]);
 	
 	const imgNameLists = splitAndJoin(newImgList, 500);
 	
@@ -126,8 +129,6 @@ console.log(`Start time: ${new Date().toISOString()}`);
 			);
 		}),
 	);
-
-	await zhapi.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 
 	if (badImageInfo) {
 		await pageEdit('User_talk:星海子/MainpageImage.json', badImageInfo, '报告问题图片', '{{subst:#time:Y年n月j日|||1}}');
