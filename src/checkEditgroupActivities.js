@@ -68,10 +68,9 @@ async function updateData(text) {
 		return [ ...new Set(data) ].sort();
 	})();
 
-	const userStr = userlist.join('|');
 	const data = await Promise.all([
-		queryContribs(zhapi, userStr, '0|10|14|12|4|6'),
-		queryContribs(cmapi, userStr, '0|10|14|12|4|6'),
+		queryContribs(zhapi, userlist, '0|10|14|12|4|6'),
+		queryContribs(cmapi, userlist, '0|10|14|12|4|6'),
 	]).then((result) => result.flat());
 
 	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的编辑组负责人90日内中文萌娘百科与萌娘共享主、模板、分类、帮助、萌娘百科、文件名字空间下编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="min-width: 60%; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|-\n! 用户名 !! 编辑数\n';
