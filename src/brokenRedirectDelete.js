@@ -8,7 +8,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 	
 	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 		
-	const { data :{ query: { querypage: { results } } } } = await api.post({
+	const { data: { query: { querypage: { results } } } } = await api.post({
 		list: 'querypage',
 		qppage: 'BrokenRedirects',
 		qplimit: 'max',

@@ -22,7 +22,7 @@ function ruleTest(item, targetns) {
 
 async function ruleTest2(item) {
 	const { title, timestamp } = item;
-	const { data:{ query:{ pages: [ { missing, revisions, pageid } ] } } } = await api.post({
+	const { data: { query: { pages: [ { missing, revisions, pageid } ] } } } = await api.post({
 		prop: 'revisions',
 		titles: title,
 		rvprop: 'ids|timestamp',

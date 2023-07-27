@@ -19,7 +19,7 @@ async function watch(titles, unwatch) {
 	
 	await api.login(config.zh.main.name, config.zh.main.password).then(console.log);
 
-	const { data:{ query:{ pages } } } = await api.post({
+	const { data: { query: { pages } } } = await api.post({
 		prop: 'revisions',
 		titles: 'Module:UserGroup/data',
 		rvprop: 'content',
@@ -29,7 +29,7 @@ async function watch(titles, unwatch) {
 	);
 	let watchlist = [ ...sysop, ...patroller, ...techeditor, ...staff ].map((username) => `User:${username}`);
 
-	const { data:{ query:{ categorymembers } } } = await api.post({
+	const { data: { query: { categorymembers } } } = await api.post({
 		list: 'categorymembers',
 		cmpageid: '374746',
 		cmprop: 'title',
@@ -46,7 +46,7 @@ async function watch(titles, unwatch) {
 	);
 
 	if (moment().utc().format('dddd') === 'Sunday') {
-		const { data:{ watchlistraw: talklist } } = await api.post({
+		const { data: { watchlistraw: talklist } } = await api.post({
 			list: 'watchlistraw',
 			wrnamespace: '5',
 			wrlimit: 'max',

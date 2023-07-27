@@ -105,6 +105,10 @@ rules:
     - warn
     - before: false
       after: true
+  key-spacing:
+    - warn
+    - beforeColon: false
+      afterColon: true
   space-in-parens:
     - warn
     - never
