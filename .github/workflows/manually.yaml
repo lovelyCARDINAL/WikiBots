@@ -10,6 +10,7 @@ on:
         options:
           - "none"
           - "deletion"
+          - "revoke-user"
       site:
         type: choice
         required: false
@@ -64,3 +65,23 @@ jobs:
           SITE: "cm"
           CM_MAIN: ${{ secrets.CM_MAIN }}
         run: node src/delete.js
+
+  revoke-user:
+    if: |
+      github.event.inputs.task == 'revoke-user'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run revokeUser.js
+        env:
+          GHP: ${{ secrets.GHP }}
+          MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
+        run: node src/revokeUser.js
