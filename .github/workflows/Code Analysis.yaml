@@ -70,6 +70,7 @@ jobs:
         uses: kentaro-m/auto-assign-action@v1.2.5
         with:
           configuration-path: ".github/auto_assign.yaml"
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
 
   dependency-review:
     if: github.event_name == 'pull_request'
