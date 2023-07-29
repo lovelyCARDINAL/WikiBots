@@ -12,7 +12,7 @@ const api = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': confi
 	await api.login(config.cm.abot.name, config.cm.abot.password).then(console.log);
 
 	const lastTime = await getTimeData();
-	const leend = lastTime['file-revision-deletion'] ?? (console.error('No last time data!'), process.exit(1)),
+	const leend = lastTime['file-revision-deletion'] ?? (console.error('No last time data!'), process.exit(6)),
 		lestart = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 	
 	const idlist = await (async () => {

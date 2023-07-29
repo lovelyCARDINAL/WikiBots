@@ -108,7 +108,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	})();
 
 	const lastTime = await getTimeData();
-	const leend = lastTime['file-info'] ?? (console.error('No last time data!'), process.exit(1)),
+	const leend = lastTime['file-info'] ?? (console.error('No last time data!'), process.exit(6)),
 		lestart = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
 	const fileData = await (async () => {
