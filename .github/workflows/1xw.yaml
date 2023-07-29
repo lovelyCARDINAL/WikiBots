@@ -4,6 +4,7 @@ name: "[schedule] weekly"
 # shortPages.js @Wednesday
 # tentativeTitle.js @Wednesday
 # checkEditgroupActivities.js @Thursday
+# fileRevisionDelete.js @Thursday
 # needImprove.js @Friday
 # needImproveWelcome.js @Friday
 
@@ -148,6 +149,27 @@ jobs:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
         run: node src/checkEditgroupActivities.js
+
+  file-revision-deletion:
+    if: |
+      github.event.schedule == '55 21 * * 3' || 
+      github.event.inputs.task == 'file-revision-deletion' ||
+      github.event.inputs.group == 'all'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run fileRevisionDelete.js
+        env:
+          CM_ABOT: ${{ secrets.CM_ABOT }}
+        run: node src/fileRevisionDelete.js
 
   need-improve:
     if: |
