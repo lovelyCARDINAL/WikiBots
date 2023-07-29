@@ -8,7 +8,7 @@ const SITE_LIST = ['zh', 'cm'];
 
 	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } }).post({
 		prop: 'revisions',
-		titles: 'User:星海子/NulleditInCategory.json',
+		titles: 'User:星海子/BotConfig/nulleditInCategory.json',
 		rvprop: 'content',
 	});
 	const setting = JSON.parse(content || '{}');

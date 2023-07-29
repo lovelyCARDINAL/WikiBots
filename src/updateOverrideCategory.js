@@ -14,7 +14,7 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
     
 	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await api.post({
 		prop: 'revisions',
-		titles: 'User:星海子/OverrideCategory.json',
+		titles: 'User:星海子/BotData/overrideCategory.json',
 		rvprop: 'content',
 	});
 	const setData = JSON.parse(content || '{}');

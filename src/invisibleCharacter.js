@@ -48,7 +48,7 @@ async function removeChar(pageid, wikitext, setting) {
         
 	const { data: { query: { recentchanges, pages: [{ revisions: [{ content }] }] } } } = await api.post({
 		prop: 'revisions',
-		titles: 'User:星海子/InvisibleCharacter.json',
+		titles: 'User:星海子/BotConfig/invisibleCharacter.json',
 		rvprop: 'content',
 		list: 'recentchanges',
 		rcprop: 'timestamp|ids',

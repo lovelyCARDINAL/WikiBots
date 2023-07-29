@@ -61,7 +61,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 
 	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await zhapi.post({
 		prop: 'revisions',
-		titles: 'User:星海子/IncorrectFileInfo.json',
+		titles: 'User:星海子/BotConfig/incorrectFileInfo.json',
 		rvprop: 'content',
 	});
 	const setting = JSON.parse(content);
