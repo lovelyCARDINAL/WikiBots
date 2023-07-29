@@ -39,8 +39,6 @@ const SITE_LIST = ['zh', 'cm'];
 				.filter((redirect) => redirect.ns === 14 && pageids.includes(redirect.pageid))
 				.flatMap((redirect) => [redirect.pageid, item.title]),
 			).filter((arr) => arr.length);
-
-			console.log(result);
 			
 			await Promise.all(
 				result.map(async ([pageid, target]) => {
