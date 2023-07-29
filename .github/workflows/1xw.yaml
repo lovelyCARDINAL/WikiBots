@@ -28,6 +28,7 @@ on:
           - "short-pages"
           - "tentative-title"
           - "check-editgroup-activities"
+          - "file-revision-deletion"
           - "need-improve"
           - "need-improve-welcome"
       group:
