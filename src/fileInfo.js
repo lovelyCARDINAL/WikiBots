@@ -1,3 +1,4 @@
+import process from 'process';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 import { getTimeData, editTimeData } from './utils/lastTime.js';
@@ -107,7 +108,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	})();
 
 	const lastTime = await getTimeData();
-	const leend = lastTime['file-info'],
+	const leend = lastTime['file-info'] ?? (console.error('No last time data!'), process.exit(1)),
 		lestart = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
 	const fileData = await (async () => {

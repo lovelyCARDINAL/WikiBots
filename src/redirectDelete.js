@@ -1,3 +1,4 @@
+import process from 'process';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 import { getTimeData, editTimeData } from './utils/lastTime.js';
@@ -53,7 +54,7 @@ async function pageDelete(pageid, reason) {
 	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 
 	const lastTime = await getTimeData();
-	const leend = lastTime['redirect-deletion'],
+	const leend = lastTime['redirect-deletion'] ?? (console.error('No last time data!'), process.exit(1)),
 		lestart = new Date(Date.now() - 3 * 60 * 1000).toISOString();
 
 	await Promise.all(
