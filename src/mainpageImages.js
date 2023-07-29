@@ -138,7 +138,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 
 	const { data: { parse: { wikitext } } } = await zhapi.post({
 		action: 'parse',
-		page: 'User:星海子/MainpageImage.json',
+		page: 'User:星海子/BotData/mainpageImage.json',
 		prop: 'wikitext',
 	});
 	const originImgList = JSON.parse(wikitext).sort();
@@ -146,7 +146,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	if (JSON.stringify(newImgList) === JSON.stringify(originImgList)) {
 		console.log('No change!');
 	} else {
-		await pageEdit('User:星海子/MainpageImage.json', JSON.stringify(newImgList), '更新首页图片数据');
+		await pageEdit('User:星海子/BotData/mainpageImage.json', JSON.stringify(newImgList), '更新首页图片数据');
 
 		const delImgList = originImgList.filter((imgName) => !newImgList.includes(imgName));
 		if (delImgList.length) {
