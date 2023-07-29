@@ -1,4 +1,3 @@
-import process from 'process';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 import { getTimeData, editTimeData } from './utils/lastTime.js';
@@ -43,8 +42,8 @@ async function removeChar(pageid, wikitext, setting) {
 	
 	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
 
-	const lastTime = await getTimeData();
-	const rcend = lastTime['invisible-character'] ?? (console.error('No last time data!'), process.exit(6)),
+	const lastTime = await getTimeData('invisible-character');
+	const rcend = lastTime['invisible-character'],
 		rcstart = new Date().toISOString();
         
 	const { data: { query: { recentchanges, pages: [{ revisions: [{ content }] }] } } } = await api.post({
