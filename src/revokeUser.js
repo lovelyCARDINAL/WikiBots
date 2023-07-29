@@ -59,7 +59,7 @@ async function deleteAvatar(user) {
 		'delete': 'true',
 		user,
 		reason: '用户注销',
-	}), { retry: 10 }).then(() => {
+	})).then(() => {
 		console.log(`Deleted avatar of User:${user}.`);
 	});
 }
