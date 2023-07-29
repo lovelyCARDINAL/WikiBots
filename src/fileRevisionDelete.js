@@ -66,6 +66,9 @@ const api = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': confi
 			reason: '删除长期未使用的旧版本文件',
 			tags: 'Bot',
 		}, { retry: 10, noCache: true });
+
+		data.revisiondelete.items = data.revisiondelete.items.map(({ status, archivename, timestamp }) => ({ status, archivename, timestamp }));
+		
 		console.log(JSON.stringify(data));
 	}));
 
