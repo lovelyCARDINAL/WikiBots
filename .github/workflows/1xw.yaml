@@ -42,6 +42,7 @@ on:
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   bad-file-name:

@@ -42,6 +42,7 @@ const api = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': confi
 				pageids: ids,
 				iiprop: 'archivename',
 				iilimit: 'max',
+				redirects: true,
 			}, { retry: 10 });
 			return await Promise.all(pages.map((page) => {
 				const ids = page.imageinfo
@@ -68,7 +69,7 @@ const api = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': confi
 		console.log(JSON.stringify(data));
 	}));
 
-	await editTimeData('file-revision-deletion');
+	await editTimeData(lastTime, 'file-revision-deletion', lestart);
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
