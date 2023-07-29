@@ -1,18 +1,18 @@
 import { Buffer } from 'buffer';
-import { env } from 'process';
+import process from 'process';
 import { Octokit } from '@octokit/core';
 import { load, dump } from 'js-yaml';
 
 const octokit = new Octokit({
-	auth: env.GITHUB_TOKEN,
+	auth: process.env.GITHUB_TOKEN,
 });
 
 /**
  * @returns {Promise<Object>}
  */
-async function getTimeData() {
+async function getTimeData(type) {
 	try {
-		const { data } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
+		const { data: raw } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
 			owner: 'lovelyCARDINAL',
 			repo: 'WikiBots',
 			path: 'data/time.yaml',
@@ -20,9 +20,14 @@ async function getTimeData() {
 				format: 'raw',
 			},
 		});
-		return load(data);
-	} catch (error) {
-		console.error('ERROR:', error);
+		const data = load(raw);
+		if (!data[type]) {
+			throw new Error(`No last time data of ${type}!`);
+		}
+		return data;
+	} catch (err) {
+		console.error(err);
+		process.exit(6);
 	}
 }
 
@@ -53,8 +58,9 @@ async function editTimeData(origin, type, string) {
 		});
 
 		console.log('SUCCESS!');
-	} catch (error) {
-		console.error('ERROR:', error);
+	} catch (err) {
+		console.error(err);
+		process.exit(1);
 	}
 }
 
