@@ -63,9 +63,8 @@ async function deleteAvatar(user) {
 			reason: '用户注销',
 		}));
 		if (data.includes('该用户没有头像。')) {
-			retry = 99;
 			console.log(`Successful deleted the avatar of ${user}`);
-			continue;
+			break;
 		}
 		retry++;
 		if (retry === 10) {
@@ -120,8 +119,8 @@ async function queryLogs(api, leaction, leuser) {
 		lelimit: 'max',
 	}, { retry: 10 });
 	return logevents
-		.filter((log) => !log?.suppressed && log.comment === '用户注销')
-		.map((log) => log.logid);
+		.filter(({ suppressed, comment }) => !suppressed && comment === '用户注销')
+		.map(({ logid }) => logid);
 }
 
 async function hideLogs(api, ids) {

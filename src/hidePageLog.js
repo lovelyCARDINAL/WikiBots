@@ -56,8 +56,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 		})).then((result) => result.flat());
 
 		if (!ids.length) {
-			retry = 99;
-			continue;
+			break;
 		}
 		console.log(`Retry: ${retry}, ids: ${ids.length}`);
 
