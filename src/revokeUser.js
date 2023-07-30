@@ -54,12 +54,24 @@ async function manageTags(operation) {
 }
 
 async function deleteAvatar(user) {
-	await cmabot.request.post('/index.php', jsonToFormData({
-		title: 'Special:查看头像',
-		'delete': 'true',
-		user,
-		reason: '用户注销',
-	})).then(() => console.log(`Deleted avatar of User:${user}.`));
+	let retry = 0;
+	while (retry < 10) {
+		const { response: { data } } = await cmabot.request.post('/index.php', jsonToFormData({
+			title: 'Special:查看头像',
+			'delete': 'true',
+			user,
+			reason: '用户注销',
+		}));
+		if (data.includes('该用户没有头像.')) {
+			retry = 99;
+			console.log(`Successful deleted the avatar of ${user}`);
+			continue;
+		}
+		retry++;
+		if (retry === 10) {
+			console.warn(`Failed to delete the avatar of ${user}`);
+		}
+	}
 }
 
 async function deleteRights(user) {
