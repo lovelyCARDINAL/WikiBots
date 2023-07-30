@@ -1,0 +1,75 @@
+name: "[schedule] semiweekly"
+# hidePageLog.js @Monday & Friday
+# hideUserLog.js @Wednesday & Sunday
+
+on:
+  schedule:
+    - cron: "50 13 * * 0,4" # Monday,Friday 21:50 CST
+    - cron: "50 13 * * 2,6" # Wednesday,Sunday 21:50 CST
+  workflow_dispatch:
+    inputs:
+      task:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "hide-page-log"
+          - "hide-user-log"
+      group:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "hide-log"
+          - "all"
+
+env:
+  MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  bad-file-name:
+    if: |
+      github.event.schedule == '50 13 * * 0,4' || 
+      github.event.inputs.task == 'hide-page-log' ||
+      github.event.inputs.group == 'hide-log' ||
+      github.event.inputs.group == 'all'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run hidePageLog.js
+        env:
+          MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
+        run: node src/hidePageLog.js
+
+  most-transcluded-pages:
+    if: |
+      github.event.schedule == '50 13 * * 2,6' || 
+      github.event.inputs.task == 'hide-user-log' ||
+      github.event.inputs.group == 'hide-log' ||
+      github.event.inputs.group == 'all'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run hideUserLog.js
+        env:
+          MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
+        run: node src/hideUserLog.js
