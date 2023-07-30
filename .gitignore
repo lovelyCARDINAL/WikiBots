@@ -199,4 +199,3 @@ dist
 # Personal
 */test*
 src/utils/localConfig.js
-src/hide*.js
