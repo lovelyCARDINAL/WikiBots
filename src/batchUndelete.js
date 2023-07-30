@@ -3,15 +3,19 @@ import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
 
 const site = env.SITE;
-const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent } });
+const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent } }),
+	main = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } });
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
-	await api.login(config[site].abot.name, config[site].abot.password).then(console.log);
+	await Promise.all([
+		api.login(config[site].abot.name, config[site].abot.password).then(console.log),
+		main.login(config.zh.abot.name, config.zh.abot.password).then(console.log),
+	]);
 
 	const titles = await (async () => {
-		const { data: { parse: { wikitext } } } = await new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } }).post({
+		const { data: { parse: { wikitext } } } = await main.post({
 			action: 'parse',
 			page: 'User:星海子/BotConfig',
 			prop: 'wikitext',
@@ -72,6 +76,22 @@ const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': co
 			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}
 	}));
-	
+
+	await main.postWithToken('csrf', {
+		action: 'edit',
+		title: 'User:星海子/BotConfig',
+		section: '2',
+		text: '== Queue ==\n<poem>\n\n</poem>',
+		summary: '清空任务队列',
+		tags: 'Bot',
+		bot: true,
+		minor: true,
+		nocreate: true,
+		watchlist: 'nochange',
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
+
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
