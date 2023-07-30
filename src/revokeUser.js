@@ -62,7 +62,7 @@ async function deleteAvatar(user) {
 			user,
 			reason: '用户注销',
 		}));
-		if (data.includes('该用户没有头像.')) {
+		if (data.includes('该用户没有头像。')) {
 			retry = 99;
 			console.log(`Successful deleted the avatar of ${user}`);
 			continue;
