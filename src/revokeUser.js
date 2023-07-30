@@ -59,21 +59,21 @@ async function deleteAvatar(user) {
 		'delete': 'true',
 		user,
 		reason: '用户注销',
-	})).then(() => {
-		console.log(`Deleted avatar of User:${user}.`);
-	});
+	})).then(() => console.log(`Deleted avatar of User:${user}.`));
 }
 
 async function deleteRights(user) {
-	const { data } = await cmabot.postWithToken('userrights', {
+	await cmabot.postWithToken('userrights', {
 		action: 'userrights',
 		user,
 		remove: 'goodeditor|honoredmaintainer|techeditor|manually-confirmed|file-maintainer|extendedconfirmed',
 		reason: '用户注销',
 		tags: 'Bot',
 		formatversion: '2',
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 async function deletePages(user) {
@@ -86,13 +86,15 @@ async function deletePages(user) {
 		.map((page) => page.title)
 		.filter((title) => title.startsWith(`User:${user}/`) || title === `User:${user}`);
 	await Promise.all(pagelist.map(async (title) => {
-		const { data } = await zhsbot.postWithToken('csrf', {
+		await zhsbot.postWithToken('csrf', {
 			action: 'delete',
 			title,
 			reason: '用户注销',
 			tags: 'Bot|RevokeUser',
-		}, { retry: 10, noCache: true });
-		/cantedit|protected/.test(data?.errors?.[0]?.code) ? console.warn(`[[${title}]] is protected.`) : console.log(JSON.stringify(data));
+		}, {
+			retry: 10,
+			noCache: true,
+		}).then(({ data }) => /cantedit|protected/.test(data?.errors?.[0]?.code) ? console.warn(`[[${title}]] is protected.`) : console.log(JSON.stringify(data)));
 	}));
 }
 
@@ -111,7 +113,7 @@ async function queryLogs(api, leaction, leuser) {
 }
 
 async function hideLogs(api, ids) {
-	const { data } = await api.postWithToken('csrf', {
+	await api.postWithToken('csrf', {
 		action: 'revisiondelete',
 		type: 'logging',
 		ids,
@@ -119,8 +121,10 @@ async function hideLogs(api, ids) {
 		suppress: 'yes',
 		reason: '用户注销',
 		tags: 'Bot',
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 (async () => {

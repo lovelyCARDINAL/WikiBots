@@ -33,7 +33,7 @@ const SITE_LIST = ['zh', 'cm'];
 					if (pagelist.length) {
 						await Promise.all(
 							pagelist.map(async (pageid) => {
-								const { data } = await api.postWithToken('csrf', {
+								await api.postWithToken('csrf', {
 									action: 'edit',
 									pageid,
 									appendtext: '',
@@ -43,8 +43,10 @@ const SITE_LIST = ['zh', 'cm'];
 									tags: 'Bot',
 									summary: '空编辑以刷新分类表',
 									watchlist: 'nochange',
-								}, { retry: 10, noCache: true });
-								console.log(JSON.stringify(data));
+								}, {
+									retry: 10,
+									noCache: true,
+								}).then(({ data }) => console.log(JSON.stringify(data)));
 							}),
 						);
 					} else {

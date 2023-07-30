@@ -57,7 +57,7 @@ const api = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': confi
 	})).then((result) => result.flat().filter(Boolean));
 
 	await Promise.all(archivelist.map(async ([target, ids]) => {
-		const { data } = await api.postWithToken('csrf', {
+		await api.postWithToken('csrf', {
 			action: 'revisiondelete',
 			target,
 			ids,
@@ -65,11 +65,14 @@ const api = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': confi
 			hide: 'content',
 			reason: '删除长期未使用的旧版本文件',
 			tags: 'Bot',
-		}, { retry: 10, noCache: true });
-
-		data.revisiondelete.items = data.revisiondelete.items.map(({ status, archivename, timestamp }) => ({ status, archivename, timestamp }));
-		
-		console.log(JSON.stringify(data));
+		}, {
+			retry: 10,
+			noCache: true,
+		}).then(({ data }) => {
+			data.revisiondelete.items = data.revisiondelete.items
+				.map(({ status, archivename, timestamp }) => ({ status, archivename, timestamp }));
+			console.log(JSON.stringify(data));
+		});
 	}));
 
 	await editTimeData(lastTime, 'file-revision-deletion', lestart);

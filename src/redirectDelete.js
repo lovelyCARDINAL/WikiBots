@@ -37,14 +37,16 @@ async function ruleTest2(item) {
 }
 
 async function pageDelete(pageid, reason) {
-	const { data } = await api.postWithToken('csrf', {
+	await api.postWithToken('csrf', {
 		action: 'delete',
 		pageid,
 		reason,
 		tags: 'Bot',
 		watchlist: 'nochange',
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 (async () => {

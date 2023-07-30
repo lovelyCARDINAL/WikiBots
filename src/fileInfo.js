@@ -37,7 +37,7 @@ function linkRuleTest(str) {
 }
 
 async function pageEdit(title, text, summary, sectiontitle) {
-	const { data } = await zhapi.postWithToken('csrf', {
+	await zhapi.postWithToken('csrf', {
 		action: 'edit',
 		title,
 		sectiontitle,
@@ -47,8 +47,10 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		summary,
 		watchlist: 'nochange',
 		bot: true,
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 (async () => {
@@ -174,7 +176,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	}));
 
 	if (appendtext) {
-		const { data } = await zhapi.postWithToken('csrf', {
+		await zhapi.postWithToken('csrf', {
 			action: 'edit',
 			pageid: '541069',
 			summary: 'log: file-info',
@@ -183,8 +185,10 @@ async function pageEdit(title, text, summary, sectiontitle) {
 			bot: true,
 			minor: true,
 			watchlist: 'nochange',
-		}, { retry: 10, noCache: true });
-		console.log(JSON.stringify(data));
+		}, {
+			retry: 10,
+			noCache: true,
+		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}
 
 	await editTimeData(lastTime, 'file-info', lestart);

@@ -7,13 +7,15 @@ const site = env.SITE;
 const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent } });
 
 async function pageDelete(pageid, user, reason) {
-	const { data } = await api.postWithToken('csrf', {
+	await api.postWithToken('csrf', {
 		action: 'delete',
 		reason: `批量删除[[Cat:即将删除的页面]]（[[User_talk:${user}|${user}]]的挂删理由：${reason} ）`,
 		pageid,
 		tags: 'Automation tool',
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 (async () => {

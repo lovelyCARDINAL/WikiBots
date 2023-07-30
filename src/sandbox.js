@@ -30,7 +30,7 @@ const PAGE_MAP = {
 };
 
 async function pageProtect(title) {
-	const { data } = await api.postWithToken('csrf', {
+	await api.postWithToken('csrf', {
 		action: 'protect',
 		title,
 		protections: 'move=sysop',
@@ -38,12 +38,14 @@ async function pageProtect(title) {
 		reason: '公共沙盒保护',
 		tags: 'Bot',
 		watchlist: 'nochange',
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 async function pageEdit(title) {
-	const { data } = await api.postWithToken('csrf', {
+	await api.postWithToken('csrf', {
 		action: 'edit',
 		title,
 		text: PAGE_MAP[title].content,
@@ -53,8 +55,10 @@ async function pageEdit(title) {
 		tags: 'Bot',
 		summary: PAGE_MAP[title].summary,
 		watchlist: 'nochange',
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 (async () => {
