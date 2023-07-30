@@ -6,7 +6,7 @@ const zhapi = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': con
 
 const time = {
 	start: new Date().toISOString(),
-	end: new Date(new Date() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+	end: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
 };
 
 function userInfo(user) {
