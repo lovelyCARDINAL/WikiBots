@@ -6,18 +6,6 @@ import config from './utils/config.js';
 const site = env.SITE;
 const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent } });
 
-async function pageDelete(pageid, user, reason) {
-	await api.postWithToken('csrf', {
-		action: 'delete',
-		reason: `批量删除[[Cat:即将删除的页面]]（[[User_talk:${user}|${user}]]的挂删理由：${reason} ）`,
-		pageid,
-		tags: 'Automation tool',
-	}, {
-		retry: 10,
-		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
-}
-
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
@@ -61,6 +49,7 @@ async function pageDelete(pageid, user, reason) {
 		if (!content || !userlist.includes(lastEditUser)) {
 			return;
 		}
+
 		const wikitext = Parser.parse(content);
 		const templateUser = wikitext.querySelector('template#Template:即将删除').getValue('user');
 		if (lastEditUser !== templateUser || !userlist.includes(templateUser)) {
@@ -70,7 +59,16 @@ async function pageDelete(pageid, user, reason) {
 		if (!reason) {
 			return;
 		}
-		await pageDelete(pageid, lastEditUser, reason);
+
+		await api.postWithToken('csrf', {
+			action: 'delete',
+			reason: `批量删除[[Cat:即将删除的页面]]（[[User_talk:${lastEditUser}|${lastEditUser}]]的挂删理由：${reason} ）`,
+			pageid,
+			tags: 'Automation tool',
+		}, {
+			retry: 10,
+			noCache: true,
+		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}));
 
 	console.log(`End time: ${new Date().toISOString()}`);
