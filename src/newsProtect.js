@@ -39,7 +39,7 @@ async function queryPages(apprefix, apprtype, apprlevel) {
 	if (pagelist.length) {
 		await Promise.all(
 			pagelist.map(async (title) => {
-				const { data } = await api.post({
+				await api.postWithToken('csrf', {
 					action: 'protect',
 					title,
 					protections: 'edit=patrolleredit|move=sysop',
@@ -47,8 +47,10 @@ async function queryPages(apprefix, apprtype, apprlevel) {
 					reason: '月报存档',
 					tags: 'Bot',
 					watchlist: 'nochange',
-				});
-				console.log(JSON.stringify(data));
+				}, {
+					retry: 10,
+					noCache: true,
+				}).then(({ data }) => console.log(JSON.stringify(data)));
 			}),
 		);
 	} else {

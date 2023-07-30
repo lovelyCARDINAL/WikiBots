@@ -6,12 +6,14 @@ import splitAndJoin from './utils/splitAndJoin.js';
 const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } });
 
 async function watch(titles, unwatch) {
-	const { data } = await api.postWithToken('watch', {
+	await api.postWithToken('watch', {
 		action: 'watch',
 		titles,
 		...unwatch && { unwatch },
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 (async () => {

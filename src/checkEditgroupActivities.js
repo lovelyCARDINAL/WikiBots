@@ -35,7 +35,7 @@ async function queryContribs(api, ucuser) {
 }
 
 async function updateData(text) {
-	const { data } = await zhapi.postWithToken('csrf', {
+	await zhapi.postWithToken('csrf', {
 		action: 'edit',
 		pageid: '544630',
 		text,
@@ -45,8 +45,10 @@ async function updateData(text) {
 		nocreate: true,
 		tags: 'Bot',
 		watchlist: 'nochange',
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 (async () => {

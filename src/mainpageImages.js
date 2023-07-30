@@ -52,7 +52,7 @@ function findImageName(imgSrc) {
 }
 
 async function pageProtect(title, protections, reason) {
-	const { data } = await cmapi.postWithToken('csrf', {
+	await cmapi.postWithToken('csrf', {
 		action: 'protect',
 		reason,
 		protections,
@@ -60,12 +60,14 @@ async function pageProtect(title, protections, reason) {
 		...protections && { expiry: 'infinite' },
 		tags: 'Bot',
 		watchlist: 'nochange',
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 async function pageEdit(title, text, summary, sectiontitle) {
-	const { data } = await zhapi.postWithToken('csrf', {
+	await zhapi.postWithToken('csrf', {
 		action: 'edit',
 		title,
 		...sectiontitle && { section: 'new', sectiontitle },
@@ -76,8 +78,10 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		bot: true,
 		nocreate: true,
 		notminor: true,
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 (async () => {

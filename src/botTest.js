@@ -8,7 +8,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 	
 	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
 
-	const { data } = await api.postWithToken('csrf', {
+	await api.postWithToken('csrf', {
 		action: 'edit',
 		title: 'User:星海子/test/001',
 		text: `${new Date().toISOString()}`,
@@ -16,6 +16,8 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 		bot: true,
 		minor: true,
 		tags: 'Bot',
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 })();

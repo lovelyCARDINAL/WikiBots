@@ -23,7 +23,7 @@ function replaceSpecialCharacters(wikitext, pageid, setting) {
 }
 
 async function removeChar(pageid, wikitext, setting) {
-	const { data } = await api.postWithToken('csrf', {
+	await api.postWithToken('csrf', {
 		action: 'edit',
 		pageid,
 		text: replaceSpecialCharacters(wikitext, pageid, setting),
@@ -33,8 +33,10 @@ async function removeChar(pageid, wikitext, setting) {
 		tags: 'Bot',
 		summary: '移除不可见字符',
 		watchlist: 'nochange',
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
 (async () => {

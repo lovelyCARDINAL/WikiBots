@@ -42,7 +42,7 @@ const SITE_LIST = ['zh', 'cm'];
 			
 			await Promise.all(
 				result.map(async ([pageid, target]) => {
-					const { data } = await api.postWithToken('csrf', {
+					await api.postWithToken('csrf', {
 						action: 'edit',
 						pageid,
 						appendtext: `\n{{Cr|${target.replace('Category:', '')}}}`,
@@ -52,8 +52,10 @@ const SITE_LIST = ['zh', 'cm'];
 						tags: 'Bot',
 						summary: `添加至「[[:${target}]]」的[[Template:分类重定向|分类重定向]]`,
 						watchlist: 'nochange',
-					}, { retry: 10, noCache: true });
-					console.log(JSON.stringify(data));
+					}, {
+						retry: 10,
+						noCache: true,
+					}).then(({ data }) => console.log(JSON.stringify(data)));
 				}),
 			);
 		}),

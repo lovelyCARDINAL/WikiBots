@@ -16,14 +16,16 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 	if (results.length) {
 		await Promise.all(results.map(async (item) => {
 			if (item.ns === 2 || item.title % 2 === 1) {
-				const { data } = await api.postWithToken('csrf', {
+				await api.postWithToken('csrf', {
 					action: 'delete',
 					title: item.title,
 					reason: '受损重定向',
 					tags: 'Bot',
 					watchlist: 'nochange',
-				}, { retry: 10, noCache: true });
-				console.log(JSON.stringify(data));
+				}, {
+					retry: 10,
+					noCache: true,
+				}).then(({ data }) => console.log(JSON.stringify(data)));
 			}
 		}));
 	} else {

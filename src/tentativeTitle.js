@@ -59,7 +59,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 	}
 	text += '|}\n\n[[Category:萌娘百科数据报告]]';
 
-	const { data } = await api.postWithToken('csrf', {
+	await api.postWithToken('csrf', {
 		action: 'edit',
 		pageid: '546073',
 		text,
@@ -68,8 +68,10 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 		notminor: true,
 		tags: 'Bot',
 		watchlist: 'nochange',
-	}, { retry: 10, noCache: true });
-	console.log(JSON.stringify(data));
+	}, {
+		retry: 10,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

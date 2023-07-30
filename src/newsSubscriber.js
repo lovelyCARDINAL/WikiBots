@@ -45,7 +45,7 @@ async function isActive(user) {
 		const userRegex = new RegExp(`#[ _]\\[\\[User[ _]talk:(${userlist.join('|')})(\\/[^\\]]+)?\\]\\]\n`, 'gi');
 		const text = wikitext.replace(userRegex, '');
 			
-		const { data } = await api.postWithToken('csrf', {
+		await api.postWithToken('csrf', {
 			action: 'edit',
 			pageid: '488029',
 			text,
@@ -56,8 +56,10 @@ async function isActive(user) {
 			bot: true,
 			nocreate: true,
 			watchlist: 'nochange',
-		}, { retry: 10, noCache: true });
-		console.log(JSON.stringify(data));
+		}, {
+			retry: 10,
+			noCache: true,
+		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}
 
 	console.log(`End time: ${new Date().toISOString()}`);
