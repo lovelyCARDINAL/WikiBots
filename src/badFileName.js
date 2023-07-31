@@ -5,8 +5,9 @@ const zhapi = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': con
 	cmapi = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent } });
 
 const MAP = {
-	'A-G': ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
-	'H-N': ['H', 'I', 'J', 'K', 'L', 'M', 'N'],
+	'A-D': ['A', 'B', 'C', 'D'],
+	'E-J': ['E', 'F', 'G', 'H', 'I', 'J'],
+	'K-N': ['K', 'L', 'M', 'N'],
 	'O-T': ['O', 'P', 'Q', 'R', 'S', 'T'],
 	'U-Z': ['U', 'V', 'W', 'X', 'Y', 'Z'],
 	'0-1': ['0', '1'],
@@ -70,10 +71,20 @@ async function updateData(title, text) {
 		cmapi.login(config.cm.ibot.name, config.cm.ibot.password).then(console.log),
 	]);
 
+	const excludeRegex = await (async () => {
+		const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await zhapi.post({
+			prop: 'revisions',
+			titles: 'User:星海子/BotConfig/excludeFilePrefix.json',
+			rvprop: 'content',
+		});
+		const exclude = JSON.parse(content).join('|');
+		return new RegExp(`^File:(?!${exclude}).+?$`);
+	})();
+
 	await Promise.all(Object.entries(MAP).map(async ([key, value]) => {
 		const pagelist = await Promise.all(value.map(async (char) => {
 			return await queryFiles(char);
-		})).then((result) => result.flat().filter((item) => isBadTitle(item[0])));
+		})).then((result) => result.flat().filter((item) => excludeRegex.test(item[0]) && isBadTitle(item[0])));
 
 		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的命名不当的文件名，以供维护人员检查。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable center plainlinks" style="word-break:break-all"\n|-\n! width=17%|页面ID !! 文件名 !! width=23%|操作\n';
 		for (const [title, pageid] of pagelist) {
