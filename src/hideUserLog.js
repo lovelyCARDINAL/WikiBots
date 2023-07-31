@@ -38,7 +38,8 @@ async function queryPages(apprefix, apnamespace) {
 		apprefix,
 		apnamespace,
 	}, { retry: 10 });
-	const prefixRegex = new RegExp(`^User(?: talk)?:(${apprefix}|${apprefix}/.*)$`);
+	const user = apprefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const prefixRegex = new RegExp(`^User(?: talk)?:(${user}|${user}/.*)$`);
 	return allpages
 		.map((page) => page.title)
 		.filter((title) => prefixRegex.test(title));

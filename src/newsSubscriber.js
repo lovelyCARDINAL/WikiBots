@@ -42,7 +42,8 @@ async function isActive(user) {
 	})();
 		
 	if (userlist.length) {
-		const userRegex = new RegExp(`#[ _]\\[\\[User[ _]talk:(${userlist.join('|')})(\\/[^\\]]+)?\\]\\]\n`, 'gi');
+		const userlistString = userlist.map((user) => user.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+		const userRegex = new RegExp(`#[ _]\\[\\[User[ _]talk:(${userlistString})(\\/[^\\]]+)?\\]\\]\n`, 'gi');
 		const text = wikitext.replace(userRegex, '');
 			
 		await api.postWithToken('csrf', {
