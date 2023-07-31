@@ -1,3 +1,4 @@
+import { load } from 'cheerio';
 import { MediaWikiApi } from 'wiki-saikou';
 import clientLogin from './utils/clientLogin.js';
 import config from './utils/config.js';
@@ -43,33 +44,50 @@ async function queryPages(apprefix, apnamespace) {
 		.filter((title) => prefixRegex.test(title));
 }
 
-//TODO: To fix the issue of hiding the page and improve the loop if there is a return.
 async function hidePages(user) {
-	let retry = 0;
-	while (retry < 20) {
-		const pagelist = await Promise.all([
-			queryPages(user, '2'),
-			queryPages(user, '3'),
-		]).then((result) => result.flat());
+	const pagelist = await Promise.all([
+		queryPages(user, '2'),
+		queryPages(user, '3'),
+	]).then((result) => result.flat());
 
-		if (!pagelist.length) {
-			break;
-		}
-
-		await Promise.all(pagelist.map(async (title) => {
-			await zhapi.request.post('/index.php', {
-				title,
-				action: 'delete',
-				wpDeleteReasonList: 'other',
-				wpReason: '被隐藏的用户',
-				wpSuppress: '',
-				wpConfirmB: '删除页面',
-				wpEditToken: await zhapi.token('csrf'),
+	await Promise.all(pagelist.map(async (title) => {
+		let retry = 0;
+		while (retry < 20) {
+			const { response: { data: htmlString } } = await zhapi.request.get('/index.php', {
+				query: {
+					title: 'User:星海子/test/006',
+					action: 'delete',
+				},
 			});
-		}));
 
-		retry++;
-	}
+			if (htmlString.includes('<title>无法删除页面')) {
+				console.warn('The page could not be deleted. It may have already been deleted by someone else.');
+				break;
+			}
+
+			const $ = load(htmlString);
+			const wpEditToken = $('[name="wpEditToken"]').get(0)?.attribs.value;
+
+			if (wpEditToken) {
+				const { response: { data } } = await zhapi.request.post('/index.php', {
+					title,
+					action: 'delete',
+					wpDeleteReasonList: 'other',
+					wpReason: '被隐藏的用户',
+					wpSuppress: '',
+					wpConfirmB: '删除页面',
+					wpEditToken,
+				});
+				if (data.includes('<title>操作完成')) {
+					console.log('Successful deleted the page');
+					break;
+				}
+			}
+
+			console.warn(`删除页面失败。重试第 ${retry} 次...`);
+			retry++;
+		}
+	}));
 }
 
 async function hideAbuseLog(afluser) {
