@@ -1,7 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import clientLogin from './utils/clientLogin.js';
 import config from './utils/config.js';
-import jsonToFormData from './utils/jsonToFormData.js';
 import { getTimeData, editTimeData } from './utils/lastTime.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
@@ -58,7 +57,7 @@ async function hidePages(user) {
 		}
 
 		await Promise.all(pagelist.map(async (title) => {
-			await zhapi.request.post('/index.php', jsonToFormData({
+			await zhapi.request.post('/index.php', {
 				title,
 				action: 'delete',
 				wpDeleteReasonList: 'other',
@@ -66,7 +65,7 @@ async function hidePages(user) {
 				wpSuppress: '',
 				wpConfirmB: '删除页面',
 				wpEditToken: await zhapi.token('csrf'),
-			}));
+			});
 		}));
 
 		retry++;
@@ -100,14 +99,14 @@ async function hideAbuseLog(afluser) {
 		console.log(`Retry: ${retry}, ids: ${ids.length}`);
 
 		await Promise.all(ids.map(async (id) => {
-			await zhapi.request.post('/index.php', jsonToFormData({
+			await zhapi.request.post('/index.php', {
 				title: 'Special:滥用日志',
 				hide: id,
 				wpdropdownreason: 'other',
 				wpreason: '被隐藏的用户',
 				wphidden: true,
 				wpEditToken: await zhapi.token('csrf'),
-			})).then(() => console.log(`Try to hide ${id}`));
+			}).then(() => console.log(`Try to hide ${id}`));
 		}));
 
 		retry++;
@@ -117,12 +116,12 @@ async function hideAbuseLog(afluser) {
 async function deleteAvatar(user) {
 	let retry = 0;
 	while (retry < 10) {
-		const { response: { data } } = await abot.request.post('/index.php', jsonToFormData({
+		const { response: { data } } = await abot.request.post('/index.php', {
 			title: 'Special:查看头像',
 			'delete': 'true',
 			user,
 			reason: '被隐藏的用户',
-		}));
+		});
 		if (data.includes('该用户没有头像。')) {
 			console.log('Successful deleted the avatar!');
 			break;
