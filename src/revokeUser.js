@@ -5,7 +5,6 @@ import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import clientLogin from './utils/clientLogin.js';
 import config from './utils/config.js';
-import jsonToFormData from './utils/jsonToFormData.js';
 
 const zhabot = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } }),
 	cmabot = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent } }),
@@ -56,12 +55,12 @@ async function manageTags(operation) {
 async function deleteAvatar(user) {
 	let retry = 0;
 	while (retry < 10) {
-		const { response: { data } } = await cmabot.request.post('/index.php', jsonToFormData({
+		const { response: { data } } = await cmabot.request.post('/index.php', {
 			title: 'Special:查看头像',
 			'delete': 'true',
 			user,
 			reason: '用户注销',
-		}));
+		});
 		if (data.includes('该用户没有头像。')) {
 			console.log(`Successful deleted the avatar of ${user}`);
 			break;

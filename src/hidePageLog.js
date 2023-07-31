@@ -1,7 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import clientLogin from './utils/clientLogin.js';
 import config from './utils/config.js';
-import jsonToFormData from './utils/jsonToFormData.js';
 import { getTimeData, editTimeData } from './utils/lastTime.js';
 
 const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } });
@@ -61,14 +60,14 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 		console.log(`Retry: ${retry}, ids: ${ids.length}`);
 
 		await Promise.all(ids.map(async (id) => {
-			await api.request.post('/index.php', jsonToFormData({
+			await api.request.post('/index.php', {
 				title: 'Special:滥用日志',
 				hide: id,
 				wpdropdownreason: 'other',
 				wpreason: '被隐藏的页面',
 				wphidden: true,
 				wpEditToken: await api.token('csrf'),
-			})).then(() => console.log(`Try to hide ${id}`));
+			}).then(() => console.log(`Try to hide ${id}`));
 		}));
 
 		retry++;
