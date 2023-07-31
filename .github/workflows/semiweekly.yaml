@@ -30,7 +30,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  bad-file-name:
+  hide-page-log:
     if: |
       github.event.schedule == '50 13 * * 0,4' || 
       github.event.inputs.task == 'hide-page-log' ||
@@ -52,7 +52,7 @@ jobs:
           MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
         run: node src/hidePageLog.js
 
-  most-transcluded-pages:
+  hide-user-log:
     if: |
       github.event.schedule == '50 13 * * 2,6' || 
       github.event.inputs.task == 'hide-user-log' ||
