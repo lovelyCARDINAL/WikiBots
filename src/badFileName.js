@@ -36,8 +36,8 @@ async function queryFiles(apprefix) {
 }
 
 function isBadTitle(fulltitle) {
-	const title = fulltitle.replace(/^File:(.+?)\.\w{3,4}$/, '$1');
-	const isDoubleExtension = /\.\w{3,4}$/.test(title);
+	const title = fulltitle.replace(/^File:(.+?)\.(?:ogg|ogv|oga|flac|opus|wav|webm|mp3|png|gif|jpg|jpeg|webp|svg|pdf|jp2|ttf|woff2|mp4)$/i, '$1');
+	const isDoubleExtension = /\.(?:ogg|ogv|oga|flac|opus|wav|webm|mp3|png|gif|jpg|jpeg|webp|svg|pdf|jp2|ttf|woff2|mp4)$/i.test(title);
 	const isSymbolStart = /^\W/.test(title);
 	if (isDoubleExtension || isSymbolStart) {
 		return true;
@@ -77,7 +77,7 @@ async function updateData(title, text) {
 			titles: 'User:星海子/BotConfig/excludeFilePrefix.json',
 			rvprop: 'content',
 		});
-		const exclude = JSON.parse(content).join('|');
+		const exclude = JSON.parse(content).flat(Infinity).join('|');
 		return new RegExp(`^File:(?!${exclude}).+?$`);
 	})();
 
