@@ -4,8 +4,8 @@ name: "[schedule] semiweekly"
 
 on:
   schedule:
-    - cron: "50 13 * * 0,4" # Monday,Friday 21:50 CST
-    - cron: "50 13 * * 2,6" # Wednesday,Sunday 21:50 CST
+    - cron: "50 13 * * 1,5" # Monday,Friday 21:50 CST
+    - cron: "50 13 * * 3,0" # Wednesday,Sunday 21:50 CST
   workflow_dispatch:
     inputs:
       task:
@@ -32,7 +32,7 @@ env:
 jobs:
   hide-page-log:
     if: |
-      github.event.schedule == '50 13 * * 0,4' || 
+      github.event.schedule == '50 13 * * 1,5' || 
       github.event.inputs.task == 'hide-page-log' ||
       github.event.inputs.group == 'hide-log' ||
       github.event.inputs.group == 'all'
@@ -54,7 +54,7 @@ jobs:
 
   hide-user-log:
     if: |
-      github.event.schedule == '50 13 * * 2,6' || 
+      github.event.schedule == '50 13 * * 3,0' || 
       github.event.inputs.task == 'hide-user-log' ||
       github.event.inputs.group == 'hide-log' ||
       github.event.inputs.group == 'all'
