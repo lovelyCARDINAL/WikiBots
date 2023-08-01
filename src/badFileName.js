@@ -37,7 +37,7 @@ async function queryFiles(apprefix) {
 
 function isBadTitle(fulltitle) {
 	const title = fulltitle.replace(/^File:(.+?)\.(?:ogg|ogv|oga|flac|opus|wav|webm|mp3|png|gif|jpg|jpeg|webp|svg|pdf|jp2|ttf|woff2|mp4)$/i, '$1');
-	const isDoubleExtension = /\.(?:ogg|ogv|oga|flac|opus|wav|webm|mp3|png|gif|jpg|jpeg|webp|svg|pdf|jp2|ttf|woff2|mp4)$/i.test(title);
+	const isDoubleExtension = /\.\w{3,4}$/.test(title);
 	const isSymbolStart = /^\W/.test(title);
 	if (isDoubleExtension || isSymbolStart) {
 		return true;
@@ -86,7 +86,7 @@ async function updateData(title, text) {
 			return await queryFiles(char);
 		})).then((result) => result.flat().filter((item) => excludeRegex.test(item[0]) && isBadTitle(item[0])));
 
-		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的命名不当的文件名，以供维护人员检查。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable center plainlinks" style="word-break:break-all"\n|-\n! width=17%|页面ID !! 文件名 !! width=23%|操作\n';
+		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的疑似命名不当的文件名，以供维护人员检查。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable center plainlinks" style="word-break:break-all"\n|-\n! width=17%|页面ID !! 文件名 !! width=23%|操作\n';
 		for (const [title, pageid] of pagelist) {
 			text += `|-\n| ${pageid} || [[:${title}]] || [{{canonicalurl:cm:${title}}} 查看]｜[[Special:链入页面/${title}|链入]]\n`;
 		}
