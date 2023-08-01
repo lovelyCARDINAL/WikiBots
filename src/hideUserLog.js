@@ -56,7 +56,7 @@ async function hidePages(user) {
 		while (retry < 20) {
 			const { response: { data: htmlString } } = await zhapi.request.get('/index.php', {
 				query: {
-					title: 'User:星海子/test/006',
+					title,
 					action: 'delete',
 				},
 			});
@@ -168,7 +168,7 @@ async function deleteAvatar(user) {
 	const userlist = await Promise.all([
 		queryLogs(zhapi, 'suppress/block', leend, lestart),
 		queryLogs(zhapi, 'suppress/reblock', leend, lestart),
-	]).then((result) => result.flat());
+	]).then((result) => result.flat().map((title) => title.replace('User:', '')));
 
 	await Promise.all(userlist.map(async (user) => {
 		await Promise.all([
