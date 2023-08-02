@@ -3,7 +3,7 @@
   "description": "moegirlpedia bot",
   "main": "index.js",
   "engines": {
-    "node": "18.*"
+    "node": ">= 20.*"
   },
   "scripts": {
     "test": "node ./src/actiontest.js",
