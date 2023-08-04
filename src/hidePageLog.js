@@ -16,6 +16,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 
 	let retry = 0;
 	while (retry < 20) {
+		console.groupCollapsed(`Retry: ${retry}`);
 		const titles = await (async () => {
 			const result = [];
 			const eol = Symbol();
@@ -33,8 +34,9 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 				lecontinue = data.continue ? data.continue.lecontinue : eol;
 				result.push(...data.query.logevents);
 			}
-			return [...new Set(result.map(({ title, comment }) => comment !== '被隐藏的用户' && title))];
+			return [...new Set(result.map(({ title, comment }) => comment !== '被隐藏的用户' && title).filter(Boolean))];
 		})();
+		console.log(`titles: ${titles.length}`);
 
 		const ids = await Promise.all(titles.map(async (title) => {
 			const result = [];
@@ -53,11 +55,12 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 			}
 			return result.filter(({ hidden }) => !hidden).map(({ id }) => id);
 		})).then((result) => result.flat());
-
+		
+		console.log(`ids: ${ids.length}`);
 		if (!ids.length) {
+			console.groupEnd();
 			break;
 		}
-		console.log(`Retry: ${retry}, ids: ${ids.length}`);
 
 		await Promise.all(ids.map(async (id) => {
 			await api.request.post('/index.php', {
@@ -69,6 +72,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 				wpEditToken: await api.token('csrf'),
 			}).then(() => console.log(`Try to hide ${id}`));
 		}));
+		console.groupEnd();
 
 		retry++;
 	}
