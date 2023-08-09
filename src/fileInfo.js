@@ -115,7 +115,6 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	const fileData = await (async () => {
 		const { data: { query: { logevents } } } = await cmapi.post({
 			list: 'logevents',
-			formatversion: 'latest',
 			leprop: 'title|ids',
 			leaction: 'upload/upload',
 			lelimit: 'max',

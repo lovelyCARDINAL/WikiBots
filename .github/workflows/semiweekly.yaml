@@ -4,8 +4,8 @@ name: "[schedule] semiweekly"
 
 on:
   schedule:
-    - cron: "50 13 * * 1,5" # Monday,Friday 21:50 CST
-    - cron: "50 13 * * 3,0" # Wednesday,Sunday 21:50 CST
+    - cron: "50 13 * * 1,5" # Monday, Friday 21:50 CST
+    - cron: "50 13 * * 3,0" # Wednesday, Sunday 21:50 CST
   workflow_dispatch:
     inputs:
       task:
