@@ -37,7 +37,7 @@ const SUMMARY = {
 			);
 	})();
 
-	const time = moment().subtract(300, 'days');
+	const time = moment().subtract(16, 'days');
 
 	const pagelist = await (async () => {
 		const { data: { query: { pages } } } = await api.zh.post({
