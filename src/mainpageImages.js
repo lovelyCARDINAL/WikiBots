@@ -22,7 +22,7 @@ function findImageSrc(data) {
 }
 
 async function getMainpageJson(part) {
-	const url = `https://app.moegirl.org.cn/wiki/extensions/MoeHomeland/dist/data/${part}.json`;
+	const url = `https://storage.moegirl.org.cn/homeland/data/${part}.json`;
 	const response = await axios.get(url);
 	return findImageSrc(response.data);
 }
