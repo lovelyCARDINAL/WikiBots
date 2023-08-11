@@ -108,8 +108,24 @@ const SITE_LIST = ['zh', 'cm'];
 					wikitext.querySelectorAll('template#Template:萌点, template#Template:萌點').forEach((temp) => {
 						const args = temp.getAllArgs();
 						args.forEach((arg) => {
-							if (variant.includes(arg.value.split(/[,，]/)?.[0].trim())) {
-								temp.setValue(arg.name, `${target},${arg.value}`);
+							const argArrary = arg.value.split(/[,，]/);
+							if (variant.includes(argArrary[0].trim())) {
+								switch (argArrary.length) {
+									case 1:
+									default:
+										temp.setValue(arg.name, `${target},${arg.value}`);
+										break;
+									case 2:
+										if (['del', '黑幕', 'heimu', '加粗', 'b'].includes(argArrary[1].trim())) {
+											temp.setValue(arg.name, `${target},${arg.value}`);
+										} else {
+											temp.setValue(arg.name, `${target},${argArrary[1]}`);
+										}
+										break;
+									case 3:
+										temp.setValue(arg.name, `${target},${argArrary[1]},${argArrary[2]}`);
+										break;
+								}
 							}
 						});
 					});
@@ -151,9 +167,9 @@ const SITE_LIST = ['zh', 'cm'];
 				// 保存
 				contentData[pageid] ||= {};
 				contentData[pageid].content = wikitext.toString();
-				contentData[pageid].summary = contentData?.[pageid]?.summary
-					? `${contentData[pageid].summary}，[[${title.replace('Category:', 'Cat:')}]] → [[Cat:${target}]]`
-					: `修复分类重定向：[[${title.replace('Category:', 'Cat:')}]] → [[Cat:${target}]]`;
+				contentData?.[pageid]?.summary
+					? contentData[pageid].summary += `，[[${title.replace('Category:', 'Cat:')}]] → [[Cat:${target}]]`
+					: contentData[pageid].summary = `修复分类重定向：[[${title.replace('Category:', 'Cat:')}]] → [[Cat:${target}]]`;
 				console.log(`${site} ${pageid}: ${title} → ${target}`);
 			}));
 		}));
