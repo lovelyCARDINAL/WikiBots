@@ -1,11 +1,12 @@
 name: "[schedule] 1x/daily @late night"
 # watch.js
 # mainpageImages.js
+# fixRedirectCategory.js
 
 on:
   schedule:
-    - cron: "35 16 * * *"
-    # 00:35 CST
+    - cron: "35 16 * * *" # 00:35 CST
+    - cron: "35 17 * * *" # 01:35 CST
   workflow_dispatch:
     inputs:
       task:
@@ -16,6 +17,7 @@ on:
           - "none"
           - "watch"
           - "mainpage-image-protection"
+          - "fix-redirect-category"
       group:
         type: choice
         required: true
@@ -30,7 +32,7 @@ env:
 jobs:
   watch:
     if: |
-      github.event_name == 'schedule' || 
+      github.event.schedule == '35 16 * * *' || 
       github.event.inputs.task == 'watch' ||
       github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
@@ -51,7 +53,7 @@ jobs:
 
   mainpage-image-protection:
     if: |
-      github.event_name == 'schedule' || 
+      github.event.schedule == '35 16 * * *' || 
       github.event.inputs.task == 'mainpage-image-protection' ||
       github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
@@ -70,3 +72,25 @@ jobs:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
           CM_ABOT: ${{ secrets.CM_ABOT }}
         run: node src/mainpageImages.js
+
+  fix-redirect-category:
+    if: |
+      github.event.schedule == '35 17 * * *' || 
+      github.event.inputs.task == 'fix-redirect-category' ||
+      github.event.inputs.group == 'all'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run fixRedirectCategory.js
+        env:
+          ZH_BOT: ${{ secrets.ZH_BOT }}
+          CM_BOT: ${{ secrets.CM_BOT }}
+        run: node src/fixRedirectCategory.js
