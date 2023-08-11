@@ -171,6 +171,7 @@ const SITE_LIST = ['zh', 'cm'];
 				bot: true,
 				nocreate: true,
 				tags: 'Bot',
+				watchlist: 'nochange',
 			}, {
 				retry: 10,
 				noCache: true,
