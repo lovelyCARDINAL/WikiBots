@@ -21,15 +21,16 @@ async function watch(titles, unwatch) {
 	
 	await api.login(config.zh.main.name, config.zh.main.password).then(console.log);
 
-	const { data: { query: { pages } } } = await api.post({
-		prop: 'revisions',
-		titles: 'Module:UserGroup/data',
-		rvprop: 'content',
-	});
-	const { sysop, patroller, techeditor, staff } = JSON.parse(
-		pages[0]?.revisions[0]?.content,
-	);
-	let watchlist = [...sysop, ...patroller, ...techeditor, ...staff].map((username) => `User:${username}`);
+	let watchlist = await (async () => {
+		const { data: { query: { allusers } } } = await api.post({
+			list: 'allusers',
+			augroup: ['sysop', 'bot', 'patroller', 'staff', 'techeditor', 'interface-admin'],
+			aulimit: 'max',
+		}, {
+			retry: 10,
+		});
+		return allusers.map(({ name }) => `User:${name}`);
+	})();
 
 	const { data: { query: { categorymembers } } } = await api.post({
 		list: 'categorymembers',
