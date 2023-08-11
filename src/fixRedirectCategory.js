@@ -18,7 +18,6 @@ const SITE_LIST = ['zh', 'cm'];
 			aulimit: 'max',
 		}, {
 			retry: 10,
-			noCache: true,
 		});
 		return allusers.map(({ name }) => name);
 	})();
@@ -45,7 +44,6 @@ const SITE_LIST = ['zh', 'cm'];
 			gcmlimit: 'max',
 		}, {
 			retry: 10,
-			noCache: true,
 		});
 
 		// 获取尚未清空的已重定向分类
@@ -88,7 +86,6 @@ const SITE_LIST = ['zh', 'cm'];
 				gcmlimit: 'max',
 			}, {
 				retry: 10,
-				noCache: true,
 			});
 
 			await Promise.all(members.map(({ pageid, revisions: [{ content }] }) => {
