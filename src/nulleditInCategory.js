@@ -5,8 +5,10 @@ const SITE_LIST = ['zh', 'cm'];
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
+	const zhapi = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } });
+	await zhapi.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
 
-	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } }).post({
+	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await zhapi.post({
 		prop: 'revisions',
 		titles: 'User:星海子/BotConfig/nulleditInCategory.json',
 		rvprop: 'content',
@@ -15,8 +17,13 @@ const SITE_LIST = ['zh', 'cm'];
 	
 	await Promise.all(
 		SITE_LIST.map(async (site) => {
-			const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent } });
-			await api.login(config[site].bot.name, config[site].bot.password).then(console.log);
+			let api;
+			if (site === 'zh') {
+				api = zhapi;
+			} else {
+				api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent } });
+				await api.login(config[site].bot.name, config[site].bot.password).then(console.log);
+			}
 			
 			const catlist = [...setting[site], '尚未清空的已重定向分类', '尚未清空的消歧义分类'];
 
