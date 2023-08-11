@@ -139,20 +139,18 @@ const SITE_LIST = ['zh', 'cm'];
 				if (site === 'cm') {
 					wikitext = Parser.parse(wikitext);
 					// {{虚拟角色/作}}
-					for (const temp of wikitext.querySelectorAll('template#Template:虚拟角色/作, template#Template:虛擬角色/作')) {
-						for (const arg of temp.getAllArgs()) {
-							if (variant.includes(`${arg.value.trim()}角色`) && arg.name !== 'more') {
-								temp.setValue(arg.name, target.replace(/角色$/, ''));
-							}
+					const temp1 = wikitext.querySelector('template#Template:虚拟角色/作, template#Template:虛擬角色/作');
+					for (const arg of temp1.getAllArgs()) {
+						if (variant.includes(`${arg.value.trim()}角色`) && arg.name !== 'more') {
+							temp1.setValue(arg.name, target.replace(/角色$/, ''));
 						}
 					}
 
 					// {{作品}}
-					for (const temp of wikitext.querySelectorAll('template#Template:作品')) {
-						for (const arg of temp.getAllArgs()) {
-							if (variant.includes(arg.value.trim()) && arg.name !== '1') {
-								temp.setValue(arg.name, target);
-							}
+					const temp2 = wikitext.querySelector('template#Template:作品');
+					for (const arg of temp2.getAllArgs()) {
+						if (variant.includes(arg.value.trim()) && arg.name !== '1') {
+							temp2.setValue(arg.name, target);
 						}
 					}
 				}
