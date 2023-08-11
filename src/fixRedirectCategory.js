@@ -105,9 +105,8 @@ const SITE_LIST = ['zh', 'cm'];
 					
 					wikitext = Parser.parse(wikitext);
 					// {{萌点}}
-					wikitext.querySelectorAll('template#Template:萌点, template#Template:萌點').forEach((temp) => {
-						const args = temp.getAllArgs();
-						args.forEach((arg) => {
+					for (const temp of wikitext.querySelectorAll('template#Template:萌点, template#Template:萌點')) {
+						for (const arg of temp.getAllArgs()) {
 							const argArrary = arg.value.split(/[,，]/);
 							if (variant.includes(argArrary?.[0].trim())) {
 								switch (argArrary.length) {
@@ -124,41 +123,38 @@ const SITE_LIST = ['zh', 'cm'];
 										break;
 								}
 							}
-						});
-					});
+						}
+					}
 
 					// {{Cate}}
-					wikitext.querySelectorAll('template#Template:Cate').forEach((temp) => {
-						const args = temp.getAllArgs();
-						args.forEach((arg) => {
+					for (const temp of wikitext.querySelectorAll('template#Template:Cate')) {
+						for (const arg of temp.getAllArgs()) {
 							if (variant.includes(arg.value.trim()) && arg.name !== '1') {
 								temp.setValue(arg.name, target);
 							}
-						});
-					});
+						}
+					}
 				}
 
 				if (site === 'cm') {
 					wikitext = Parser.parse(wikitext);
 					// {{虚拟角色/作}}
-					wikitext.querySelectorAll('template#Template:虚拟角色/作, template#Template:虛擬角色/作').forEach((temp) => {
-						const args = temp.getAllArgs();
-						args.forEach((arg) => {
+					for (const temp of wikitext.querySelectorAll('template#Template:虚拟角色/作, template#Template:虛擬角色/作')) {
+						for (const arg of temp.getAllArgs()) {
 							if (variant.includes(`${arg.value.trim()}角色`) && arg.name !== 'more') {
 								temp.setValue(arg.name, target.replace(/角色$/, ''));
 							}
-						});
-					});
+						}
+					}
 
 					// {{作品}}
-					wikitext.querySelectorAll('template#Template:作品').forEach((temp) => {
-						const args = temp.getAllArgs();
-						args.forEach((arg) => {
+					for (const temp of wikitext.querySelectorAll('template#Template:作品')) {
+						for (const arg of temp.getAllArgs()) {
 							if (variant.includes(arg.value.trim()) && arg.name !== '1') {
 								temp.setValue(arg.name, target);
 							}
-						});
-					});
+						}
+					}
 				}
 
 				// 保存
