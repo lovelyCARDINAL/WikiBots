@@ -1,5 +1,6 @@
 name: "[schedule] 1x/daily @late night"
 # watch.js
+# purge.js
 # mainpageImages.js
 # fixRedirectCategory.js
 
@@ -16,6 +17,7 @@ on:
         options:
           - "none"
           - "watch"
+          - "purge"
           - "mainpage-image-protection"
           - "fix-redirect-category"
       group:
@@ -50,6 +52,27 @@ jobs:
         env:
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
         run: node src/watch.js
+
+  purge:
+    if: |
+      github.event.schedule == '35 16 * * *' || 
+      github.event.inputs.task == 'purge' ||
+      github.event.inputs.group == 'all'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run purge.js
+        env:
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
+        run: node src/purge.js
 
   mainpage-image-protection:
     if: |
