@@ -109,18 +109,15 @@ const SITE_LIST = ['zh', 'cm'];
 						const args = temp.getAllArgs();
 						args.forEach((arg) => {
 							const argArrary = arg.value.split(/[,，]/);
-							if (variant.includes(argArrary[0].trim())) {
+							if (variant.includes(argArrary?.[0].trim())) {
 								switch (argArrary.length) {
 									case 1:
-									default:
 										temp.setValue(arg.name, `${target},${arg.value}`);
 										break;
 									case 2:
-										if (['del', '黑幕', 'heimu', '加粗', 'b'].includes(argArrary[1].trim())) {
-											temp.setValue(arg.name, `${target},${arg.value}`);
-										} else {
-											temp.setValue(arg.name, `${target},${argArrary[1]}`);
-										}
+										['del', '黑幕', 'heimu', '加粗', 'b'].includes(argArrary[1].trim())
+											? temp.setValue(arg.name, `${target},${arg.value}`)
+											: temp.setValue(arg.name, `${target},${argArrary[1]}`);
 										break;
 									case 3:
 										temp.setValue(arg.name, `${target},${argArrary[1]},${argArrary[2]}`);
