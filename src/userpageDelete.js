@@ -62,22 +62,14 @@ async function cannotDelete(pageid) {
 	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 
 	const maintainlist = await (async () => {
-		const [{ data: { query: { pages: [{ revisions: [{ content }] }] } } },
-			{ data: { query: { allusers } } }] = await Promise.all([
-			api.post({
-				prop: 'revisions',
-				titles: 'Module:UserGroup/data',
-				rvprop: 'content',
-			}),
-			api.post({
-				list: 'allusers',
-				augroup: 'bot',
-				aulimit: 'max',
-			}),
-		]);
-		const { sysop, patroller, staff } = JSON.parse(content);
-		const bot = allusers.map((user) => user.name);
-		return [...sysop, ...patroller, ...staff, ...bot];
+		const { data: { query: { allusers } } } = await api.post({
+			list: 'allusers',
+			augroup: ['sysop', 'bot', 'patroller', 'staff'],
+			aulimit: 'max',
+		}, {
+			retry: 10,
+		});
+		return allusers.map(({ name }) => name);
 	})();
 		
 	const { data } = await api.post({
