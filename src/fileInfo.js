@@ -29,7 +29,7 @@ function linkRuleTest(str) {
 	const match = linkRegex.exec(str);
 	if (match && match[1]) {
 		const sourceAddress = match[1].trim();
-		if (sourceAddress && !sourceAddress.startsWith('http')) {
+		if (sourceAddress && !sourceAddress.toLowerCase().startsWith('http')) {
 			return sourceAddress;
 		}
 	}
