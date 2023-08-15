@@ -2,11 +2,14 @@ name: "[schedule] monthly"
 # newsSubscriber.js @2nd
 # newsProtect.js @9th
 # updateOverrideCategory.js @3rd
+# needImproveVtuber.js @7th
+# interfaceMessages.js @10th, 25th
 
 on:
   schedule:
     - cron: "50 16 1 * *" # 2nd 00:50 CST
     - cron: "50 16 2 * *" # 3rd 00:50 CST
+    - cron: "50 16 6 * *" # 7th 00:50 CST
     - cron: "50 16 8 * *" # 9th 00:50 CST
     - cron: "50 16 9,24 * *" # 10th, 25th 00:50 CST
   workflow_dispatch:
@@ -21,6 +24,7 @@ on:
           - "news-protection"
           - "interface-messages"
           - "update-override-category"
+          - "need-improve-vtuber"
       group:
         type: choice
         required: true
@@ -28,6 +32,7 @@ on:
         options:
           - "none"
           - "news"
+          - "need-improve"
           - "all"
 
 env:
@@ -100,6 +105,28 @@ jobs:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/updateOverrideCategory.js
 
+  need-improve-vtuber:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.schedule == '50 16 6 * *' ||
+      github.event.inputs.task == 'need-improve-vtuber' ||
+      github.event.inputs.group == 'need-improve' ||
+      github.event.inputs.group == 'all'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run needImproveVtuber.js @7th
+        env:
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+        run: node src/needImproveVtuber.js
+
   interface-messages:
     runs-on: ubuntu-latest
     if: |
@@ -116,7 +143,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run interfaceMessages.js
+      - name: Run interfaceMessages.js @10th, 25th
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
