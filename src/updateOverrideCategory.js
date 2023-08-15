@@ -35,7 +35,7 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 					cmprop: 'title',
 					cmtype: 'subcat',
 					cmlimit: 'max',
-				}, { retry: 10 });
+				}, { retry: 30 });
 				return categorymembers;
 			}));
 			return result.flat().map(({ title }) => title);
@@ -48,7 +48,7 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 					cmprop: 'title',
 					cmtype: 'subcat',
 					cmlimit: 'max',
-				}, { retry: 10 });
+				}, { retry: 30 });
 				return categorymembers;
 			}));
 			return result.flat().map(({ title }) => title).concat(data.vtuber);
