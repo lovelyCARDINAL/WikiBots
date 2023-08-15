@@ -21,24 +21,39 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 
 	const data = {};
 	await Promise.all(Object.keys(setData)
-		.filter((key) => key !== 'cat' && !key.startsWith('_'))
+		.filter((key) => !key.endsWith('cat') && !key.startsWith('_'))
 		.map((key) => {
 			data[key] = setData[key];
 		}),
 	);
-	data.cat = await (async () => {
-		const result = await Promise.all(setData.cat.map(async (cat) => {
-			const { data: { query: { categorymembers } } } = await api.post({
-				list: 'categorymembers',
-				cmtitle: cat,
-				cmprop: 'title',
-				cmtype: 'subcat',
-				cmlimit: 'max',
-			}, { retry: 10 });
-			return categorymembers;
-		}));
-		return result.flat().map(({ title }) => title);
-	})();
+	await Promise.all([
+		data.cat = await (async () => {
+			const result = await Promise.all(setData.cat.map(async (cat) => {
+				const { data: { query: { categorymembers } } } = await api.post({
+					list: 'categorymembers',
+					cmtitle: cat,
+					cmprop: 'title',
+					cmtype: 'subcat',
+					cmlimit: 'max',
+				}, { retry: 10 });
+				return categorymembers;
+			}));
+			return result.flat().map(({ title }) => title);
+		})(),
+		data.vtuber = await (async () => {
+			const result = await Promise.all(setData.vtuber_cat.map(async (cat) => {
+				const { data: { query: { categorymembers } } } = await api.post({
+					list: 'categorymembers',
+					cmtitle: cat,
+					cmprop: 'title',
+					cmtype: 'subcat',
+					cmlimit: 'max',
+				}, { retry: 10 });
+				return categorymembers;
+			}));
+			return result.flat().map(({ title }) => title).concat(data.vtuber);
+		})(),
+	]);
     
 	try {
 		const { data: { sha } } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
