@@ -44,14 +44,14 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 	let count = 1;
 	for (const page of pages) {
 		const { title, revisions: [{ timestamp, content, size }], categories } = page;
-		const category = categories ? categories
-			.map(({ title }) => title)
+		const category = categories
+			?.map(({ title }) => title)
 			.filter((title) => !overrideCategory.includes(title))
 			.map((title) => `[[:${title}]]`)
 			.join('，')
-			: 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
-		const wikitext = Parser.parse(content.replaceAll('\n', '').replace(/急需改[进進]/g, '急需改进'));
-		const value = wikitext.querySelector('template#Template:急需改进')?.getValue() || ['data-sort-value="*" | <i style="color:red;">找不到目标模板</i>'];
+			|| 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
+		const wikitext = Parser.parse(content.replaceAll('\n', ''));
+		const value = wikitext.querySelector('template#Template:急需改进, template#Template:急需改進')?.getValue() || ['data-sort-value="*" | <i style="color:red;">找不到目标模板</i>'];
 		const reason = Object.keys(value)
 			.filter((key) => !isNaN(key) && value[key]?.trim())
 			.map((key) => value[key]?.trim())

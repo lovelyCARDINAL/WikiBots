@@ -44,12 +44,12 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 	let count = 1;
 	for (const page of pages) {
 		const { title, revisions: [{ timestamp, content, size }], categories } = page;
-		const category = categories ? categories
-			.map(({ title }) => title)
+		const category = categories
+			?.map(({ title }) => title)
 			.filter((title) => !overrideCategory.includes(title))
 			.map((title) => `[[:${title}]]`)
 			.join('，')
-			: 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
+			|| 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
 		const wikitext = Parser.parse(content.replaceAll('\n', '').replace(/[欢歡]迎[編编][辑輯]|不完整/, '欢迎编辑'));
 		const value = wikitext.querySelector('template#Template:欢迎编辑')?.getValue() || ['data-sort-value="*" | <i style="color:red;">找不到目标模板</i>'];
 		const reason = Object.keys(value)
