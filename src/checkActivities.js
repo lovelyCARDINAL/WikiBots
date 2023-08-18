@@ -45,6 +45,8 @@ async function queryContribs(api, ucuser, ucnamespace, ucend) {
 			ucuser,
 			ucprop: 'title|timestamp',
 			...uccontinue && { uccontinue },
+		}, {
+			retry: 10,
 		});
 		uccontinue = data.continue ? data.continue.uccontinue : eol;
 		result.push(...data.query.usercontribs);
@@ -61,6 +63,8 @@ async function queryLatestContribs(api, ucuser, ucnamespace, ucend) {
 		ucnamespace,
 		ucuser,
 		ucprop: 'timestamp',
+	}, {
+		retry: 10,
 	});
 	return usercontribs?.[0]?.timestamp;
 }
@@ -81,6 +85,8 @@ async function queryLatestEvents(api, user, end) {
 		leprop: 'timestamp',
 		uctag: 'Bot',
 		letag: 'Bot',
+	}, {
+		retry: 10,
 	});
 	const contribsTimestamp = usercontribs.length
 		? timestampCST(usercontribs[0].timestamp)
@@ -105,7 +111,7 @@ async function updateData(pageid, text) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }

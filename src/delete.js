@@ -25,6 +25,8 @@ const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': co
 				gcmtype: 'page|subcat|file',
 				gcmlimit: 'max',
 				...gcmcontinue && { gcmcontinue },
+			}, {
+				retry: 10,
 			});
 			gcmcontinue = data.continue ? data.continue.gcmcontinue : eol;
 			if (data?.query?.pages) {
@@ -42,6 +44,8 @@ const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': co
 		list: 'allusers',
 		aurights: 'rollback',
 		aulimit: 'max',
+	}, {
+		retry: 10,
 	});
 	const userlist = allusers.map(({ name }) => name);
 		
@@ -66,7 +70,7 @@ const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': co
 			pageid,
 			tags: 'Automation tool',
 		}, {
-			retry: 10,
+			retry: 20,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}));

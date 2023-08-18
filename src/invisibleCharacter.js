@@ -34,7 +34,7 @@ async function removeChar(pageid, wikitext, setting) {
 		summary: '移除不可见字符',
 		watchlist: 'nochange',
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -60,6 +60,8 @@ async function removeChar(pageid, wikitext, setting) {
 		rcnamespace: '*',
 		rctag: 'invisibleCharacter',
 		rctoponly: true,
+	}, {
+		retry: 10,
 	});
 
 	const setting = JSON.parse(content || '{}');
@@ -73,6 +75,8 @@ async function removeChar(pageid, wikitext, setting) {
 					prop: 'revisions',
 					pageids: pagelist,
 					rvprop: 'content',
+				}, {
+					retry: 10,
 				});
 				await Promise.all(
 					pages.map(async (page) => {

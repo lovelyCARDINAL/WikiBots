@@ -58,7 +58,7 @@ async function isActive(user) {
 			nocreate: true,
 			watchlist: 'nochange',
 		}, {
-			retry: 10,
+			retry: 20,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}

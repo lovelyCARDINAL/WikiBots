@@ -44,7 +44,7 @@ async function pageDelete(pageid, reason) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }

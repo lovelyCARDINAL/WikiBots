@@ -20,7 +20,9 @@ const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': co
 			page: 'User:星海子/BotConfig',
 			prop: 'wikitext',
 			section: '2',
-		}, { retry: 10 });
+		}, {
+			retry: 10,
+		});
 		return wikitext.split('\n').slice(2, -1).map((page) => page.trim());
 	})();
 
@@ -32,7 +34,7 @@ const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': co
 			tags: 'Bot',
 			watchlist: 'nochange',
 		}, {
-			retry: 10,
+			retry: 20,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
 
@@ -41,7 +43,9 @@ const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': co
 			titles: title,
 			rvprop: 'content|ids',
 			rvlimit: 'max',
-		}, { retry: 10 });
+		}, {
+			retry: 10,
+		});
 
 		if (missing) {
 			console.log(`${title} is missing.`);
@@ -71,7 +75,7 @@ const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': co
 				minor: true,
 				watchlist: 'nochange',
 			}, {
-				retry: 10,
+				retry: 20,
 				noCache: true,
 			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}
@@ -89,7 +93,7 @@ const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': co
 		nocreate: true,
 		watchlist: 'nochange',
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 

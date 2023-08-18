@@ -69,7 +69,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 

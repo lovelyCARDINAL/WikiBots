@@ -81,7 +81,7 @@ async function deleteRights(user) {
 		tags: 'Bot',
 		formatversion: '2',
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -102,7 +102,7 @@ async function deletePages(user) {
 			reason: '用户注销',
 			tags: 'Bot|RevokeUser',
 		}, {
-			retry: 10,
+			retry: 20,
 			noCache: true,
 		}).then(({ data }) => /cantedit|protected/.test(data?.errors?.[0]?.code) ? console.warn(`[[${title}]] is protected.`) : console.log(JSON.stringify(data)));
 	}));
@@ -132,7 +132,7 @@ async function hideLogs(api, ids) {
 		reason: '用户注销',
 		tags: 'Bot',
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }

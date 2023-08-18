@@ -23,7 +23,9 @@ async function queryLogs(api, leaction, leend, lestart = undefined) {
 			lelimit: 'max',
 			...leaction === 'avatar/delete' && { leuser: '星海-adminbot' },
 			...lecontinue && { lecontinue },
-		}, { retry: 10 });
+		}, {
+			retry: 10
+		});
 		lecontinue = data.continue ? data.continue.lecontinue : eol;
 		result.push(...data.query.logevents);
 	}
@@ -37,7 +39,9 @@ async function queryPages(apprefix, apnamespace) {
 		list: 'allpages',
 		apprefix,
 		apnamespace,
-	}, { retry: 10 });
+	}, {
+		retry: 10
+	});
 	const user = apprefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	const prefixRegex = new RegExp(`^User(?: talk)?:(${user}|${user}/.*)$`);
 	return allpages
@@ -105,7 +109,9 @@ async function hideAbuseLog(afluser) {
 					afllimit: 'max',
 					aflprop: 'ids|hidden',
 					...aflstart && { aflstart },
-				}, { retry: 10 });
+				}, {
+					retry: 10
+				});
 				aflstart = data.continue ? data.continue.aflstart : eol;
 				result.push(...data.query.abuselog);
 			}
@@ -213,7 +219,7 @@ async function deleteAvatar(user) {
 			reason: 'test',
 			tags: 'Bot',
 		}, {
-			retry: 10,
+			retry: 20,
 			noCache: true,
 		}).then(({ data }) => {
 			data.revisiondelete.items = data.revisiondelete.items

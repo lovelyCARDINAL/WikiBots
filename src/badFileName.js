@@ -28,6 +28,8 @@ async function queryFiles(apprefix) {
 			apfilterredir: 'nonredirects',
 			aplimit: 'max',
 			...apcontinue && { apcontinue },
+		}, {
+			retry: 10,
 		});
 		apcontinue = data.continue ? data.continue.apcontinue : eol;
 		result.push(...data.query.allpages.map((page) => [page.title, page.pageid]));
@@ -58,7 +60,7 @@ async function updateData(title, text) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -76,6 +78,8 @@ async function updateData(title, text) {
 			prop: 'revisions',
 			titles: 'User:星海子/BotConfig/excludeFilePrefix.json',
 			rvprop: 'content',
+		}, {
+			retry: 10,
 		});
 		const exclude = JSON.parse(content).flat(Infinity).join('|');
 		return new RegExp(`^File:(?!${exclude}).+?$`);

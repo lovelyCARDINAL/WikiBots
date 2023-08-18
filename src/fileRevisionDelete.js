@@ -26,7 +26,9 @@ const api = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': confi
 				lestart,
 				leend,
 				...lecontinue && { lecontinue },
-			}, { retry: 10 });
+			}, {
+				retry: 10,
+			});
 			lecontinue = data.continue ? data.continue.lecontinue : eol;
 			result.push(...data.query.logevents);
 		}
@@ -66,7 +68,7 @@ const api = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': confi
 			reason: '删除长期未使用的旧版本文件',
 			tags: 'Bot',
 		}, {
-			retry: 10,
+			retry: 20,
 			noCache: true,
 		}).then(({ data }) => {
 			data.revisiondelete.items = data.revisiondelete.items

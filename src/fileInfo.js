@@ -48,7 +48,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		watchlist: 'nochange',
 		bot: true,
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -65,6 +65,8 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		prop: 'revisions',
 		titles: 'User:星海子/BotConfig/incorrectFileInfo.json',
 		rvprop: 'content',
+	}, {
+		retry: 10,
 	});
 	const setting = JSON.parse(content);
 	const catData = await (async() => {
@@ -95,6 +97,8 @@ async function pageEdit(title, text, summary, sectiontitle) {
 			gtiprop: 'title',
 			gtinamespace: '3',
 			gtilimit: 'max',
+		}, {
+			retry: 10,
 		});
 		const set = new Set();
 		const regex = /{{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=.*?机娘星海酱.*?|optout=all|optout=.*?fileInfo.*?|deny=all))}}/;
@@ -120,6 +124,8 @@ async function pageEdit(title, text, summary, sectiontitle) {
 			lelimit: 'max',
 			leend,
 			lestart,
+		}, {
+			retry: 10,
 		});
 		const titleData = logevents
 			.filter((item) => item.pageid !== 0)
@@ -130,6 +136,8 @@ async function pageEdit(title, text, summary, sectiontitle) {
 				prop: 'revisions',
 				titles,
 				rvprop: 'content|ids|user',
+			}, {
+				retry: 10,
 			});
 			return pages.filter((page) => page.revisions[0].parentid === 0);
 		}));
@@ -185,7 +193,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 			minor: true,
 			watchlist: 'nochange',
 		}, {
-			retry: 10,
+			retry: 20,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}

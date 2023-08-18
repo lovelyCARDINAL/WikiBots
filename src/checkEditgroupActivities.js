@@ -27,6 +27,8 @@ async function queryContribs(api, ucuser) {
 			ucuser,
 			ucprop: '',
 			...uccontinue && { uccontinue },
+		}, {
+			retry: 10,
 		});
 		uccontinue = data.continue ? data.continue.uccontinue : eol;
 		result.push(...data.query.usercontribs);
@@ -46,7 +48,7 @@ async function updateData(text) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -64,6 +66,8 @@ async function updateData(text) {
 			action: 'parse',
 			pageid: '490849',
 			prop: 'wikitext',
+		}, {
+			retry: 10,
 		});
 		const regex = /{{User\|(.+?)}}/gi;
 		const data = Array.from(wikitext.matchAll(regex), (match) => match[1]);

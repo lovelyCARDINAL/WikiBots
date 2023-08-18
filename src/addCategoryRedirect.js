@@ -18,6 +18,8 @@ const SITE_LIST = ['zh', 'cm'];
 			arprop: 'title|ids',
 			arnamespace: '14',
 			arlimit: 'max',
+		}, {
+			retry: 10,
 		});
 
 		const pageids = allredirects
@@ -36,6 +38,8 @@ const SITE_LIST = ['zh', 'cm'];
 			redirects: true,
 			rdprop: 'pageid|title',
 			rdlimit: 'max',
+		}, {
+			retry: 10,
 		});
 
 		const result = pages.map((item) => item?.redirects
@@ -56,7 +60,7 @@ const SITE_LIST = ['zh', 'cm'];
 					summary: `添加至「[[:${target}]]」的[[Template:分类重定向|分类重定向]]`,
 					watchlist: 'nochange',
 				}, {
-					retry: 10,
+					retry: 20,
 					noCache: true,
 				}).then(({ data }) => console.log(JSON.stringify(data)));
 			}),

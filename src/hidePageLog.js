@@ -30,7 +30,9 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 					leend,
 					lelimit: 'max',
 					...lecontinue && { lecontinue },
-				}, { retry: 10 });
+				}, {
+					retry: 10,
+				});
 				lecontinue = data.continue ? data.continue.lecontinue : eol;
 				result.push(...data.query.logevents);
 			}
@@ -49,7 +51,9 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 					afllimit: 'max',
 					aflprop: 'ids|hidden',
 					...aflstart && { aflstart },
-				}, { retry: 10 });
+				}, {
+					retry: 10,
+				});
 				aflstart = data.continue ? data.continue.aflstart : eol;
 				result.push(...data.query.abuselog);
 			}

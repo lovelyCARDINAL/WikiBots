@@ -51,7 +51,7 @@ const SITE_LIST = ['zh', 'cm'];
 									summary: '空编辑以刷新分类表',
 									watchlist: 'nochange',
 								}, {
-									retry: 10,
+									retry: 20,
 									noCache: true,
 								}).then(({ data }) => console.log(JSON.stringify(data)));
 							}),

@@ -61,7 +61,7 @@ async function pageProtect(title, protections, reason) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -79,7 +79,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		nocreate: true,
 		notminor: true,
 	}, {
-		retry: 10,
+		retry: 20,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -118,6 +118,8 @@ async function pageEdit(title, text, summary, sectiontitle) {
 				prop: 'info',
 				titles,
 				inprop: 'protection',
+			}, {
+				retry: 10,
 			});
 
 			await Promise.all(
@@ -144,6 +146,8 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		action: 'parse',
 		page: 'User:星海子/BotData/mainpageImage.json',
 		prop: 'wikitext',
+	}, {
+		retry: 10,
 	});
 	const originImgList = JSON.parse(wikitext).sort();
 
