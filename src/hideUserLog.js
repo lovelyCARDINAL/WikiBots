@@ -24,7 +24,7 @@ async function queryLogs(api, leaction, leend, lestart = undefined) {
 			...leaction === 'avatar/delete' && { leuser: '星海-adminbot' },
 			...lecontinue && { lecontinue },
 		}, {
-			retry: 10
+			retry: 10,
 		});
 		lecontinue = data.continue ? data.continue.lecontinue : eol;
 		result.push(...data.query.logevents);
@@ -40,7 +40,7 @@ async function queryPages(apprefix, apnamespace) {
 		apprefix,
 		apnamespace,
 	}, {
-		retry: 10
+		retry: 10,
 	});
 	const user = apprefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	const prefixRegex = new RegExp(`^User(?: talk)?:(${user}|${user}/.*)$`);
@@ -110,7 +110,7 @@ async function hideAbuseLog(afluser) {
 					aflprop: 'ids|hidden',
 					...aflstart && { aflstart },
 				}, {
-					retry: 10
+					retry: 10,
 				});
 				aflstart = data.continue ? data.continue.aflstart : eol;
 				result.push(...data.query.abuselog);
