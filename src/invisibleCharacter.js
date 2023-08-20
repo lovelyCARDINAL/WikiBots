@@ -69,26 +69,22 @@ async function removeChar(pageid, wikitext, setting) {
 		recentchanges.map(({ pageid }) => pageid)
 		, 500);
 	if (pagelists.length) {
-		await Promise.all(
-			pagelists.map(async(pagelist) => {
-				const { data: { query: { pages } } } = await api.post({
-					prop: 'revisions',
-					pageids: pagelist,
-					rvprop: 'content',
-				}, {
-					retry: 10,
-				});
-				await Promise.all(
-					pages.map(async (page) => {
-						const { pageid, revisions } = page;
-						if (revisions.length) {
-							const { content: wikitext } = revisions[0];
-							await removeChar(pageid, wikitext, setting);
-						}
-					}),
-				);
-			}),
-		);
+		await Promise.all(pagelists.map(async(pagelist) => {
+			const { data: { query: { pages } } } = await api.post({
+				prop: 'revisions',
+				pageids: pagelist,
+				rvprop: 'content',
+			}, {
+				retry: 10,
+			});
+			await Promise.all(pages.map(async (page) => {
+				const { pageid, revisions } = page;
+				if (revisions.length) {
+					const { content: wikitext } = revisions[0];
+					await removeChar(pageid, wikitext, setting);
+				}
+			}));
+		}));
 	} else {
 		console.log('No pages has invisible characters.');
 	}
