@@ -17,7 +17,11 @@ async function clientLogin(api, username, password = config.password) {
 				password,
 				loginreturnurl: config.zh.api,
 			},
-			{ tokenName: 'logintoken', retry: 10, noCache: true },
+			{
+				tokenName: 'logintoken',
+				retry: 10,
+				noCache: true,
+			},
 		)
 		.then(({ data }) => {
 			if (data.clientlogin.status === 'PASS') {

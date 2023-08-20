@@ -71,6 +71,8 @@ async function pageEdit(title) {
 		titles: Object.keys(PAGE_MAP),
 		rvprop: 'content',
 		inprop: 'protection',
+	}, {
+		retry: 10,
 	});
 
 	await Promise.all(pages.map(async ({ title, revisions: [{ content }], protection, touched }) => {

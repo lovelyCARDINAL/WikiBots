@@ -27,6 +27,8 @@ async function ruleTest2(item) {
 		titles: title,
 		rvprop: 'ids|timestamp',
 		rvlimit: '2',
+	}, {
+		retry: 10,
 	});
 	if (missing || revisions.length > 1) {
 		return false;
@@ -70,6 +72,8 @@ async function pageDelete(pageid, reason) {
 				lelimit: 'max',
 				lestart,
 				leend,
+			}, {
+				retry: 10,
 			});
 
 			if (pagelist.length) {

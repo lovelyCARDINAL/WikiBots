@@ -33,7 +33,9 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 				gcmtype: 'page',
 				gcmlimit: 'max',
 				...rvcontinue && { rvcontinue },
-			}, { retry: 10 });
+			}, {
+				retry: 10,
+			});
 			rvcontinue = data.continue ? data.continue.rvcontinue : eol;
 			result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
 		}

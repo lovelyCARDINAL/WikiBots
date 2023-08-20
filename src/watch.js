@@ -38,6 +38,8 @@ async function watch(titles, unwatch) {
 		cmprop: 'title',
 		cmnamespace: '*',
 		cmlimit: 'max',
+	}, {
+		retry: 10,
 	});
 	watchlist.push(...categorymembers.map((member) => member.title));
 
@@ -55,6 +57,8 @@ async function watch(titles, unwatch) {
 			wrlimit: 'max',
 			wrfromtitle: '萌娘百科_talk:讨论版',
 			wrtotitle: '萌娘百科_talk:讨论页面',
+		}, {
+			retry: 10,
 		});
 		const unwatchlist = splitAndJoin(
 			talklist

@@ -25,6 +25,8 @@ const SUMMARY = {
 			prop: 'revisions',
 			titles: 'User:星海子/BotConfig/interfaceMessages.json',
 			rvprop: 'content',
+		}, {
+			retry: 10,
 		});
 		const setData = JSON.parse(content);
 		const suffixes = ['', '/zh-hans', '/zh-cn', '/zh-hant', '/zh-tw', '/zh-hk'];
@@ -44,6 +46,8 @@ const SUMMARY = {
 			prop: 'revisions',
 			titles: pageGroup.map(([title]) => title),
 			rvprop: 'timestamp|content',
+		}, {
+			retry: 10,
 		});
 		const result = pages
 			.filter(({ missing, revisions }) => !missing && moment(revisions[0].timestamp).isAfter(time))

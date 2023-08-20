@@ -196,7 +196,9 @@ async function deleteAvatar(user) {
 					leuser: user.replace('User:', ''),
 					lelimit: 'max',
 					...lecontinue && { lecontinue },
-				}, { retry: 10 });
+				}, {
+					retry: 10,
+				});
 				lecontinue = data.continue ? data.continue.lecontinue : eol;
 				result.push(...data.query.logevents);
 			}

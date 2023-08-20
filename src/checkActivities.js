@@ -131,11 +131,15 @@ async function updateData(pageid, text) {
 				prop: 'revisions',
 				titles: 'Module:UserGroup/data',
 				rvprop: 'content',
+			}, {
+				retry: 10,
 			}),
 			zhapi.post({
 				list: 'allusers',
 				augroup: 'bot',
 				aulimit: 'max',
+			}, {
+				retry: 10,
 			}),
 		]);
 		const data = JSON.parse(content);

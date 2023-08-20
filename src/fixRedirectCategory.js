@@ -62,6 +62,8 @@ const SITE_LIST = ['zh', 'cm'];
 		const { data: { query: { redirects } } } = await api.post({
 			redirects: true,
 			pageids: pages.map(({ pageid }) => pageid),
+		}, {
+			retry: 10,
 		});
 
 		const contentData = {};

@@ -12,6 +12,8 @@ async function queryPages(apprefix, apprtype, apprlevel) {
 		apprefix,
 		apprtype,
 		apprlevel,
+	}, {
+		retry: 10,
 	});
 	return allpages;
 }

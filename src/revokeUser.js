@@ -48,7 +48,10 @@ async function manageTags(operation) {
 		reason: '用户注销',
 		ignorewarnings: true,
 		tags: 'Bot',
-	}, { retry: 10, noCache: true });
+	}, {
+		retry: 20,
+		noCache: true,
+	});
 	console.log(JSON.stringify(data));
 }
 
@@ -91,7 +94,9 @@ async function deletePages(user) {
 		list: 'allpages',
 		apprefix: user,
 		apnamespace: '2',
-	}, { retry: 10 });
+	}, {
+		retry: 10,
+	});
 	const pagelist = allpages
 		.map((page) => page.title)
 		.filter((title) => title.startsWith(`User:${user}/`) || title === `User:${user}`);
@@ -116,7 +121,9 @@ async function queryLogs(api, leaction, leuser) {
 		leend: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
 		leuser,
 		lelimit: 'max',
-	}, { retry: 10 });
+	}, {
+		retry: 10,
+	});
 	return logevents
 		.filter(({ suppressed, comment }) => !suppressed && comment === '用户注销')
 		.map(({ logid }) => logid);

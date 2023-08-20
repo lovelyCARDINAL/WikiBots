@@ -12,6 +12,8 @@ async function isActive(user) {
 		ucnamespace: '*',
 		uclimit: '1',
 		ucend: time,
+	}, {
+		retry: 10,
 	});
 	return !usercontribs.length;
 }
@@ -26,6 +28,8 @@ async function isActive(user) {
 		pageid: '488029',
 		prop: 'wikitext',
 		section: '1',
+	}, {
+		retry: 10,
 	});
 
 	const userlist = await (async () => {

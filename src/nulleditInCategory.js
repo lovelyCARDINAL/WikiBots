@@ -12,6 +12,8 @@ const SITE_LIST = ['zh', 'cm'];
 		prop: 'revisions',
 		titles: 'User:星海子/BotConfig/nulleditInCategory.json',
 		rvprop: 'content',
+	}, {
+		retry: 10,
 	});
 	const setting = JSON.parse(content || '{}');
 	
@@ -34,6 +36,8 @@ const SITE_LIST = ['zh', 'cm'];
 						cmtitle: `Category:${title}`,
 						cmnamespace: '*',
 						cmlimit: 'max',
+					}, {
+						retry: 10,
 					});
 					const pagelist = categorymembers.map(({ pageid }) => pageid);
 					

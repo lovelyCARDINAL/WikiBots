@@ -16,6 +16,8 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 		prop: 'revisions',
 		titles: 'User:星海子/BotData/overrideCategory.json',
 		rvprop: 'content',
+	}, {
+		retry: 10,
 	});
 	const setData = JSON.parse(content || '{}');
 
@@ -35,7 +37,9 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 					cmprop: 'title',
 					cmtype: 'subcat',
 					cmlimit: 'max',
-				}, { retry: 30 });
+				}, {
+					retry: 30,
+				});
 				return categorymembers;
 			}));
 			return result.flat().map(({ title }) => title);
@@ -48,7 +52,9 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 					cmprop: 'title',
 					cmtype: 'subcat',
 					cmlimit: 'max',
-				}, { retry: 30 });
+				}, {
+					retry: 30,
+				});
 				return categorymembers;
 			}));
 			return result.flat().map(({ title }) => title).concat(data.vtuber);

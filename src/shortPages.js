@@ -16,6 +16,8 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 				apnamespace: ns,
 				apmaxsize: '15',
 				aplimit: 'max',
+			}, {
+				retry: 10,
 			});
 			return allpages;
 		}));

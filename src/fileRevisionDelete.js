@@ -45,7 +45,9 @@ const api = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': confi
 				iiprop: 'archivename',
 				iilimit: 'max',
 				redirects: true,
-			}, { retry: 10 });
+			}, {
+				retry: 10,
+			});
 			return await Promise.all(pages.map((page) => {
 				const ids = page.imageinfo
 					.map((item) => !item?.filehidden && item?.archivename)

@@ -13,6 +13,8 @@ async function ruleTest(title, pageid, maintainlist) {
 		rvprop: 'user',
 		rvlimit: 'max',
 		rvdir: 'newer',
+	}, {
+		retry: 10,
 	});
 	const editlist = pages[0].revisions.map((item) => item.user);
 
@@ -29,7 +31,10 @@ async function pageDelete(pageid) {
 		reason: '自动删除悬挂{{[[Template:ns2d|ns2d]]}}的用户页面',
 		tags: 'Bot',
 		watchlist: 'nochange',
-	}, { retry: 10, noCache: true });
+	}, {
+		retry: 20,
+		noCache: true,
+	});
 	console.log(JSON.stringify(data));
 }
 
@@ -38,6 +43,8 @@ async function cannotDelete(pageid) {
 		prop: 'revisions',
 		pageids: pageid,
 		rvprop: 'content',
+	}, {
+		retry: 10,
 	});
 	let wikitext = pages[0].revisions[0].content;
 	wikitext = wikitext.replaceAll(/(?:<noinclude>\s*)?{{\s*(?:T:|模板:|[样樣]板:|Template:)?\s*ns2d\s*}}(?:\s*<\/noinclude>)?/gi, '');
@@ -78,6 +85,8 @@ async function cannotDelete(pageid) {
 		tiprop: 'pageid|title',
 		tinamespace: '2',
 		tilimit: 'max',
+	}, {
+		retry: 10,
 	});
 	const pagedata = data.query.pages[0];
 	if (Object.prototype.hasOwnProperty.call(pagedata, 'transcludedin')){
