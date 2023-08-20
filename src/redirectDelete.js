@@ -1,10 +1,9 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
-import { getTimeData, editTimeData } from './utils/lastTime.js';
 
 const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } });
 
-const NS_LIST = ['1', '2', '3', '5', '9', '11', '13', '15', '275', '829'];
+const NS_LIST = [1, 2, 3, 5, 9, 11, 13, 15, 275, 829];
 const NS_REASON_MAP = {
 	13: [ [13, 5], '自动删除移动讨论页面残留重定向'],
 	5: [ [13, 5], '自动删除移动讨论页面残留重定向'],
@@ -12,30 +11,21 @@ const NS_REASON_MAP = {
 	3: [ [1, 11, 5, 13], '自动删除移动用户讨论页面残留重定向'],
 };
 
-function ruleTest(item, targetns) {
-	const { params, comment } = item;
-	if (params.suppressredirect || !targetns.includes(params.target_ns) || item.commenthidden) {
-		return false;
-	} 
-	return !/(?:!nobot!|[暫暂]留)/i.test(comment);
-}
-
-async function ruleTest2(item) {
-	const { title, timestamp } = item;
-	const { data: { query: { pages: [{ missing, revisions, pageid }] } } } = await api.post({
+async function ruleTest(pageid, timestamp) {
+	const { data: { query: { pages: [{ missing, revisions }] } } } = await api.post({
 		prop: 'revisions',
-		titles: title,
-		rvprop: 'ids|timestamp',
+		pageids: pageid,
+		rvprop: 'timestamp',
 		rvlimit: '2',
 	}, {
 		retry: 10,
 	});
 	if (missing || revisions.length > 1) {
+		console.log(pageid, missing, revisions?.length);
 		return false;
 	}
 	const { timestamp: timestamp2 } = revisions[0];
-	const timeDiff = Math.abs(new Date(timestamp) - new Date(timestamp2)) < 5000;
-	return timeDiff ? pageid : false;
+	return Math.abs(new Date(timestamp) - new Date(timestamp2)) < 5000;
 }
 
 async function pageDelete(pageid, reason) {
@@ -56,43 +46,38 @@ async function pageDelete(pageid, reason) {
 	
 	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 
-	const lastTime = await getTimeData('redirect-deletion');
-	const leend = lastTime['redirect-deletion'],
-		lestart = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+	const { data: { query: { logevents } } } = await api.post({
+		list: 'logevents',
+		letype: 'move',
+		leprop: 'ids|title|type|user|timestamp|comment|details',
+		lelimit: 'max',
+		lestart: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+		leend: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+	}, {
+		retry: 10,
+	});
 
-	await Promise.all(
-		NS_LIST.map(async (ns) => {
-			const [targetns, reason] = NS_REASON_MAP[ns] || [ [parseInt(ns)], '自动删除移动讨论页面残留重定向'];
-
-			const { data: { query: { logevents: pagelist } } } = await api.post({
-				list: 'logevents',
-				letype: 'move',
-				leprop: 'title|type|user|timestamp|comment|details',
-				lenamespace: ns,
-				lelimit: 'max',
-				lestart,
-				leend,
-			}, {
-				retry: 10,
-			});
-
-			if (pagelist.length) {
-				await Promise.all(
-					pagelist.map(async (item) => {
-						if (ruleTest(item, targetns)) {
-							const pageid = await ruleTest2(item);
-							if (pageid) {
-								await pageDelete(pageid, reason);
-							}
-						}
-					}),
-				);
-			} else {
-				console.log(`No redirect in namespace ${ns}`);
-			}
-		}),
+	const pages = logevents.filter(({ pageid, ns, comment, params, commenthidden }) => pageid !== 0
+		&& NS_LIST.includes(ns)
+		&& !/(?:!nobot!|[暫暂]留)/i.test(comment)
+		&& !params.suppressredirect
+		&& !commenthidden,
 	);
 
-	await editTimeData(lastTime, 'redirect-deletion', lestart);
+	if (!pages.length) {
+		console.log('No pages to delete.');
+	}
+
+	await Promise.all(pages.map(async ({ pageid, ns, params, timestamp }) => {
+		const [targetns, reason] = NS_REASON_MAP[ns] || [ [ns], '自动删除移动讨论页面残留重定向'];
+		if (!targetns.includes(params.target_ns)) {
+			return;
+		}
+		const needsDelete = await ruleTest(pageid, timestamp);
+		if (needsDelete) {
+			await pageDelete(pageid, reason);
+		}
+	}));
+
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
