@@ -32,7 +32,7 @@ const api = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': confi
 				geinamespace: '0',
 				geifilterredir: 'nonredirects',
 				geilimit: 'max',
-				...rvcontinue && { rvcontinue, clcontinue: `${rvcontinue.split('|')[0]}|` },
+				...rvcontinue && { rvcontinue, clcontinue: `${rvcontinue.split('|')[0]}|` }, //TODO: only works when pages < 5000
 			}, {
 				retry: 10,
 			});
