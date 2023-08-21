@@ -1,6 +1,7 @@
 name: "[schedule] weekly"
 # badFileName.js @Monday
 # mostTranscludedPages.js @Tuesday
+# badDisplayTitle.js @Tuesday
 # shortPages.js @Wednesday
 # tentativeTitle.js @Wednesday
 # checkEditgroupActivities.js @Thursday
@@ -27,6 +28,7 @@ on:
           - "none"
           - "bad-file-name"
           - "most-transcluded-pages"
+          - "bad-display-title"
           - "short-pages"
           - "tentative-title"
           - "check-editgroup-activities"
@@ -64,7 +66,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run mostTranscludedPages.js
+      - name: Run badFileName.js
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
@@ -90,6 +92,27 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/mostTranscludedPages.js
+
+  bad-display-title:
+    if: |
+      github.event.schedule == '55 21 * * 1' || 
+      github.event.inputs.task == 'bad-display-title' ||
+      github.event.inputs.group == 'all'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run badDisplayTitle.js
+        env:
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+        run: node src/badDisplayTitle.js
 
   short-pages:
     if: |
