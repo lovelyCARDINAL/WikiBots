@@ -13,36 +13,6 @@ const NS_REASON_MAP = {
 	3: [ [1, 11, 5, 13], '自动删除移动用户讨论页面残留重定向'],
 };
 
-async function ruleTest(pageid, timestamp) {
-	const { data: { query: { pages: [{ missing, revisions }] } } } = await api.post({
-		prop: 'revisions',
-		pageids: pageid,
-		rvprop: 'timestamp',
-		rvlimit: '2',
-	}, {
-		retry: 15,
-	});
-	if (missing || revisions.length > 1) {
-		console.log(pageid, missing, revisions?.length);
-		return false;
-	}
-	const { timestamp: timestamp2 } = revisions[0];
-	return Math.abs(new Date(timestamp) - new Date(timestamp2)) < 5000;
-}
-
-async function pageDelete(pageid, reason) {
-	await api.postWithToken('csrf', {
-		action: 'delete',
-		pageid,
-		reason,
-		tags: 'Bot',
-		watchlist: 'nochange',
-	}, {
-		retry: 30,
-		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
-}
-
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
@@ -75,9 +45,33 @@ async function pageDelete(pageid, reason) {
 		if (!targetns.includes(params.target_ns)) {
 			return;
 		}
-		const needsDelete = await ruleTest(pageid, timestamp);
+		const needsDelete = await (async () => {
+			const { data: { query: { pages: [{ missing, revisions }] } } } = await api.post({
+				prop: 'revisions',
+				pageids: pageid,
+				rvprop: 'timestamp',
+				rvlimit: '2',
+			}, {
+				retry: 15,
+			});
+			if (missing || revisions.length > 1) {
+				console.log(pageid, missing, revisions?.length);
+				return false;
+			}
+			const { timestamp: timestamp2 } = revisions[0];
+			return Math.abs(new Date(timestamp) - new Date(timestamp2)) < 5000;
+		})();
 		if (needsDelete) {
-			await pageDelete(pageid, reason);
+			await api.postWithToken('csrf', {
+				action: 'delete',
+				pageid,
+				reason,
+				tags: 'Bot',
+				watchlist: 'nochange',
+			}, {
+				retry: 30,
+				noCache: true,
+			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}
 	}));
 

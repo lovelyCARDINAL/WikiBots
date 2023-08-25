@@ -24,23 +24,6 @@ function replaceSpecialCharacters(wikitext, pageid, setting) {
 	}
 }
 
-async function removeChar(pageid, wikitext, setting) {
-	await api.postWithToken('csrf', {
-		action: 'edit',
-		pageid,
-		text: replaceSpecialCharacters(wikitext, pageid, setting),
-		minor: true,
-		bot: true,
-		nocreate: true,
-		tags: 'Bot',
-		summary: '移除不可见字符',
-		watchlist: 'nochange',
-	}, {
-		retry: 30,
-		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
-}
-
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
@@ -83,7 +66,20 @@ async function removeChar(pageid, wikitext, setting) {
 				const { pageid, revisions } = page;
 				if (revisions.length) {
 					const { content: wikitext } = revisions[0];
-					await removeChar(pageid, wikitext, setting);
+					await api.postWithToken('csrf', {
+						action: 'edit',
+						pageid,
+						text: replaceSpecialCharacters(wikitext, pageid, setting),
+						minor: true,
+						bot: true,
+						nocreate: true,
+						tags: 'Bot',
+						summary: '移除不可见字符',
+						watchlist: 'nochange',
+					}, {
+						retry: 30,
+						noCache: true,
+					}).then(({ data }) => console.log(JSON.stringify(data)));
 				}
 			}));
 		}));
