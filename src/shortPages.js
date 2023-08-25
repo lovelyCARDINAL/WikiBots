@@ -19,7 +19,7 @@ const api = new MediaWikiApi(config.zh.api, {
 				apmaxsize: '15',
 				aplimit: 'max',
 			}, {
-				retry: 10,
+				retry: 15,
 			});
 			return allpages;
 		}));
@@ -50,7 +50,7 @@ const api = new MediaWikiApi(config.zh.api, {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 

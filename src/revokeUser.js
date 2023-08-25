@@ -57,7 +57,7 @@ async function manageTags(operation) {
 		ignorewarnings: true,
 		tags: 'Bot',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	});
 	console.log(JSON.stringify(data));
@@ -65,7 +65,7 @@ async function manageTags(operation) {
 
 async function deleteAvatar(user) {
 	let retry = 0;
-	while (retry < 10) {
+	while (retry < 15) {
 		const { response: { data } } = await cmabot.request.post('/index.php', {
 			title: 'Special:查看头像',
 			'delete': 'true',
@@ -92,7 +92,7 @@ async function deleteRights(user) {
 		tags: 'Bot',
 		formatversion: '2',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -103,7 +103,7 @@ async function deletePages(user) {
 		apprefix: user,
 		apnamespace: '2',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	const pagelist = allpages
 		.map((page) => page.title)
@@ -115,7 +115,7 @@ async function deletePages(user) {
 			reason: '用户注销',
 			tags: 'Bot|RevokeUser',
 		}, {
-			retry: 20,
+			retry: 30,
 			noCache: true,
 		}).then(({ data }) => /cantedit|protected/.test(data?.errors?.[0]?.code) ? console.warn(`[[${title}]] is protected.`) : console.log(JSON.stringify(data)));
 	}));
@@ -130,7 +130,7 @@ async function queryLogs(api, leaction, leuser) {
 		leuser,
 		lelimit: 'max',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	return logevents
 		.filter(({ suppressed, comment }) => !suppressed && comment === '用户注销')
@@ -147,7 +147,7 @@ async function hideLogs(api, ids) {
 		reason: '用户注销',
 		tags: 'Bot',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }

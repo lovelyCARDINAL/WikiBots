@@ -31,7 +31,7 @@ async function protect(site, title, protections) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -54,7 +54,7 @@ async function protect(site, title, protections) {
 			titles: 'User:星海子/BotConfig/interfaceProtection.json',
 			rvprop: 'content',
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 		const setData = JSON.parse(content);
 		const results = {};
@@ -75,7 +75,7 @@ async function protect(site, title, protections) {
 			titles: pageGroup[site],
 			inprop: 'protection',
 		}, {
-			retry: 10,
+			retry: 15,
 		}).then(async ({ data: { query: { pages } } }) => {
 			console.groupCollapsed(site.toUpperCase());
 			await Promise.all(pages.map(async({ title, missing, protection }) => {

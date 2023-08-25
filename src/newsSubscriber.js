@@ -15,7 +15,7 @@ async function isActive(user) {
 		uclimit: '1',
 		ucend: time,
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	return !usercontribs.length;
 }
@@ -31,7 +31,7 @@ async function isActive(user) {
 		prop: 'wikitext',
 		section: '1',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 
 	const userlist = await (async () => {
@@ -64,7 +64,7 @@ async function isActive(user) {
 			nocreate: true,
 			watchlist: 'nochange',
 		}, {
-			retry: 20,
+			retry: 30,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}

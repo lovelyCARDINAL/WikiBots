@@ -50,7 +50,7 @@ async function queryContribs(api, ucuser, ucnamespace, ucend) {
 			ucprop: 'title|timestamp',
 			uccontinue,
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 		uccontinue = data.continue ? data.continue.uccontinue : eol;
 		result.push(...data.query.usercontribs);
@@ -68,7 +68,7 @@ async function queryLatestContribs(api, ucuser, ucnamespace, ucend) {
 		ucuser,
 		ucprop: 'timestamp',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	return usercontribs?.[0]?.timestamp;
 }
@@ -90,7 +90,7 @@ async function queryLatestEvents(api, user, end) {
 		uctag: 'Bot',
 		letag: 'Bot',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	const contribsTimestamp = usercontribs.length
 		? timestampCST(usercontribs[0].timestamp)
@@ -115,7 +115,7 @@ async function updateData(pageid, text) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -136,14 +136,14 @@ async function updateData(pageid, text) {
 				titles: 'Module:UserGroup/data',
 				rvprop: 'content',
 			}, {
-				retry: 10,
+				retry: 15,
 			}),
 			zhapi.post({
 				list: 'allusers',
 				augroup: 'bot',
 				aulimit: 'max',
 			}, {
-				retry: 10,
+				retry: 15,
 			}),
 		]);
 		const data = JSON.parse(content);

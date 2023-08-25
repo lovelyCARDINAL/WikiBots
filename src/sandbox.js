@@ -41,7 +41,7 @@ async function pageProtect(title) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -58,7 +58,7 @@ async function pageEdit(title) {
 		summary: PAGE_MAP[title].summary,
 		watchlist: 'nochange',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -74,7 +74,7 @@ async function pageEdit(title) {
 		rvprop: 'content',
 		inprop: 'protection',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 
 	await Promise.all(pages.map(async ({ title, revisions: [{ content }], protection, touched }) => {

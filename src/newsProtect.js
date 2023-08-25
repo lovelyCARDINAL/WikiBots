@@ -15,7 +15,7 @@ async function queryPages(apprefix, apprtype, apprlevel) {
 		apprtype,
 		apprlevel,
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	return allpages;
 }
@@ -52,7 +52,7 @@ async function queryPages(apprefix, apprtype, apprlevel) {
 					tags: 'Bot',
 					watchlist: 'nochange',
 				}, {
-					retry: 20,
+					retry: 30,
 					noCache: true,
 				}).then(({ data }) => console.log(JSON.stringify(data)));
 			}),

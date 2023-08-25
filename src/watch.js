@@ -1,6 +1,6 @@
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
-import config from './utils/config.js';
+import config from './utils/localConfig.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
 const api = new MediaWikiApi(config.zh.api, {
@@ -11,9 +11,9 @@ async function watch(titles, unwatch) {
 	await api.postWithToken('watch', {
 		action: 'watch',
 		titles,
-		...unwatch && { unwatch },
+		unwatch,
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -29,7 +29,7 @@ async function watch(titles, unwatch) {
 			augroup: ['sysop', 'bot', 'patroller', 'staff', 'techeditor', 'interface-admin'],
 			aulimit: 'max',
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 		return allusers.map(({ name }) => `User:${name}`);
 	})();
@@ -41,7 +41,7 @@ async function watch(titles, unwatch) {
 		cmnamespace: '*',
 		cmlimit: 'max',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	watchlist.push(...categorymembers.map((member) => member.title));
 
@@ -60,7 +60,7 @@ async function watch(titles, unwatch) {
 			wrfromtitle: '萌娘百科_talk:讨论版',
 			wrtotitle: '萌娘百科_talk:讨论页面',
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 		const unwatchlist = splitAndJoin(
 			talklist

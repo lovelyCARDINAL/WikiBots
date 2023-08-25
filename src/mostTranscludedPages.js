@@ -17,14 +17,14 @@ const api = new MediaWikiApi(config.zh.api, {
 		gqppage: 'Mostlinkedtemplates',
 		gqplimit: 'max',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	const { data: { query: { querypage: { results } } } } = await api.post({
 		list: 'querypage',
 		qppage: 'Mostlinkedtemplates',
 		qplimit: 'max',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
     
 	let text = '* 本页面由[[U:星海-interfacebot|机器人]]根据[[Special:MostTranscludedPages]]生成页面保护信息以供管理员检查。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable center plainlinks"\n|-\n! 序号 !! 页面名 !! 使用量 !! 编辑 !! 移动 !! 操作\n';
@@ -54,7 +54,7 @@ const api = new MediaWikiApi(config.zh.api, {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 

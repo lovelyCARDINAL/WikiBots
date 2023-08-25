@@ -28,7 +28,7 @@ const SUMMARY = {
 			titles: 'User:星海子/BotConfig/interfaceMessages.json',
 			rvprop: 'content',
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 		const setData = JSON.parse(content);
 		const suffixes = ['', '/zh-hans', '/zh-cn', '/zh-hant', '/zh-tw', '/zh-hk'];
@@ -49,7 +49,7 @@ const SUMMARY = {
 			titles: pageGroup.map(([title]) => title),
 			rvprop: 'timestamp|content',
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 		const result = pages
 			.filter(({ missing, revisions }) => !missing && moment(revisions[0].timestamp).isAfter(time))
@@ -76,7 +76,7 @@ const SUMMARY = {
 				summary: SUMMARY[key] || '同步界面消息',
 				watchlist: 'nochange',
 			}, {
-				retry: 20,
+				retry: 30,
 				noCache: true,
 			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}));

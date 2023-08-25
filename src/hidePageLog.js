@@ -17,7 +17,7 @@ const api = new MediaWikiApi(config.zh.api, {
 		lestart = new Date().toISOString();
 
 	let retry = 0;
-	while (retry < 20) {
+	while (retry < 30) {
 		console.groupCollapsed(`Retry: ${retry}`);
 		const titles = await (async () => {
 			const result = [];
@@ -33,7 +33,7 @@ const api = new MediaWikiApi(config.zh.api, {
 					lelimit: 'max',
 					lecontinue,
 				}, {
-					retry: 10,
+					retry: 15,
 				});
 				lecontinue = data.continue ? data.continue.lecontinue : eol;
 				result.push(...data.query.logevents);
@@ -52,9 +52,9 @@ const api = new MediaWikiApi(config.zh.api, {
 					afltitle: title,
 					afllimit: 'max',
 					aflprop: 'ids|hidden',
-					...aflstart && { aflstart },
+					aflstart,
 				}, {
-					retry: 10,
+					retry: 15,
 				});
 				aflstart = data.continue ? data.continue.aflstart : eol;
 				result.push(...data.query.abuselog);

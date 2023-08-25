@@ -29,7 +29,7 @@ const api = new MediaWikiApi(config.cm.api, {
 				leend,
 				lecontinue,
 			}, {
-				retry: 10,
+				retry: 15,
 			});
 			lecontinue = data.continue ? data.continue.lecontinue : eol;
 			result.push(...data.query.logevents);
@@ -48,7 +48,7 @@ const api = new MediaWikiApi(config.cm.api, {
 				iilimit: 'max',
 				redirects: true,
 			}, {
-				retry: 10,
+				retry: 15,
 			});
 			return await Promise.all(pages.map((page) => {
 				const ids = page.imageinfo
@@ -72,7 +72,7 @@ const api = new MediaWikiApi(config.cm.api, {
 			reason: '删除长期未使用的旧版本文件',
 			tags: 'Bot',
 		}, {
-			retry: 20,
+			retry: 30,
 			noCache: true,
 		}).then(({ data }) => {
 			data.revisiondelete.items = data.revisiondelete.items

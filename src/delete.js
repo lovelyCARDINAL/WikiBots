@@ -28,7 +28,7 @@ const api = new MediaWikiApi(config[site].api, {
 				gcmlimit: 'max',
 				gcmcontinue,
 			}, {
-				retry: 10,
+				retry: 15,
 			});
 			gcmcontinue = data.continue ? data.continue.gcmcontinue : eol;
 			if (data?.query?.pages) {
@@ -47,7 +47,7 @@ const api = new MediaWikiApi(config[site].api, {
 		aurights: 'rollback',
 		aulimit: 'max',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	const userlist = allusers.map(({ name }) => name);
 		
@@ -72,7 +72,7 @@ const api = new MediaWikiApi(config[site].api, {
 			pageid,
 			tags: 'Automation tool',
 		}, {
-			retry: 20,
+			retry: 30,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}));

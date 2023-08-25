@@ -19,7 +19,7 @@ async function clientLogin(api, username, password = config.password) {
 			},
 			{
 				tokenName: 'logintoken',
-				retry: 10,
+				retry: 15,
 				noCache: true,
 			},
 		)

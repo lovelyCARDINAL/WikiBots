@@ -25,7 +25,7 @@ const api = new MediaWikiApi(config[site].api, {
 			prop: 'wikitext',
 			section: '2',
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 		return wikitext.split('\n').slice(2, -1).map((page) => page.trim());
 	})();
@@ -38,7 +38,7 @@ const api = new MediaWikiApi(config[site].api, {
 			tags: 'Bot',
 			watchlist: 'nochange',
 		}, {
-			retry: 20,
+			retry: 30,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
 
@@ -48,7 +48,7 @@ const api = new MediaWikiApi(config[site].api, {
 			rvprop: 'content|ids',
 			rvlimit: 'max',
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 
 		if (missing) {
@@ -71,7 +71,7 @@ const api = new MediaWikiApi(config[site].api, {
 				action: 'edit',
 				title,
 				undo,
-				...undoafter && { undoafter },
+				undoafter,
 				summary: '尝试恢复页面后取消即将删除状态',
 				tags: 'Bot',
 				bot: true,
@@ -79,7 +79,7 @@ const api = new MediaWikiApi(config[site].api, {
 				minor: true,
 				watchlist: 'nochange',
 			}, {
-				retry: 20,
+				retry: 30,
 				noCache: true,
 			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}
@@ -97,7 +97,7 @@ const api = new MediaWikiApi(config[site].api, {
 		nocreate: true,
 		watchlist: 'nochange',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 

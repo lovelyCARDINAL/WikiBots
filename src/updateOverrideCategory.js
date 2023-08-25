@@ -19,7 +19,7 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 		titles: 'User:星海子/BotData/overrideCategory.json',
 		rvprop: 'content',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	const setData = JSON.parse(content || '{}');
 

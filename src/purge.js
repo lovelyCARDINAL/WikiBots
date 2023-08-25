@@ -25,14 +25,14 @@ const api = new MediaWikiApi(config.zh.api, {
 				gapnamespace: ns,
 				gaplimit: 'max',
 			}, {
-				retry: 10,
+				retry: 15,
 			}).then(({ data }) => console.log(JSON.stringify(data)));
 		})),
 		api.post({
 			action: 'purge',
 			titles: setting.page,
 		}, {
-			retry: 10,
+			retry: 15,
 		}).then(({ data }) => console.log(JSON.stringify(data))),
 	]);
 

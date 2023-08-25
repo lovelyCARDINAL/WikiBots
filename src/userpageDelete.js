@@ -16,7 +16,7 @@ async function ruleTest(title, pageid, maintainlist) {
 		rvlimit: 'max',
 		rvdir: 'newer',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	const editlist = pages[0].revisions.map((item) => item.user);
 
@@ -34,7 +34,7 @@ async function pageDelete(pageid) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	});
 	console.log(JSON.stringify(data));
@@ -46,7 +46,7 @@ async function cannotDelete(pageid) {
 		pageids: pageid,
 		rvprop: 'content',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	let wikitext = pages[0].revisions[0].content;
 	wikitext = wikitext.replaceAll(/(?:<noinclude>\s*)?{{\s*(?:T:|模板:|[样樣]板:|Template:)?\s*ns2d\s*}}(?:\s*<\/noinclude>)?/gi, '');
@@ -60,7 +60,7 @@ async function cannotDelete(pageid) {
 		bot: true,
 		summary: '无法自动删除，请至[[萌娘百科_talk:讨论版/操作申请]]提请维护人员删除。',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -76,7 +76,7 @@ async function cannotDelete(pageid) {
 			augroup: ['sysop', 'bot', 'patroller', 'staff'],
 			aulimit: 'max',
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 		return allusers.map(({ name }) => name);
 	})();
@@ -88,7 +88,7 @@ async function cannotDelete(pageid) {
 		tinamespace: '2',
 		tilimit: 'max',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	const pagedata = data.query.pages[0];
 	if (Object.prototype.hasOwnProperty.call(pagedata, 'transcludedin')){

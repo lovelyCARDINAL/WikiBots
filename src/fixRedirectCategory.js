@@ -19,7 +19,7 @@ const SITE_LIST = ['zh', 'cm'];
 			augroup: ['sysop', 'bot', 'patroller', 'honoredmaintainer', 'goodeditor', 'extendedconfirmed', 'staff'],
 			aulimit: 'max',
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 		return allusers.map(({ name }) => name);
 	})();
@@ -47,7 +47,7 @@ const SITE_LIST = ['zh', 'cm'];
 			gcmtype: 'subcat',
 			gcmlimit: 'max',
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 
 		// 获取尚未清空的已重定向分类
@@ -67,7 +67,7 @@ const SITE_LIST = ['zh', 'cm'];
 			redirects: true,
 			pageids: pages.map(({ pageid }) => pageid),
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 
 		const contentData = {};
@@ -91,7 +91,7 @@ const SITE_LIST = ['zh', 'cm'];
 				gcmtitle: title,
 				gcmlimit: 'max',
 			}, {
-				retry: 10,
+				retry: 15,
 			});
 
 			await Promise.all(members.map(({ pageid, revisions: [{ content }] }) => {
@@ -187,7 +187,7 @@ const SITE_LIST = ['zh', 'cm'];
 				tags: 'Bot',
 				watchlist: 'nochange',
 			}, {
-				retry: 20,
+				retry: 30,
 				noCache: true,
 			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}));

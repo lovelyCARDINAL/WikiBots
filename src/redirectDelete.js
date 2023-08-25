@@ -20,7 +20,7 @@ async function ruleTest(pageid, timestamp) {
 		rvprop: 'timestamp',
 		rvlimit: '2',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	if (missing || revisions.length > 1) {
 		console.log(pageid, missing, revisions?.length);
@@ -38,7 +38,7 @@ async function pageDelete(pageid, reason) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -56,7 +56,7 @@ async function pageDelete(pageid, reason) {
 		lestart: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
 		leend: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 
 	const pages = logevents.filter(({ pageid, ns, comment, params, commenthidden }) => pageid !== 0

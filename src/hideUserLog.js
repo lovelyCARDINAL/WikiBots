@@ -24,13 +24,13 @@ async function queryLogs(api, leaction, leend, lestart = undefined) {
 			list: 'logevents',
 			leprop: leaction === 'avatar/delete' ? 'ids|comment' : 'title',
 			leaction,
-			...lestart && { lestart },
+			lestart,
 			leend,
 			lelimit: 'max',
 			...leaction === 'avatar/delete' && { leuser: '星海-adminbot' },
 			lecontinue,
 		}, {
-			retry: 10,
+			retry: 15,
 		});
 		lecontinue = data.continue ? data.continue.lecontinue : eol;
 		result.push(...data.query.logevents);
@@ -46,7 +46,7 @@ async function queryPages(apprefix, apnamespace) {
 		apprefix,
 		apnamespace,
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	const user = apprefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	const prefixRegex = new RegExp(`^User(?: talk)?:(${user}|${user}/.*)$`);
@@ -63,7 +63,7 @@ async function hidePages(user) {
 
 	await Promise.all(pagelist.map(async (title) => {
 		let retry = 0;
-		while (retry < 20) {
+		while (retry < 30) {
 			const { response: { data: htmlString } } = await zhapi.request.get('/index.php', {
 				query: {
 					title,
@@ -103,7 +103,7 @@ async function hidePages(user) {
 
 async function hideAbuseLog(afluser) {
 	let retry = 0;
-	while (retry < 20) {
+	while (retry < 30) {
 		const ids = await (async () => {
 			const result = [];
 			const eol = Symbol();
@@ -114,9 +114,9 @@ async function hideAbuseLog(afluser) {
 					afluser,
 					afllimit: 'max',
 					aflprop: 'ids|hidden',
-					...aflstart && { aflstart },
+					aflstart,
 				}, {
-					retry: 10,
+					retry: 15,
 				});
 				aflstart = data.continue ? data.continue.aflstart : eol;
 				result.push(...data.query.abuselog);
@@ -146,7 +146,7 @@ async function hideAbuseLog(afluser) {
 
 async function deleteAvatar(user) {
 	let retry = 0;
-	while (retry < 10) {
+	while (retry < 15) {
 		const { response: { data } } = await abot.request.post('/index.php', {
 			title: 'Special:查看头像',
 			'delete': 'true',
@@ -203,7 +203,7 @@ async function deleteAvatar(user) {
 					lelimit: 'max',
 					lecontinue,
 				}, {
-					retry: 10,
+					retry: 15,
 				});
 				lecontinue = data.continue ? data.continue.lecontinue : eol;
 				result.push(...data.query.logevents);
@@ -227,7 +227,7 @@ async function deleteAvatar(user) {
 			reason: 'test',
 			tags: 'Bot',
 		}, {
-			retry: 20,
+			retry: 30,
 			noCache: true,
 		}).then(({ data }) => {
 			data.revisiondelete.items = data.revisiondelete.items

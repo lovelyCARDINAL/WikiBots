@@ -25,7 +25,7 @@ const api = new MediaWikiApi(config.zh.api, {
 		cmtype: 'subcat',
 		cmlimit: 'max',
 	}, {
-		retry: 10,
+		retry: 15,
 	}).then(({ data: { query: { categorymembers } } }) => {
 		return [...categorymembers.map(({ title }) => title), 'Category:虚拟UP主']; // TODO: remove 'Category:虚拟UP主' future
 	});
@@ -39,7 +39,7 @@ const api = new MediaWikiApi(config.zh.api, {
 			cmtype: 'page',
 			cmlimit: 'max',
 		}, {
-			retry: 10,
+			retry: 15,
 		}).then(({ data: { query: { categorymembers } } }) => {
 			return categorymembers.map(({ pageid }) => pageid);
 		});
@@ -54,7 +54,7 @@ const api = new MediaWikiApi(config.zh.api, {
 			clshow: '!hidden',
 			cllimit: 'max',
 		}, {
-			retry: 10,
+			retry: 15,
 		}).then(({ data: { query: { pages } } }) => {
 			return pages;
 		});
@@ -101,7 +101,7 @@ const api = new MediaWikiApi(config.zh.api, {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 20,
+		retry: 30,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 

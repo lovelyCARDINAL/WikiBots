@@ -15,7 +15,7 @@ const SITE_LIST = ['zh', 'cm'];
 		titles: 'User:星海子/BotConfig/nulleditInCategory.json',
 		rvprop: 'content',
 	}, {
-		retry: 10,
+		retry: 15,
 	});
 	const setting = JSON.parse(content || '{}');
 	
@@ -41,7 +41,7 @@ const SITE_LIST = ['zh', 'cm'];
 						cmnamespace: '*',
 						cmlimit: 'max',
 					}, {
-						retry: 10,
+						retry: 15,
 					});
 					const pagelist = categorymembers.map(({ pageid }) => pageid);
 					
@@ -59,7 +59,7 @@ const SITE_LIST = ['zh', 'cm'];
 									summary: '空编辑以刷新分类表',
 									watchlist: 'nochange',
 								}, {
-									retry: 20,
+									retry: 30,
 									noCache: true,
 								}).then(({ data }) => console.log(JSON.stringify(data)));
 							}),
