@@ -24,7 +24,7 @@ const api = new MediaWikiApi(config.zh.api, {
 				geinamespace: '0',
 				geifilterredir: 'nonredirects',
 				geilimit: '500',
-				...geicontinue && { geicontinue },
+				geicontinue,
 			}, {
 				retry: 10,
 			});

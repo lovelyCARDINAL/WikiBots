@@ -27,7 +27,7 @@ const api = new MediaWikiApi(config.cm.api, {
 				leaction: 'upload/overwrite',
 				lestart,
 				leend,
-				...lecontinue && { lecontinue },
+				lecontinue,
 			}, {
 				retry: 10,
 			});

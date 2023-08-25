@@ -31,7 +31,7 @@ async function queryFiles(apprefix) {
 			apnamespace: '6',
 			apfilterredir: 'nonredirects',
 			aplimit: 'max',
-			...apcontinue && { apcontinue },
+			apcontinue,
 		}, {
 			retry: 10,
 		});

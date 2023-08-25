@@ -28,7 +28,7 @@ async function queryLogs(api, leaction, leend, lestart = undefined) {
 			leend,
 			lelimit: 'max',
 			...leaction === 'avatar/delete' && { leuser: '星海-adminbot' },
-			...lecontinue && { lecontinue },
+			lecontinue,
 		}, {
 			retry: 10,
 		});
@@ -201,7 +201,7 @@ async function deleteAvatar(user) {
 					leprop: 'ids',
 					leuser: user.replace('User:', ''),
 					lelimit: 'max',
-					...lecontinue && { lecontinue },
+					lecontinue,
 				}, {
 					retry: 10,
 				});

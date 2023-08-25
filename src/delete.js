@@ -26,7 +26,7 @@ const api = new MediaWikiApi(config[site].api, {
 				gcmprop: 'ids|title',
 				gcmtype: 'page|subcat|file',
 				gcmlimit: 'max',
-				...gcmcontinue && { gcmcontinue },
+				gcmcontinue,
 			}, {
 				retry: 10,
 			});

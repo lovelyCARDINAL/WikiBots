@@ -34,7 +34,7 @@ const api = new MediaWikiApi(config.zh.api, {
 				gcmnamespace: '0',
 				gcmtype: 'page',
 				gcmlimit: 'max',
-				...rvcontinue && { rvcontinue },
+				rvcontinue,
 			}, {
 				retry: 10,
 			});

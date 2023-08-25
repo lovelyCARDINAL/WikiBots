@@ -21,8 +21,8 @@ const api = new MediaWikiApi(config.zh.api, {
 	const pages = await (async () => {
 		const result = [];
 		const eol = Symbol();
-		let rvcontinue = undefined;
-		while (rvcontinue !== eol) {
+		let geicontinue = undefined;
+		while (geicontinue !== eol) {
 			const { data } = await api.post({
 				prop: 'revisions|categories',
 				generator: 'embeddedin',
@@ -33,12 +33,12 @@ const api = new MediaWikiApi(config.zh.api, {
 				geititle: 'Template:欢迎编辑/有填写改进方向',
 				geinamespace: '0',
 				geifilterredir: 'nonredirects',
-				geilimit: 'max',
-				...rvcontinue && { rvcontinue, clcontinue: `${rvcontinue.split('|')[0]}|` }, //TODO: only works when pages < 5000
+				geilimit: '500',
+				geicontinue,
 			}, {
 				retry: 10,
 			});
-			rvcontinue = data.continue ? data.continue.rvcontinue : eol;
+			geicontinue = data.continue ? data.continue.geicontinue : eol;
 			result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
 		}
 		return result;

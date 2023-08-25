@@ -48,7 +48,7 @@ async function queryContribs(api, ucuser, ucnamespace, ucend) {
 			ucnamespace,
 			ucuser,
 			ucprop: 'title|timestamp',
-			...uccontinue && { uccontinue },
+			uccontinue,
 		}, {
 			retry: 10,
 		});

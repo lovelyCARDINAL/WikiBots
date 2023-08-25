@@ -30,7 +30,7 @@ async function queryContribs(api, ucuser) {
 			ucnamespace: '0|10|14|12|4|6',
 			ucuser,
 			ucprop: '',
-			...uccontinue && { uccontinue },
+			uccontinue,
 		}, {
 			retry: 10,
 		});

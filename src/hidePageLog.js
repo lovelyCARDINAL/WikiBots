@@ -31,7 +31,7 @@ const api = new MediaWikiApi(config.zh.api, {
 					lestart,
 					leend,
 					lelimit: 'max',
-					...lecontinue && { lecontinue },
+					lecontinue,
 				}, {
 					retry: 10,
 				});
