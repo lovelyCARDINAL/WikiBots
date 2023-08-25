@@ -4,7 +4,9 @@ import Parser from 'wikiparser-node';
 import config from './utils/config.js';
 
 const site = env.SITE;
-const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent } });
+const api = new MediaWikiApi(config[site].api, {
+	headers: { 'api-user-agent': config.apiuseragent },
+});
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);

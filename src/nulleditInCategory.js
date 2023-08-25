@@ -5,7 +5,9 @@ const SITE_LIST = ['zh', 'cm'];
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
-	const zhapi = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } });
+	const zhapi = new MediaWikiApi(config.zh.api, {
+		headers: { 'api-user-agent': config.apiuseragent },
+	});
 	await zhapi.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
 
 	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await zhapi.post({
@@ -23,7 +25,9 @@ const SITE_LIST = ['zh', 'cm'];
 			if (site === 'zh') {
 				api = zhapi;
 			} else {
-				api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent } });
+				api = new MediaWikiApi(config[site].api, {
+					headers: { 'api-user-agent': config.apiuseragent },
+				});
 				await api.login(config[site].bot.name, config[site].bot.password).then(console.log);
 			}
 			

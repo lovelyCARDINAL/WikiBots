@@ -6,7 +6,9 @@ const SITE_LIST = ['zh', 'cm'];
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	await Promise.all(SITE_LIST.map(async (site) => {
-		const api = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent } });
+		const api = new MediaWikiApi(config[site].api, {
+			headers: { 'api-user-agent': config.apiuseragent },
+		});
 		await api.login(config[site].bot.name, config[site].bot.password).then(console.log);
 
 		const { data: { query: { allredirects, categorymembers } } } = await api.post({

@@ -6,10 +6,18 @@ import { MediaWikiApi } from 'wiki-saikou';
 import clientLogin from './utils/clientLogin.js';
 import config from './utils/config.js';
 
-const zhabot = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } }),
-	cmabot = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent } }),
-	zhsbot = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } }),
-	cmsbot = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent } });
+const zhabot = new MediaWikiApi(config.zh.api, {
+		headers: { 'api-user-agent': config.apiuseragent },
+	}),
+	cmabot = new MediaWikiApi(config.cm.api, {
+		headers: { 'api-user-agent': config.apiuseragent },
+	}),
+	zhsbot = new MediaWikiApi(config.zh.api, {
+		headers: { 'api-user-agent': config.apiuseragent },
+	}),
+	cmsbot = new MediaWikiApi(config.cm.api, {
+		headers: { 'api-user-agent': config.apiuseragent },
+	});
 
 const octokit = new Octokit({ auth: env.GHP });
 

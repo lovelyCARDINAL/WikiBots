@@ -3,7 +3,9 @@ import config from './utils/config.js';
 import { getTimeData, editTimeData } from './utils/lastTime.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
-const api = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent } });
+const api = new MediaWikiApi(config.cm.api, {
+	headers: { 'api-user-agent': config.apiuseragent },
+});
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);

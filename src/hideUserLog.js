@@ -5,9 +5,15 @@ import config from './utils/config.js';
 import { getTimeData, editTimeData } from './utils/lastTime.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
-const abot = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent } }),
-	zhapi = new MediaWikiApi(config.zh.api, { headers: { 'api-user-agent': config.apiuseragent } }),
-	cmapi = new MediaWikiApi(config.cm.api, { headers: { 'api-user-agent': config.apiuseragent } });
+const abot = new MediaWikiApi(config.cm.api, {
+		headers: { 'api-user-agent': config.apiuseragent },
+	}),
+	zhapi = new MediaWikiApi(config.zh.api, {
+		headers: { 'api-user-agent': config.apiuseragent },
+	}),
+	cmapi = new MediaWikiApi(config.cm.api, {
+		headers: { 'api-user-agent': config.apiuseragent },
+	});
 
 async function queryLogs(api, leaction, leend, lestart = undefined) {
 	const result = [];

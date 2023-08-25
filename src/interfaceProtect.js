@@ -41,7 +41,9 @@ async function protect(site, title, protections) {
 
 	console.groupCollapsed('LOGIN');
 	await Promise.all(SITE_LIST.map(async(site) => {
-		api[site] = new MediaWikiApi(config[site].api, { headers: { 'api-user-agent': config.apiuseragent } });
+		api[site] = new MediaWikiApi(config[site].api, {
+			headers: { 'api-user-agent': config.apiuseragent },
+		});
 		await api[site].login(config[site].abot.name, config[site].abot.password).then((result) => console.log(site, result));
 	}));
 	console.groupEnd();
