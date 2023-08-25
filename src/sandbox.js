@@ -1,5 +1,3 @@
-// @TODO: 若沙盒版本数超过2000，则删除并重建
-
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
@@ -31,21 +29,6 @@ const PAGE_MAP = {
 	},
 };
 
-async function pageProtect(title) {
-	await api.postWithToken('csrf', {
-		action: 'protect',
-		title,
-		protections: 'move=sysop',
-		expiry: 'infinite',
-		reason: '公共沙盒保护',
-		tags: 'Bot',
-		watchlist: 'nochange',
-	}, {
-		retry: 30,
-		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
-}
-
 async function pageEdit(title) {
 	await api.postWithToken('csrf', {
 		action: 'edit',
@@ -53,7 +36,6 @@ async function pageEdit(title) {
 		text: PAGE_MAP[title].content,
 		notminor: true,
 		bot: true,
-		nocreate: true,
 		tags: 'Bot',
 		summary: PAGE_MAP[title].summary,
 		watchlist: 'nochange',
@@ -68,6 +50,33 @@ async function pageEdit(title) {
 	
 	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
 
+	if (moment().utc().format('dddd') === 'Sunday') {
+		await Promise.all(['Help:沙盒', 'Template:沙盒'].map(async (title) => {
+			const { data: { query: { pages: [{ revisions: { length } }] } } } = await api.post({
+				prop: 'revisions',
+				titles: title,
+				rvprop: '',
+				rvlimit: 'max',
+			}, {
+				retry: 15,
+			});
+			console.info(`${title} has ${length} revisions.`);		
+			if (length > 2000) {
+				await api.postWithToken('csrf', {
+					action: 'delete',
+					title,
+					reason: '沙盒清理作业：删除并重建版本过多的公共沙盒。',
+					tags: 'Bot',
+					watchlist: 'nochange',
+				}, {
+					retry: 30,
+					noCache: true,
+				}).then(({ data }) => console.log(JSON.stringify(data)));
+				await pageEdit(title);
+			}
+		}));
+	}
+
 	const { data: { query: { pages } } } = await api.post({
 		prop: 'revisions|info',
 		titles: Object.keys(PAGE_MAP),
@@ -79,7 +88,18 @@ async function pageEdit(title) {
 
 	await Promise.all(pages.map(async ({ title, revisions: [{ content }], protection, touched }) => {
 		if (protection.length === 0 || protection[0].type !== 'move' || protection[0].level !== 'sysop') {
-			await pageProtect(title);
+			await api.postWithToken('csrf', {
+				action: 'protect',
+				title,
+				protections: 'move=sysop',
+				expiry: 'infinite',
+				reason: '公共沙盒保护',
+				tags: 'Bot',
+				watchlist: 'nochange',
+			}, {
+				retry: 30,
+				noCache: true,
+			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}
 		if (PAGE_MAP[title].content !== content) {
 			const minutesDiff = moment().diff(moment(touched), 'minutes');
