@@ -4,6 +4,7 @@ name: "[schedule] monthly"
 # updateOverrideCategory.js @3rd
 # needImproveVtuber.js @7th
 # interfaceMessages.js @10th, 25th
+# removeBlockedUserrights.js @26th
 
 on:
   schedule:
@@ -12,6 +13,7 @@ on:
     - cron: "50 16 6 * *" # 7th 00:50 CST
     - cron: "50 16 8 * *" # 9th 00:50 CST
     - cron: "50 16 9,24 * *" # 10th, 25th 00:50 CST
+    - cron: "50 16 25 * *" # 26th 00:50 CST
   workflow_dispatch:
     inputs:
       task:
@@ -25,6 +27,7 @@ on:
           - "interface-messages"
           - "update-override-category"
           - "need-improve-vtuber"
+          - "remove-blocked-userrights"
       group:
         type: choice
         required: true
@@ -57,7 +60,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run newsSubscriber.js
+      - name: Run newsSubscriber.js @2nd
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
         run: node src/newsSubscriber.js
@@ -148,3 +151,24 @@ jobs:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
         run: node src/interfaceMessages.js
+
+  remove-blocked-userrights:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.schedule == '50 16 25 * *' || 
+      github.event.inputs.task == 'remove-blocked-userrights' ||
+      github.event.inputs.group == 'all'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run removeBlockedUserrights.js @26th
+        env:
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
+        run: node src/removeBlockedUserrights.js
