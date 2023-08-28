@@ -2,7 +2,7 @@ import { Buffer } from 'buffer';
 import { env } from 'process';
 import { Octokit } from '@octokit/core';
 import { MediaWikiApi } from 'wiki-saikou';
-import config from './utils/localConfig.js';
+import config from './utils/config.js';
 import readData from './utils/readData.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
