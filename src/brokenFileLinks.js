@@ -99,7 +99,6 @@ async function getDetails(title) {
 				}
 			}
 		}
-
 	}
 
 	try {

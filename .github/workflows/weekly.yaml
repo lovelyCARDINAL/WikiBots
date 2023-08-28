@@ -286,6 +286,6 @@ jobs:
         run: npm ci
       - name: Run brokenFileLinks.js
         env:
-          ZH_BOT: ${{ secrets.ZH_IBOT }}
-          CM_BOT: ${{ secrets.CM_IBOT }}
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+          CM_IBOT: ${{ secrets.CM_IBOT }}
         run: node src/brokenFileLinks.js
