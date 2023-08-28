@@ -90,7 +90,6 @@ async function deleteRights(user) {
 		remove: 'goodeditor|honoredmaintainer|techeditor|manually-confirmed|file-maintainer|extendedconfirmed',
 		reason: '用户注销',
 		tags: 'Bot',
-		formatversion: '2',
 	}, {
 		retry: 30,
 		noCache: true,

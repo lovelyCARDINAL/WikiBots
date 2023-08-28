@@ -77,7 +77,6 @@ async function getDetails(title) {
 			const { data: { query: { pages } } } = await cmapi.post({
 				prop: 'revisions',
 				titles,
-				formatversion: '2',
 				rvprop: '',
 			}, {
 				retry: 15,

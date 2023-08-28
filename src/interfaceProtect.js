@@ -70,7 +70,6 @@ async function protect(site, title, protections) {
 
 	await Promise.all(SITE_LIST.map(async(site) => {
 		await api[site].post({
-			action: 'query',
 			prop: 'info',
 			titles: pageGroup[site],
 			inprop: 'protection',
