@@ -19,7 +19,7 @@ const api = new MediaWikiApi(config.zh.api, {
 		minor: true,
 		tags: 'Bot',
 	}, {
-		retry: 30,
+		retry: 50,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 })();

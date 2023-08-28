@@ -227,7 +227,7 @@ async function deleteAvatar(user) {
 			reason: 'test',
 			tags: 'Bot',
 		}, {
-			retry: 30,
+			retry: 50,
 			noCache: true,
 		}).then(({ data }) => {
 			data.revisiondelete.items = data.revisiondelete.items

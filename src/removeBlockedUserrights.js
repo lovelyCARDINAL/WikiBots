@@ -30,7 +30,7 @@ const api = new MediaWikiApi(config.zh.api, {
 			reason: '无限期封禁',
 			tags: 'Bot',
 		}, {
-			retry: 30,
+			retry: 50,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}));

@@ -72,7 +72,7 @@ const api = new MediaWikiApi(config.cm.api, {
 			reason: '删除长期未使用的旧版本文件',
 			tags: 'Bot',
 		}, {
-			retry: 30,
+			retry: 50,
 			noCache: true,
 		}).then(({ data }) => {
 			data.revisiondelete.items = data.revisiondelete.items

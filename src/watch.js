@@ -13,7 +13,7 @@ async function watch(titles, unwatch) {
 		titles,
 		unwatch,
 	}, {
-		retry: 30,
+		retry: 50,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }

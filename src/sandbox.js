@@ -40,7 +40,7 @@ async function pageEdit(title) {
 		summary: PAGE_MAP[title].summary,
 		watchlist: 'nochange',
 	}, {
-		retry: 30,
+		retry: 50,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -69,7 +69,7 @@ async function pageEdit(title) {
 					tags: 'Bot',
 					watchlist: 'nochange',
 				}, {
-					retry: 30,
+					retry: 50,
 					noCache: true,
 				}).then(({ data }) => console.log(JSON.stringify(data)));
 				await pageEdit(title);
@@ -97,7 +97,7 @@ async function pageEdit(title) {
 				tags: 'Bot',
 				watchlist: 'nochange',
 			}, {
-				retry: 30,
+				retry: 50,
 				noCache: true,
 			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}

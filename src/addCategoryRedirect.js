@@ -62,7 +62,7 @@ const SITE_LIST = ['zh', 'cm'];
 					summary: `添加至「[[:${target}]]」的[[Template:分类重定向|分类重定向]]`,
 					watchlist: 'nochange',
 				}, {
-					retry: 30,
+					retry: 50,
 					noCache: true,
 				}).then(({ data }) => console.log(JSON.stringify(data)));
 			}),

@@ -38,7 +38,7 @@ const api = new MediaWikiApi(config[site].api, {
 			tags: 'Bot',
 			watchlist: 'nochange',
 		}, {
-			retry: 30,
+			retry: 50,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
 
@@ -79,7 +79,7 @@ const api = new MediaWikiApi(config[site].api, {
 				minor: true,
 				watchlist: 'nochange',
 			}, {
-				retry: 30,
+				retry: 50,
 				noCache: true,
 			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}
@@ -97,7 +97,7 @@ const api = new MediaWikiApi(config[site].api, {
 		nocreate: true,
 		watchlist: 'nochange',
 	}, {
-		retry: 30,
+		retry: 50,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 

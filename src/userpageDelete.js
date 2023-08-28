@@ -34,7 +34,7 @@ async function pageDelete(pageid) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 30,
+		retry: 50,
 		noCache: true,
 	});
 	console.log(JSON.stringify(data));
@@ -60,7 +60,7 @@ async function cannotDelete(pageid) {
 		bot: true,
 		summary: '无法自动删除，请至[[萌娘百科_talk:讨论版/操作申请]]提请维护人员删除。',
 	}, {
-		retry: 30,
+		retry: 50,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }

@@ -115,7 +115,7 @@ async function updateData(pageid, text) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 30,
+		retry: 50,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }

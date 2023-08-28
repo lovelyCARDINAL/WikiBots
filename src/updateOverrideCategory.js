@@ -40,7 +40,7 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 					cmtype: 'subcat',
 					cmlimit: 'max',
 				}, {
-					retry: 30,
+					retry: 50,
 				});
 				return categorymembers;
 			}));
@@ -55,7 +55,7 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 					cmtype: 'subcat',
 					cmlimit: 'max',
 				}, {
-					retry: 30,
+					retry: 50,
 				});
 				return categorymembers;
 			}));

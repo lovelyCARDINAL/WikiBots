@@ -76,7 +76,7 @@ const SUMMARY = {
 				summary: SUMMARY[key] || '同步界面消息',
 				watchlist: 'nochange',
 			}, {
-				retry: 30,
+				retry: 50,
 				noCache: true,
 			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}));

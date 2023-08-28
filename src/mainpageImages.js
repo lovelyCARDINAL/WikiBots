@@ -65,7 +65,7 @@ async function pageProtect(title, protections, reason) {
 		tags: 'Bot',
 		watchlist: 'nochange',
 	}, {
-		retry: 30,
+		retry: 50,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
@@ -83,7 +83,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		nocreate: true,
 		notminor: true,
 	}, {
-		retry: 30,
+		retry: 50,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }

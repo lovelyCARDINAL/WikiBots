@@ -71,7 +71,7 @@ function replaceSpecialCharacters(wikitext, pageid, setting) {
 						summary: '移除不可见字符',
 						watchlist: 'nochange',
 					}, {
-						retry: 30,
+						retry: 50,
 						noCache: true,
 					}).then(({ data }) => console.log(JSON.stringify(data)));
 				}

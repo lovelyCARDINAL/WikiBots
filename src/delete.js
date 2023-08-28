@@ -72,7 +72,7 @@ const api = new MediaWikiApi(config[site].api, {
 			pageid,
 			tags: 'Automation tool',
 		}, {
-			retry: 30,
+			retry: 50,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}));
