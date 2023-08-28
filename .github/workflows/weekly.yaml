@@ -38,6 +38,7 @@ on:
           - "need-improve"
           - "need-improve-welcome"
           - "add-category-redirect"
+          - "broken-file-links"
       group:
         type: choice
         required: true
