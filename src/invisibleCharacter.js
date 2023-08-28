@@ -1,6 +1,5 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from './utils/config.js';
-import { getTimeData, editTimeData } from './utils/lastTime.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
 const api = new MediaWikiApi(config.zh.api, {
@@ -28,10 +27,6 @@ function replaceSpecialCharacters(wikitext, pageid, setting) {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
 	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
-
-	const lastTime = await getTimeData('invisible-character');
-	const rcend = lastTime['invisible-character'],
-		rcstart = new Date().toISOString();
         
 	const { data: { query: { recentchanges, pages: [{ revisions: [{ content }] }] } } } = await api.post({
 		prop: 'revisions',
@@ -39,8 +34,7 @@ function replaceSpecialCharacters(wikitext, pageid, setting) {
 		rvprop: 'content',
 		list: 'recentchanges',
 		rcprop: 'timestamp|ids',
-		rcstart,
-		rcend,
+		rcend: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		rclimit: 'max',
 		rcnamespace: '*',
 		rctag: 'invisibleCharacter',
@@ -87,6 +81,5 @@ function replaceSpecialCharacters(wikitext, pageid, setting) {
 		console.log('No pages has invisible characters.');
 	}
 
-	await editTimeData(lastTime, 'invisible-character', rcstart);
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

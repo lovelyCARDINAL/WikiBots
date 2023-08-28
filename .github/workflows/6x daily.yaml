@@ -51,10 +51,9 @@ jobs:
         run: node src/invisibleCharacter.js
 
   file-info:
-    needs: invisible-character
     if: |
       github.event_name == 'schedule' ||
-      always() && github.event.inputs.task == 'file-info' ||
+      github.event.inputs.task == 'file-info' ||
       github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
