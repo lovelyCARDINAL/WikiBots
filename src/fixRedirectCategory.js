@@ -84,15 +84,28 @@ const SITE_LIST = ['zh', 'cm'];
 				.join('|');
 
 			// 获取分类成员和内容
-			const { data: { query: { pages: members } } } = await api.post({
-				prop: 'revisions',
-				generator: 'categorymembers',
-				rvprop: 'content',
-				gcmtitle: title,
-				gcmlimit: 'max',
-			}, {
-				retry: 15,
-			});
+			const members = await (async () => {
+				const result = [];
+				const eol = Symbol();
+				let gcmcontinue = undefined;
+				while (gcmcontinue !== eol) {
+					const { data } = await api.post({
+						prop: 'revisions',
+						generator: 'categorymembers',
+						rvprop: 'content',
+						gcmtitle: title,
+						gcmlimit: '500',
+						gcmcontinue,
+					}, {
+						retry: 15,
+					});
+					gcmcontinue = data.continue ? data.continue.gcmcontinue : eol;
+					if (data?.query?.pages) {
+						result.push(...Object.values(data.query.pages));
+					}
+				}
+				return result;
+			})();
 
 			await Promise.all(members.map(({ pageid, revisions: [{ content }] }) => {
 				let wikitext = contentData?.[pageid]?.content || content;
