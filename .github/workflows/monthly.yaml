@@ -52,7 +52,7 @@ jobs:
       github.event.inputs.group == 'all'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set Node Version
         uses: actions/setup-node@v3
         with:
@@ -74,7 +74,7 @@ jobs:
       github.event.inputs.group == 'all'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set Node Version
         uses: actions/setup-node@v3
         with:
@@ -95,7 +95,7 @@ jobs:
       github.event.inputs.group == 'all'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set Node Version
         uses: actions/setup-node@v3
         with:
@@ -117,7 +117,7 @@ jobs:
       github.event.inputs.group == 'all'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set Node Version
         uses: actions/setup-node@v3
         with:
@@ -138,7 +138,7 @@ jobs:
       github.event.inputs.group == 'all'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set Node Version
         uses: actions/setup-node@v3
         with:
@@ -160,7 +160,7 @@ jobs:
       github.event.inputs.group == 'all'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set Node Version
         uses: actions/setup-node@v3
         with:
