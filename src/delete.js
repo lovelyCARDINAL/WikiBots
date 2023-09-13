@@ -11,7 +11,12 @@ const api = new MediaWikiApi(config[site].api, {
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
-	await api.login(config[site].main.name, config[site].main.password).then(console.log);
+	await api.login(
+		config[site].main.name,
+		config[site].main.password,
+		undefined,
+		{ retry: 25, noCache: true },
+	).then(console.log);
 
 	const pagelist = await (async () => {
 		const result = [];

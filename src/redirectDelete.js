@@ -16,7 +16,12 @@ const NS_REASON_MAP = {
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
-	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
+	await api.login(
+		config.zh.abot.name,
+		config.zh.abot.password,
+		undefined,
+		{ retry: 25, noCache: true },
+	).then(console.log);
 
 	const { data: { query: { logevents } } } = await api.post({
 		list: 'logevents',

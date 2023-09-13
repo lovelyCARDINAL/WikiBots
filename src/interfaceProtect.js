@@ -44,7 +44,12 @@ async function protect(site, title, protections) {
 		api[site] = new MediaWikiApi(config[site].api, {
 			headers: { 'api-user-agent': config.apiuseragent },
 		});
-		await api[site].login(config[site].abot.name, config[site].abot.password).then((result) => console.log(site, result));
+		await api[site].login(
+			config[site].abot.name,
+			config[site].abot.password,
+			undefined,
+			{ retry: 25, noCache: true },
+		).then((result) => console.log(site, result));
 	}));
 	console.groupEnd();
 

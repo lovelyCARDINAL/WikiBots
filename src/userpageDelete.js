@@ -68,7 +68,12 @@ async function cannotDelete(pageid) {
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
-	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
+	await api.login(
+		config.zh.abot.name,
+		config.zh.abot.password,
+		undefined,
+		{ retry: 25, noCache: true },
+	).then(console.log);
 
 	const maintainlist = await (async () => {
 		const { data: { query: { allusers } } } = await api.post({

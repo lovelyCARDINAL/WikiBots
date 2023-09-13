@@ -43,8 +43,18 @@ async function getDetails(title) {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
 	await Promise.all([
-		zhapi.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log),
-		cmapi.login(config.cm.ibot.name, config.cm.ibot.password).then(console.log),
+		zhapi.login(
+			config.zh.ibot.name,
+			config.zh.ibot.password,
+			undefined,
+			{ retry: 25, noCache: true },
+		).then(console.log),
+		cmapi.login(
+			config.cm.ibot.name,
+			config.cm.ibot.password,
+			undefined,
+			{ retry: 25, noCache: true },
+		).then(console.log),
 	]);
 
 	const lastData = JSON.parse(await readData('brokenFiles.json'));

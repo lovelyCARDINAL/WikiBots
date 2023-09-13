@@ -18,7 +18,12 @@ const SUMMARY = {
 		api[site] = new MediaWikiApi(config[site].api, {
 			headers: { 'api-user-agent': config.apiuseragent },
 		});
-		await api[site].login(config[site].ibot.name, config[site].ibot.password).then((result) => console.log(site, result));
+		await api[site].login(
+			config[site].ibot.name,
+			config[site].ibot.password,
+			undefined,
+			{ retry: 25, noCache: true },
+		).then((result) => console.log(site, result));
 	}));
 	console.groupEnd();
 

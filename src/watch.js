@@ -21,7 +21,12 @@ async function watch(titles, unwatch) {
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
-	await api.login(config.zh.main.name, config.zh.main.password).then(console.log);
+	await api.login(
+		config.zh.main.name,
+		config.zh.main.password,
+		undefined,
+		{ retry: 25, noCache: true },
+	).then(console.log);
 
 	let watchlist = await (async () => {
 		const { data: { query: { allusers } } } = await api.post({

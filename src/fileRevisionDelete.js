@@ -10,7 +10,12 @@ const api = new MediaWikiApi(config.cm.api, {
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
-	await api.login(config.cm.abot.name, config.cm.abot.password).then(console.log);
+	await api.login(
+		config.cm.abot.name,
+		config.cm.abot.password,
+		undefined,
+		{ retry: 25, noCache: true },
+	).then(console.log);
 
 	const lastTime = await getTimeData('file-revision-deletion');
 	const leend = lastTime['file-revision-deletion'],

@@ -9,7 +9,12 @@ const SITE_LIST = ['zh', 'cm'];
 		const api = new MediaWikiApi(config[site].api, {
 			headers: { 'api-user-agent': config.apiuseragent },
 		});
-		await api.login(config[site].bot.name, config[site].bot.password).then(console.log);
+		await api.login(
+			config[site].bot.name,
+			config[site].bot.password,
+			undefined,
+			{ retry: 25, noCache: true },
+		).then(console.log);
 
 		const { data: { query: { allredirects, categorymembers } } } = await api.post({
 			list: 'allredirects|categorymembers',

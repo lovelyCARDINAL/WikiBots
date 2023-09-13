@@ -110,8 +110,18 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	newImgList.sort();
 
 	await Promise.all([
-		cmapi.login(config.cm.abot.name, config.cm.abot.password).then(console.log),
-		zhapi.login(config.zh.abot.name, config.zh.abot.password).then(console.log),
+		cmapi.login(
+			config.cm.abot.name,
+			config.cm.abot.password,
+			undefined,
+			{ retry: 25, noCache: true },
+		).then(console.log),
+		zhapi.login(
+			config.zh.abot.name,
+			config.zh.abot.password,
+			undefined,
+			{ retry: 25, noCache: true },
+		).then(console.log),
 	]);
 	
 	const imgNameLists = splitAndJoin(newImgList, 500);

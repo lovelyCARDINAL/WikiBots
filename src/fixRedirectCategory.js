@@ -10,7 +10,12 @@ const SITE_LIST = ['zh', 'cm'];
 	const zhapi = new MediaWikiApi(config.zh.api, {
 		headers: { 'api-user-agent': config.apiuseragent },
 	});
-	await zhapi.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
+	await zhapi.login(
+		config.zh.bot.name,
+		config.zh.bot.password,
+		undefined,
+		{ retry: 25, noCache: true },
+	).then(console.log);
 
 	const userlist = await (async () => {
 		// 获取延确或优编及以上用户
@@ -33,7 +38,12 @@ const SITE_LIST = ['zh', 'cm'];
 			api = new MediaWikiApi(config[site].api, {
 				headers: { 'api-user-agent': config.apiuseragent },
 			});
-			await api.login(config[site].bot.name, config[site].bot.password).then(console.log);
+			await api.login(
+				config[site].bot.name,
+				config[site].bot.password,
+				undefined,
+				{ retry: 25, noCache: true },
+			).then(console.log);
 		}
 
 		// 获取已重定向分类

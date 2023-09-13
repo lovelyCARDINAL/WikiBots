@@ -61,8 +61,18 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
 	await Promise.all([
-		zhapi.login(config.zh.bot.name, config.zh.bot.password).then(console.log),
-		cmapi.login(config.cm.bot.name, config.cm.bot.password).then(console.log),
+		zhapi.login(
+			config.zh.bot.name,
+			config.zh.bot.password,
+			undefined,
+			{ retry: 25, noCache: true },
+		).then(console.log),
+		cmapi.login(
+			config.cm.bot.name,
+			config.cm.bot.password,
+			undefined,
+			{ retry: 25, noCache: true },
+		).then(console.log),
 	]);
 
 	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await zhapi.post({

@@ -7,7 +7,12 @@ const api = new MediaWikiApi(config.zh.api, {
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
-	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
+	await api.login(
+		config.zh.abot.name,
+		config.zh.abot.password,
+		undefined,
+		{ retry: 25, noCache: true },
+	).then(console.log);
 
 	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await api.post({
 		prop: 'revisions',

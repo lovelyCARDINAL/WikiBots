@@ -26,7 +26,12 @@ function replaceSpecialCharacters(wikitext, pageid, setting) {
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
-	await api.login(config.zh.bot.name, config.zh.bot.password).then(console.log);
+	await api.login(
+		config.zh.bot.name,
+		config.zh.bot.password,
+		undefined,
+		{ retry: 25, noCache: true },
+	).then(console.log);
         
 	const { data: { query: { recentchanges, pages: [{ revisions: [{ content }] }] } } } = await api.post({
 		prop: 'revisions',

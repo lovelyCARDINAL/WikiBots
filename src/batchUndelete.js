@@ -14,8 +14,18 @@ const api = new MediaWikiApi(config[site].api, {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
 	await Promise.all([
-		api.login(config[site].abot.name, config[site].abot.password).then(console.log),
-		main.login(config.zh.abot.name, config.zh.abot.password).then(console.log),
+		api.login(
+			config[site].abot.name,
+			config[site].abot.password,
+			undefined,
+			{ retry: 25, noCache: true },
+		).then(console.log),
+		main.login(
+			config.zh.abot.name,
+			config.zh.abot.password,
+			undefined,
+			{ retry: 25, noCache: true },
+		).then(console.log),
 	]);
 
 	const titles = await (async () => {

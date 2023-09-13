@@ -8,7 +8,12 @@ const api = new MediaWikiApi(config.zh.api, {
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
-	await api.login(config.zh.ibot.name, config.zh.ibot.password).then(console.log);
+	await api.login(
+		config.zh.ibot.name,
+		config.zh.ibot.password,
+		undefined,
+		{ retry: 25, noCache: true },
+	).then(console.log);
 
 	const pages = await (async () => {
 		const result = [];

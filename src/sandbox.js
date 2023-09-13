@@ -48,7 +48,12 @@ async function pageEdit(title) {
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
-	await api.login(config.zh.abot.name, config.zh.abot.password).then(console.log);
+	await api.login(
+		config.zh.abot.name,
+		config.zh.abot.password,
+		undefined,
+		{ retry: 25, noCache: true },
+	).then(console.log);
 
 	if (moment().utc().format('dddd') === 'Sunday') {
 		await Promise.all(['Help:沙盒', 'Template:沙盒'].map(async (title) => {
