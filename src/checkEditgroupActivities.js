@@ -84,7 +84,7 @@ async function updateData(text) {
 			retry: 15,
 		});
 		const regex = /{{User\|(.+?)}}/gi;
-		const data = Array.from(wikitext.matchAll(regex), (match) => match[1]);
+		const data = Array.from(wikitext.matchAll(regex), (match) => match[1]?.replace(/^\w/, (first) => first.toUpperCase()));
 		return [...new Set(data)].sort();
 	})();
 
