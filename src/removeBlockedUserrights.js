@@ -25,7 +25,8 @@ const api = new MediaWikiApi(config.zh.api, {
 	const time = moment().subtract(1, 'week');
 	const userids = allusers
 		.filter(({ blockexpiry, blockedtimestamp }) => blockexpiry === 'infinity' && moment(blockedtimestamp).isBefore(time))
-		.map(({ userid }) => userid);
+		.map(({ userid }) => ![86212].includes(userid) && userid)
+		.filter(Boolean);
 
 	await Promise.all(userids.map(async (userid) => {
 		await api.postWithToken('userrights', {
