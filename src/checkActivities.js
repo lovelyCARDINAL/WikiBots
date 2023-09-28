@@ -15,7 +15,8 @@ const now = moment().utc();
 const time = {
 	0: now.toISOString(),
 	30: now.subtract(30, 'days').toISOString(),
-	90: now.subtract(60, 'days').toISOString(),
+	60: now.subtract(30, 'days').toISOString(),
+	90: now.subtract(30, 'days').toISOString(),
 	180: now.subtract(90, 'days').toISOString(),
 	365: now.subtract(185, 'days').toISOString(),
 };
@@ -163,20 +164,30 @@ async function updateData(pageid, text) {
 	})();
 
 	const maintainTable = async () => {
-		const userList = [...userData.sysop, ...userData.patroller];
-		const data = await Promise.all([
-			queryContribs(zhapi, userList, '0|10|14|12|4|6', time[30]),
-			queryContribs(cmapi, userList, '0|10|14|12|4|6', time[30]),
-		]).then((result) => result.flat());
+		const processData = [
+			Promise.all([
+				queryContribs(zhapi, userData.sysop, '0|10|14|12|4|6', time[30]),
+				queryContribs(cmapi, userData.sysop, '0|10|14|12|4|6', time[30]),
+			]).then((result) => result.flat()),
+			Promise.all([
+				queryContribs(zhapi, userData.patroller, '0|10|14|12|4|6', time[60]),
+				queryContribs(cmapi, userData.patroller, '0|10|14|12|4|6', time[60]),
+			]).then((result) => result.flat()),
+		];
+		const data = {};
+		await Promise.all(processData).then((results) => {
+			data.sysop = results[0];
+			data.patroller = results[1];
+		});
 	
-		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的维护人员30日内中文萌娘百科与萌娘共享主、模板、分类、帮助、萌娘百科、文件名字空间下编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 管理员\n|-\n! 用户名 !! 编辑数 !! 最后编辑时间\n';
+		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的管理员30日或维护姬60日内中文萌娘百科与萌娘共享主、模板、分类、帮助、萌娘百科、文件名字空间下有效编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 管理员\n|-\n! 用户名 !! 编辑数 !! 最后编辑时间\n';
 	
-		const processUser = (group) => {
+		const processUser = (group, n) => {
 			for (const user of userData[group]) {
-				const contribsData = data.filter((item) => item.user === user) || [];
+				const contribsData = data[group].filter((item) => item.user === user && !/Sandbox|测试|沙盒/i.test(item.title)) || [];
 				const contribsCount = contribsData.length;
 				const count = contribsCount 
-					? contribsCount >= 3
+					? contribsCount >= n
 						? `data-sort-value="${contribsCount}"|${contribsCount}次`
 						: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`
 					: 'data-sort-value="0"|<i style="color:red">无相关编辑</i>';
@@ -187,11 +198,11 @@ async function updateData(pageid, text) {
 			}
 		};
 	
-		processUser('sysop');
+		processUser('sysop', 3);
 
-		text += '|}\n</div>\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 巡查姬\n|-\n! 用户名 !! 编辑数 !! 最后编辑时间\n';
+		text += '|}\n</div>\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 维护姬\n|-\n! 用户名 !! 编辑数 !! 最后编辑时间\n';
 
-		processUser('patroller');
+		processUser('patroller', 5);
 
 		text += '|}\n</div>\n</div>\n\n[[Category:萌娘百科数据报告]]';
 		
@@ -206,29 +217,24 @@ async function updateData(pageid, text) {
 				queryContribs(cmapi, userData.techeditor, '10|828', time[180]),
 			]).then((result) => result.flat()),
 			Promise.all([
-				queryContribs(zhapi, userData.scripteditor, '10|828|274', time[90]),
-				queryContribs(cmapi, userData.scripteditor, '10|828|274', time[90]),
-			]).then((result) => result.flat()),
-			Promise.all([
-				queryContribs(zhapi, userData['interface-admin'], '10|828|8', time[90]),
-				queryContribs(cmapi, userData['interface-admin'], '10|828|8', time[90]),
+				queryContribs(zhapi, userData['interface-admin'], '10|828|8|274', time[180]),
+				queryContribs(cmapi, userData['interface-admin'], '10|828|8|274', time[180]),
 			]).then((result) => result.flat()),
 		];
 		const data = {};
 		await Promise.all(processData).then((results) => {
 			data.techeditor = results[0];
-			data.scripteditor = results[1];
-			data['interface-admin'] = results[2];
+			data['interface-admin'] = results[1];
 		});
 
-		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的技术人员90日或180日内中文萌娘百科与萌娘共享模板、模块和特定名字名字空间编辑数统计与特定名字空间365日内最后一次编辑时间。\n* 界面管理员的特定名字空间为「MediaWiki」（含[[GHIA:|GHIA]]），脚本编辑员的特定名字空间为「Widget」。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 界面管理员\n|-\n! 用户名 !! 90日编辑数 !! MediaWiki最后编辑时间 \n';
+		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的技术人员180日或365日内指定名字空间有效编辑数统计与特定名字空间365日内最后一次编辑时间。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 界面管理员\n|-\n! 用户名 !! 180日编辑数 !! MediaWiki或Widget最后编辑时间 \n';
 
 		for (const user of userData['interface-admin']) {
 			const contribsData = data['interface-admin'] && data['interface-admin'].filter((item) => item.user === user) || [];
-			const nsContribsData = contribsData && contribsData.filter((item) => item.ns === 8) || [];
+			const nsContribsData = contribsData && contribsData.filter((item) => item.ns === 8 || item.ns === 274) || [];
 
 			const { [`U:${user}`]: ghiaUserData } = ghiaData;
-			const ghiaContribsCount = ghiaUserData && ghiaUserData.filter((item) => moment(item.datetime).isAfter(moment(time[90]))).reduce((total, item) => total + item.changedFiles, 0) || 0;
+			const ghiaContribsCount = ghiaUserData && ghiaUserData.filter((item) => moment(item.datetime).isAfter(moment(time[180]))).reduce((total, item) => total + item.changedFiles, 0) || 0;
 
 			const contribsCount = contribsData.length + ghiaContribsCount;
 			const count = contribsCount 
@@ -245,8 +251,8 @@ async function updateData(pageid, text) {
 				text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
 			} else {
 				const moreContribs = await Promise.all([
-					queryLatestContribs(zhapi, user, '8', time[365]),
-					queryLatestContribs(cmapi, user, '8', time[365]),
+					queryLatestContribs(zhapi, user, '8|274', time[365]),
+					queryLatestContribs(cmapi, user, '8|274', time[365]),
 				]).then((result) => result.flat().filter((item) => item !== undefined));
 				const nsLatestTimestamp = moreContribs.length && moment.max(moreContribs.map((item) => moment(item)));
 				
@@ -263,37 +269,7 @@ async function updateData(pageid, text) {
 			}
 		}
 
-		text += '|}\n</div>\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 脚本编辑员\n|-\n! 用户名 !! 90日编辑数 !! Widget最后编辑时间 \n';
-
-		for (const user of userData.scripteditor) {
-			const contribsData = data.scripteditor && data.scripteditor.filter((item) => item.user === user) || [];
-			const nsContribsData = contribsData && contribsData.filter((item) => item.ns === 8) || [];
-			const contribsCount = contribsData.length;
-
-			const count = contribsCount 
-				? contribsCount >= 3
-					? `data-sort-value="${contribsCount}"|${contribsCount}次`
-					: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`
-				: 'data-sort-value="0"|<i style="color:red">无相关编辑</i>';
-            
-			if (nsContribsData.length) {
-				const latestTimestamp = moment.max(nsContribsData.map((item) => moment(item.timestamp)));
-				const timestamp = timestampCST(latestTimestamp);
-				text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
-			} else {
-				const moreContribs = await Promise.all([
-					queryLatestContribs(zhapi, user, '274', time[365]),
-					queryLatestContribs(cmapi, user, '274', time[365]),
-				]).then((result) => result.flat().filter((item) => item !== undefined));
-				const latestTimestamp = moreContribs.length && moment.max(moreContribs.map((item) => moment(item)));
-				const timestamp = latestTimestamp
-					? timestampCST(latestTimestamp)
-					: '<i style="color:red">无相关编辑</i>';
-				text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
-			}
-		}
-
-		text += '|}\n</div>\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 技术编辑员\n|-\n! 用户名 !! 180日编辑数 !! 最后编辑时间\n';
+		text += '|}\n</div>\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 技术编辑员\n|-\n! 用户名 !! 365日编辑数 !! 最后编辑时间\n';
 
 		for (const user of userData.techeditor) {
 			const contribsData = data.techeditor && data.techeditor.filter((item) => item.user === user) || [];
