@@ -180,14 +180,14 @@ async function updateData(pageid, text) {
 			data.patroller = results[1];
 		});
 	
-		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的管理员30日或维护姬60日内中文萌娘百科与萌娘共享主、模板、分类、帮助、萌娘百科、文件名字空间下有效编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 管理员\n|-\n! 用户名 !! 编辑数 !! 最后编辑时间\n';
+		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的维护人员有效编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 管理员\n|-\n! 用户名 !! 30日编辑数 !! 最后编辑时间\n';
 	
-		const processUser = (group, n) => {
+		const processUser = (group, minCount) => {
 			for (const user of userData[group]) {
 				const contribsData = data[group].filter((item) => item.user === user && !/Sandbox|测试|沙盒/i.test(item.title)) || [];
 				const contribsCount = contribsData.length;
 				const count = contribsCount 
-					? contribsCount >= n
+					? contribsCount >= minCount
 						? `data-sort-value="${contribsCount}"|${contribsCount}次`
 						: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`
 					: 'data-sort-value="0"|<i style="color:red">无相关编辑</i>';
@@ -200,7 +200,7 @@ async function updateData(pageid, text) {
 	
 		processUser('sysop', 3);
 
-		text += '|}\n</div>\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 维护姬\n|-\n! 用户名 !! 编辑数 !! 最后编辑时间\n';
+		text += '|}\n</div>\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 维护姬\n|-\n! 用户名 !! 60日编辑数 !! 最后编辑时间\n';
 
 		processUser('patroller', 5);
 
@@ -227,7 +227,7 @@ async function updateData(pageid, text) {
 			data['interface-admin'] = results[1];
 		});
 
-		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的技术人员180日或365日内指定名字空间有效编辑数统计与特定名字空间365日内最后一次编辑时间。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 界面管理员\n|-\n! 用户名 !! 180日编辑数 !! MediaWiki或Widget最后编辑时间 \n';
+		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的技术人员有效编辑数统计与特定名字空间最后编辑时间。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 界面管理员\n|-\n! 用户名 !! 180日编辑数 !! MediaWiki或Widget最后编辑时间 \n';
 
 		for (const user of userData['interface-admin']) {
 			const contribsData = data['interface-admin'] && data['interface-admin'].filter((item) => item.user === user) || [];
