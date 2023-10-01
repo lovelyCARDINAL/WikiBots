@@ -84,7 +84,7 @@ const SITE_LIST = ['zh', 'cm'];
 		await Promise.all(pages.map(async ({ title, varianttitles }) => {
 			// 获取重定向目标
 			const target = redirects.find(({ from }) => from === title)?.to.replace('Category:', '');
-			const targetCV = target.replace(/配音角色$/, '');
+			const targetCV = target?.replace('配音角色', '');
 
 			// 获取变体列表和正则
 			const variant = Object.values(varianttitles).map((item) => item.replace(/Category:|分类:|分類:/, ''));
@@ -95,7 +95,7 @@ const SITE_LIST = ['zh', 'cm'];
 				.join('|');
 			const variantRegexCV = variant
 				.map((item) => item
-					.replace(/配音角色$/, ''),
+					.replace('配音角色', ''),
 				)
 				.map((item) => item
 					.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
