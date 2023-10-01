@@ -85,6 +85,10 @@ const SITE_LIST = ['zh', 'cm'];
 			// 获取重定向目标
 			const target = redirects.find(({ from }) => from === title)?.to.replace('Category:', '');
 			const targetCV = target?.replace('配音角色', '');
+			if (target === undefined) {
+				console.warn(`${site} ${title}：找不到重定向目标`);
+				return;
+			}
 
 			// 获取变体列表和正则
 			const variant = Object.values(varianttitles).map((item) => item.replace(/Category:|分类:|分類:/, ''));
