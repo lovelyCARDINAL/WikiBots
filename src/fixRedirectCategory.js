@@ -14,7 +14,7 @@ const SITE_LIST = ['zh', 'cm'];
 		config.zh.bot.name,
 		config.zh.bot.password,
 		undefined,
-		{ retry: 25, noCache: true },
+		{ retry: 75, noCache: true },
 	).then(console.log);
 
 	const userlist = await (async () => {
@@ -24,7 +24,7 @@ const SITE_LIST = ['zh', 'cm'];
 			augroup: ['sysop', 'bot', 'patroller', 'honoredmaintainer', 'goodeditor', 'extendedconfirmed', 'staff'],
 			aulimit: 'max',
 		}, {
-			retry: 15,
+			retry: 50,
 		});
 		return allusers.map(({ name }) => name);
 	})();
@@ -42,7 +42,7 @@ const SITE_LIST = ['zh', 'cm'];
 				config[site].bot.name,
 				config[site].bot.password,
 				undefined,
-				{ retry: 25, noCache: true },
+				{ retry: 75, noCache: true },
 			).then(console.log);
 		}
 
@@ -57,7 +57,7 @@ const SITE_LIST = ['zh', 'cm'];
 			gcmtype: 'subcat',
 			gcmlimit: 'max',
 		}, {
-			retry: 15,
+			retry: 50,
 		});
 
 		// 获取尚未清空的已重定向分类
@@ -77,7 +77,7 @@ const SITE_LIST = ['zh', 'cm'];
 			redirects: true,
 			pageids: pages.map(({ pageid }) => pageid),
 		}, {
-			retry: 15,
+			retry: 50,
 		});
 
 		const contentData = {};
@@ -116,7 +116,7 @@ const SITE_LIST = ['zh', 'cm'];
 						gcmlimit: '500',
 						gcmcontinue,
 					}, {
-						retry: 15,
+						retry: 50,
 					});
 					gcmcontinue = data.continue ? data.continue.gcmcontinue : eol;
 					if (data?.query?.pages) {
