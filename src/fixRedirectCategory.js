@@ -84,10 +84,19 @@ const SITE_LIST = ['zh', 'cm'];
 		await Promise.all(pages.map(async ({ title, varianttitles }) => {
 			// 获取重定向目标
 			const target = redirects.find(({ from }) => from === title)?.to.replace('Category:', '');
+			const targetCV = target.replace(/配音角色$/, '');
 
 			// 获取变体列表和正则
 			const variant = Object.values(varianttitles).map((item) => item.replace(/Category:|分类:|分類:/, ''));
 			const variantRegex = variant
+				.map((item) => item
+					.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+					.replaceAll(/ /g, '[ _]'))
+				.join('|');
+			const variantRegexCV = variant
+				.map((item) => item
+					.replace(/配音角色$/, ''),
+				)
 				.map((item) => item
 					.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 					.replaceAll(/ /g, '[ _]'))
@@ -128,8 +137,8 @@ const SITE_LIST = ['zh', 'cm'];
 				if (site === 'zh') {
 					// 声优
 					wikitext = wikitext.replaceAll(
-						new RegExp(`(\\|\\s*(?:声优|聲優|配音)\\s*=\\s*)(?:${variantRegex})(?=\\s*[\\|\\}])`, 'ig'),
-						`$1${target}`,
+						new RegExp(`(\\|\\s*(?:声优|聲優|配音)\\s*=\\s*)(?:${variantRegexCV})(?=\\s*[\\|\\}])`, 'ig'),
+						`$1${targetCV}`,
 					);
 					
 					wikitext = Parser.parse(wikitext);
