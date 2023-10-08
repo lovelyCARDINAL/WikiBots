@@ -49,7 +49,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run interfaceProtect.js
+      - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
           CM_ABOT: ${{ secrets.CM_ABOT }}
@@ -72,7 +72,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run hidePageLog.js
+      - name: Run Script
         env:
           MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
         run: node src/hidePageLog.js
@@ -94,7 +94,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run hideUserLog.js
+      - name: Run Script
         env:
           MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
         run: node src/hideUserLog.js

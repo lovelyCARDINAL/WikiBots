@@ -69,7 +69,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run delete.js
+      - name: Run Script
         env:
           SITE: "zh"
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
@@ -90,7 +90,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run delete.js
+      - name: Run Script
         env:
           SITE: "cm"
           CM_MAIN: ${{ secrets.CM_MAIN }}
@@ -110,7 +110,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run revokeUser.js
+      - name: Run Script
         env:
           GHP: ${{ secrets.GHP }}
           MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
@@ -131,7 +131,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run batchUndelete.js
+      - name: Run Script
         env:
           SITE: ${{ github.event.inputs.site }}
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
@@ -152,7 +152,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run newsSender.js
+      - name: Run Script
         env:
           TYPE: ${{ github.event.inputs.number }}
           ZH_BOT: ${{ secrets.ZH_BOT }}

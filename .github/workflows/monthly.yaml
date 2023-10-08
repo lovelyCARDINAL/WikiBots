@@ -60,7 +60,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run newsSubscriber.js @2nd
+      - name: Run Script @2nd
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
         run: node src/newsSubscriber.js
@@ -82,7 +82,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run newsProtect.js @9th
+      - name: Run Script @9th
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/newsProtect.js
@@ -103,7 +103,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run updateOverrideCategory.js @3rd
+      - name: Run Script @3rd
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/updateOverrideCategory.js
@@ -125,7 +125,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run needImproveVtuber.js @7th
+      - name: Run Script @7th
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/needImproveVtuber.js
@@ -146,7 +146,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run interfaceMessages.js @10th, 25th
+      - name: Run Script @10th, 25th
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
@@ -168,7 +168,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run removeBlockedUserrights.js @26th
+      - name: Run Script @26th
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/removeBlockedUserrights.js

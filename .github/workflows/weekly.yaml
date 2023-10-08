@@ -69,7 +69,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run badFileName.js
+      - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
@@ -91,7 +91,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run mostTranscludedPages.js
+      - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/mostTranscludedPages.js
@@ -112,7 +112,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run badDisplayTitle.js
+      - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/badDisplayTitle.js
@@ -133,7 +133,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run shortPages.js
+      - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/shortPages.js
@@ -154,7 +154,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run tentativeTitle.js
+      - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/tentativeTitle.js
@@ -175,7 +175,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run checkEditgroupActivities.js
+      - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
@@ -197,7 +197,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run fileRevisionDelete.js
+      - name: Run Script
         env:
           CM_ABOT: ${{ secrets.CM_ABOT }}
         run: node src/fileRevisionDelete.js
@@ -219,7 +219,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run needImprove.js
+      - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/needImprove.js
@@ -241,7 +241,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run needImproveWelcome.js
+      - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/needImproveWelcome.js
@@ -262,7 +262,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run addCategoryRedirect.js
+      - name: Run Script
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
           CM_BOT: ${{ secrets.CM_BOT }}
@@ -284,7 +284,7 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run brokenFileLinks.js
+      - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
