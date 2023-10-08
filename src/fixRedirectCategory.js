@@ -47,18 +47,30 @@ const SITE_LIST = ['zh', 'cm'];
 		}
 
 		// 获取已重定向分类
-		let { data: { query: { pages } } } = await api.post({
-			prop: 'categoryinfo|info|revisions',
-			generator: 'categorymembers',
-			inprop: 'varianttitles',
-			rvprop: 'timestamp|user',
-			gcmtitle: 'Category:已重定向的分类',
-			gcmprop: 'ids|title',
-			gcmtype: 'subcat',
-			gcmlimit: 'max',
-		}, {
-			retry: 50,
-		});
+		let pages = await (async () => {
+			const result = [];
+			const eol = Symbol();
+			let gcmcontinue = undefined;
+			while (gcmcontinue !== eol) {
+				const { data } = await api.post({
+					prop: 'categoryinfo|info|revisions',
+					generator: 'categorymembers',
+					cllimit: 'max',
+					inprop: 'varianttitles',
+					rvprop: 'timestamp|user',
+					gcmtitle: 'Category:已重定向的分类',
+					gcmprop: 'ids|title',
+					gcmtype: 'subcat',
+					gcmlimit: 'max',
+					gcmcontinue,
+				}, {
+					retry: 50,
+				});
+				gcmcontinue = data.continue ? data.continue.gcmcontinue : eol;
+				result.push(...Object.values(data.query.pages));
+			}
+			return result;
+		})();
 
 		// 获取尚未清空的已重定向分类
 		pages = pages.filter(({ categoryinfo: { pages, files, subcats } }) => pages + files + subcats > 0);
@@ -71,6 +83,9 @@ const SITE_LIST = ['zh', 'cm'];
 		// 判断最后编辑者是否为延确或优编以上，或者最后编辑时间是否超过3天
 		pages = pages.filter(({ revisions: [{ user, timestamp }] }) => userlist.includes(user) || moment(timestamp).isBefore(moment().subtract(3, 'days')));
 		console.info(`${site}: ${pages.length}个已重定向分类符合自动修复条件`);
+		if (pages.length === 0) {
+			return;
+		}
 
 		// 获取全部重定向目标
 		const { data: { query: { redirects } } } = await api.post({
@@ -134,7 +149,7 @@ const SITE_LIST = ['zh', 'cm'];
 				let wikitext = contentData?.[pageid]?.content || content;
 				// 分类文本替换
 				wikitext = wikitext.replaceAll(
-					new RegExp(`\\s*(Category|分类|分類|Cat):(?:${variantRegex})\\s*(?=[\\|\\]])`, 'ig'),
+					new RegExp(`\\s*(Category|分类|分類|Cat):\\s*(?:${variantRegex})\\s*(?=[\\|\\]])`, 'ig'),
 					`$1:${target}`,
 				);
 
