@@ -16,18 +16,46 @@ const SITE_LIST = ['zh', 'cm'];
 			{ retry: 25, noCache: true },
 		).then(console.log);
 
-		const { data: { query: { allredirects, categorymembers } } } = await api.post({
-			list: 'allredirects|categorymembers',
-			cmtitle: 'Category:已重定向的分类',
-			cmprop: 'ids|title',
-			cmnamespace: '14',
-			cmlimit: 'max',
-			arprop: 'title|ids',
-			arnamespace: '14',
-			arlimit: 'max',
-		}, {
-			retry: 15,
-		});
+		const categorymembers = await (async () => {
+			const result = [];
+			const eol = Symbol();
+			let cmcontinue = undefined;
+			while (cmcontinue !== eol) {
+				const { data } = await api.post({
+					list: 'categorymembers',
+					cmtitle: 'Category:已重定向的分类',
+					cmprop: 'ids|title',
+					cmnamespace: '14',
+					cmlimit: 'max',
+					cmcontinue,
+				}, {
+					retry: 15,
+				});
+				cmcontinue = data.continue ? data.continue.cmcontinue : eol;
+				result.push(...Object.values(data.query.categorymembers));
+			}
+			return result;
+		})();
+
+		const allredirects = await (async () => {
+			const result = [];
+			const eol = Symbol();
+			let arcontinue = undefined;
+			while (arcontinue !== eol) {
+				const { data } = await api.post({
+					list: 'allredirects',
+					arprop: 'title|ids',
+					arnamespace: '14',
+					arlimit: 'max',
+					arcontinue,
+				}, {
+					retry: 15,
+				});
+				arcontinue = data.continue ? data.continue.arcontinue : eol;
+				result.push(...Object.values(data.query.allredirects));
+			}
+			return result;
+		})();
 
 		const pageids = allredirects
 			.map(({ fromid }) => fromid)
