@@ -30,49 +30,54 @@ async function isActive(user) {
 		{ retry: 25, noCache: true },
 	).then(console.log);
 
-	const { data: { parse: { wikitext } } } = await api.post({
-		action: 'parse',
-		pageid: '488029',
-		prop: 'wikitext',
-		section: '1',
-	}, {
-		retry: 15,
-	});
+	const pageids = ['488029', '525904'];
 
-	const userlist = await (async () => {
-		const data = [];
-		const regex = /\[\[User talk:(.+?)(?:\/.+?)?\]\]/g;
-		const matches = Array.from(wikitext.matchAll(regex));
-		await Promise.all(matches.map(async (match) => {
-			const user = match[1];
-			if (await isActive(user)) {
-				data.push(user);
-			}
-		}));
-		return data;
-	})();
-		
-	if (userlist.length) {
-		const userlistString = userlist.map((user) => user.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-		const userRegex = new RegExp(`#[ _]\\[\\[User[ _]talk:(${userlistString})(\\/[^\\]]+)?\\]\\]\n`, 'gi');
-		const text = wikitext.replace(userRegex, '');
-			
-		await api.postWithToken('csrf', {
-			action: 'edit',
-			pageid: '488029',
-			text,
+	await Promise.all(pageids.map(async (pageid) => {
+
+		const { data: { parse: { wikitext } } } = await api.post({
+			action: 'parse',
+			pageid,
+			prop: 'wikitext',
 			section: '1',
-			summary: '移除超过90日不活跃的订阅者',
-			tags: 'Bot',
-			notminor: true,
-			bot: true,
-			nocreate: true,
-			watchlist: 'nochange',
 		}, {
-			retry: 50,
-			noCache: true,
-		}).then(({ data }) => console.log(JSON.stringify(data)));
-	}
+			retry: 15,
+		});
+
+		const userlist = await (async () => {
+			const data = [];
+			const regex = /\[\[User talk:(.+?)(?:\/.+?)?\]\]/g;
+			const matches = Array.from(wikitext.matchAll(regex));
+			await Promise.all(matches.map(async (match) => {
+				const user = match[1];
+				if (await isActive(user)) {
+					data.push(user);
+				}
+			}));
+			return data;
+		})();
+		
+		if (userlist.length) {
+			const userlistString = userlist.map((user) => user.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+			const userRegex = new RegExp(`#[ _]\\[\\[User[ _]talk:(${userlistString})(\\/[^\\]]+)?\\]\\]\n`, 'gi');
+			const text = wikitext.replace(userRegex, '');
+			
+			await api.postWithToken('csrf', {
+				action: 'edit',
+				pageid,
+				text,
+				section: '1',
+				summary: '移除超过90日不活跃的订阅者',
+				tags: 'Bot',
+				notminor: true,
+				bot: true,
+				nocreate: true,
+				watchlist: 'nochange',
+			}, {
+				retry: 50,
+				noCache: true,
+			}).then(({ data }) => console.log(JSON.stringify(data)));
+		}
+	}));
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
