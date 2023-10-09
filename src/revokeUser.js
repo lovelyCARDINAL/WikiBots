@@ -24,8 +24,8 @@ const octokit = new Octokit({ auth: env.GHP });
 async function getRevokeList() {
 	const pages = await (async () => {
 		const { data } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
-			owner: 'lovelyCARDINAL',
-			repo: 'moegirl-revoke-user',
+			owner: 'moepad',
+			repo: 'revoke-user',
 			path: 'data',
 		});
 		return data
@@ -37,8 +37,8 @@ async function getRevokeList() {
 	const newPage = pages[dates.indexOf(maxDate)];
 	return await (async () => {
 		const { data } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
-			owner: 'lovelyCARDINAL',
-			repo: 'moegirl-revoke-user',
+			owner: 'moepad',
+			repo: 'revoke-user',
 			path: `data/${newPage}`,
 			mediaType: {
 				format: 'raw',
