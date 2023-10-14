@@ -21,6 +21,23 @@ async function isActive(user) {
 	return !usercontribs.length;
 }
 
+async function edit(pageid, text) {
+	await api.postWithToken('csrf', {
+		action: 'edit',
+		pageid,
+		text,
+		summary: '移除超过180日不活跃的编辑组成员',
+		tags: 'Bot',
+		notminor: true,
+		bot: true,
+		nocreate: true,
+		watchlist: 'nochange',
+	}, {
+		retry: 50,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
+}
+
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
@@ -31,9 +48,13 @@ async function isActive(user) {
 		{ retry: 25, noCache: true },
 	).then(console.log);
 
-	const pageids = ['490856'];
+	const pageids = {
+		signature: [],
+		template: ['420215', '582333'],
+	};
 
-	await Promise.all(pageids.map(async (pageid) => {
+	// signature
+	await Promise.all(pageids.signature.map(async (pageid) => {
 		const { data: { parse: { wikitext } } } = await api.post({
 			action: 'parse',
 			pageid,
@@ -48,6 +69,7 @@ async function isActive(user) {
 				return;
 			}
 			const wikitext = Parser.parse(line);
+			// 取最后一个用户页、用户讨论页、用户贡献内部链接中的用户名
 			const username = wikitext.querySelectorAll('link')
 				?.map(({ name }) => /^(?:(?:user|u|user[ _]talk):[^/]+$|(?:Special|特殊):(?:(?:用[户戶]|使用者)?[贡貢]献|Contrib(?:ution)?s)\/)/i.test(name) && name)
 				?.filter(Boolean)
@@ -67,21 +89,47 @@ async function isActive(user) {
 			console.log(`No change: ${pageid}`);
 			return;
 		}
+		await edit(pageid, text);
+	}));
 
-		await api.postWithToken('csrf', {
-			action: 'edit',
+	// template
+	await Promise.all(pageids.template.map(async (pageid) => {
+		const { data: { parse: { wikitext, links } } } = await api.post({
+			action: 'parse',
 			pageid,
-			text,
-			summary: '移除超过180日不活跃的编辑组成员',
-			tags: 'Bot',
-			notminor: true,
-			bot: true,
-			nocreate: true,
-			watchlist: 'nochange',
+			prop: 'wikitext|links',
 		}, {
-			retry: 50,
-			noCache: true,
-		}).then(({ data }) => console.log(JSON.stringify(data)));
+			retry: 15,
+		});
+
+		// {{User}}与{{Supu}}均包含User talk内部链接
+		const userlist = links
+			.map(({ ns, title }) => ns === 3 && title)
+			.filter(Boolean)
+			.map((title) => !title.includes('/') && title.replace('User talk:', ''));
+		
+		const incative = (await Promise.all(userlist.map(async (user) => {
+			return await isActive(user) && user.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		}))).filter(Boolean);
+
+		const regex = new RegExp(`{{\\s*(?:User|Supu)\\s*\\|\\s*(?:${incative.join('|')})\\s*[|}]`, 'gi');
+
+		const content = Parser.parse(wikitext);
+		const templates = content.querySelectorAll('template#Template:Hlist');
+		for (const temp of templates) {
+			for (const arg of temp.getAllArgs()) {
+				if (regex.test(arg.value.trim())) {
+					arg.remove();
+				}
+			}
+		}
+
+		const text = content.toString();
+		if (text === wikitext) {
+			console.log(`No change: ${pageid}`);
+			return;
+		}
+		await edit(pageid, text);
 	}));
 
 	console.log(`End time: ${new Date().toISOString()}`);
