@@ -4,7 +4,7 @@ name: "[schedule] weekly"
 # badDisplayTitle.js @Tuesday
 # shortPages.js @Wednesday
 # tentativeTitle.js @Wednesday
-# checkEditgroupActivities.js @Thursday
+# checkLeaderActivities.js @Thursday
 # fileRevisionDelete.js @Thursday
 # needImprove.js @Friday
 # needImproveWelcome.js @Friday
@@ -33,7 +33,7 @@ on:
           - "bad-display-title"
           - "short-pages"
           - "tentative-title"
-          - "check-editgroup-activities"
+          - "check-leader-activities"
           - "file-revision-deletion"
           - "need-improve"
           - "need-improve-welcome"
@@ -159,10 +159,10 @@ jobs:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/tentativeTitle.js
 
-  check-editgroup-activities:
+  check-leader-activities:
     if: |
       github.event.schedule == '55 21 * * 3' || 
-      github.event.inputs.task == 'check-editgroup-activities' ||
+      github.event.inputs.task == 'check-leader-activities' ||
       github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
@@ -179,7 +179,7 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: node src/checkEditgroupActivities.js
+        run: node src/checkLeaderActivities.js
 
   file-revision-deletion:
     if: |

@@ -4,7 +4,8 @@ name: "[schedule] monthly"
 # updateOverrideCategory.js @3rd
 # needImproveVtuber.js @7th
 # interfaceMessages.js @10th, 25th
-# removeBlockedUserrights.js @26th
+# checkMemberActivities.js @12th, 27th
+# removeBlockedUserrights.js @28th
 
 on:
   schedule:
@@ -13,7 +14,8 @@ on:
     - cron: "50 16 6 * *" # 7th 00:50 CST
     - cron: "50 16 8 * *" # 9th 00:50 CST
     - cron: "50 16 9,24 * *" # 10th, 25th 00:50 CST
-    - cron: "50 16 25 * *" # 26th 00:50 CST
+    - cron: "50 16 11,26 * *" # 12th, 27th 00:50 CST
+    - cron: "50 16 27 * *" # 28th 00:50 CST
   workflow_dispatch:
     inputs:
       task:
@@ -28,6 +30,7 @@ on:
           - "update-override-category"
           - "need-improve-vtuber"
           - "remove-blocked-userrights"
+          - "check-member-activities"
       group:
         type: choice
         required: true
@@ -155,7 +158,7 @@ jobs:
   remove-blocked-userrights:
     runs-on: ubuntu-latest
     if: |
-      github.event.schedule == '50 16 25 * *' || 
+      github.event.schedule == '50 16 27 * *' || 
       github.event.inputs.task == 'remove-blocked-userrights' ||
       github.event.inputs.group == 'all'
     steps:
@@ -168,7 +171,28 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: Run Script @26th
+      - name: Run Script @28th
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/removeBlockedUserrights.js
+
+  check-member-activities:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.schedule == '50 16 11,26 * *' || 
+      github.event.inputs.task == 'check-member-activities' ||
+      github.event.inputs.group == 'all'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script @12th, 27th
+        env:
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
+        run: node src/checkMemberActivities.js
