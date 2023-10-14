@@ -51,7 +51,7 @@ async function isActive(user) {
 			const username = wikitext.querySelectorAll('link')
 				?.map(({ name }) => /^(?:(?:user|u|user[ _]talk):[^/]+$|(?:Special|特殊):(?:(?:用[户戶]|使用者)?[贡貢]献|Contrib(?:ution)?s)\/)/i.test(name) && name)
 				?.filter(Boolean)
-				?.pop()
+				?.at(-1)
 				?.replace(/^user:|u:|user[ _]talk:|(Special|特殊):((用[户戶]|使用者)?[贡貢]献|Contrib(ution)?s)\//i, '');
 			if (!username) {
 				console.warn(`username not found: ${line}`);
