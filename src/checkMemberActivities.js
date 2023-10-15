@@ -103,19 +103,19 @@ async function edit(pageid, text) {
 		});
 
 		// {{User}}与{{Supu}}均包含User talk内部链接
-		const userlist = links
+		const inactive = (await Promise.all(links
 			.map(({ ns, title }) => ns === 3 && title)
 			.filter(Boolean)
-			.map((title) => !title.includes('/') && title.replace('User talk:', ''));
-		
-		const incative = (await Promise.all(userlist.map(async (user) => {
-			return await isActive(user) && user.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-		}))).filter(Boolean);
-
-		const regex = new RegExp(`{{\\s*(?:User|Supu)\\s*\\|\\s*(?:${incative.join('|')})\\s*[|}]`, 'gi');
+			.map((title) => !title.includes('/') && title.replace('User talk:', ''))
+			.map(async (user) => {
+				return await isActive(user) && user.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+			}),
+		)).filter(Boolean);
 
 		const content = Parser.parse(wikitext);
 		const templates = content.querySelectorAll('template#Template:Hlist');
+		const regex = new RegExp(`{{\\s*(?:User|Supu)\\s*\\|\\s*(?:${inactive.join('|')})\\s*[|}]`, 'i');
+
 		for (const temp of templates) {
 			for (const arg of temp.getAllArgs()) {
 				if (regex.test(arg.value.trim())) {
