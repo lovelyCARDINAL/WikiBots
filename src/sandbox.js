@@ -80,6 +80,35 @@ async function pageEdit(title) {
 				await pageEdit(title);
 			}
 		}));
+
+		const prefix = ['沙盒/', 'Sandbox/'];
+		const deletePages = await Promise.all(prefix.map(async (gapprefix) => {
+			const { data: { query: { pages } } } = await api.post({
+				prop: 'revisions',
+				generator: 'allpages',
+				rvprop: 'timestamp',
+				gapprefix,
+				gapnamespace: '10',
+				gaplimit: 'max',
+			}, {
+				retry: 15,
+			});
+			return pages
+				.filter(({ title, revisions: [{ timestamp }] }) => moment().diff(moment(timestamp), 'days') > 90 && !Object.keys(PAGE_MAP).includes(title))
+				.map(({ title, revisions: [{ timestamp }] }) => [title, timestamp]);
+		})).then((result) => result.flat());
+		await Promise.all(deletePages.map(async ([title, timestamp]) => {
+			await api.postWithToken('csrf', {
+				action: 'delete',
+				title,
+				reason: `沙盒清理作业：最后编辑时间 ${timestamp} 超过90日。如有需要请联系管理员恢复页面。`,
+				tags: 'Bot',
+				watchlist: 'nochange',
+			}, {
+				retry: 50,
+				noCache: true,
+			}).then(({ data }) => console.log(JSON.stringify(data)));
+		}));
 	}
 
 	const { data: { query: { pages } } } = await api.post({
