@@ -65,7 +65,7 @@ async function pageEdit(title) {
 			}, {
 				retry: 15,
 			});
-			console.info(`${title} has ${length} revisions.`);		
+			console.info(`${title} has ${length} revisions.`);
 			if (length > 2000) {
 				await api.postWithToken('csrf', {
 					action: 'delete',
@@ -97,6 +97,7 @@ async function pageEdit(title) {
 				.filter(({ title, revisions: [{ timestamp }] }) => moment().diff(moment(timestamp), 'days') > 90 && !Object.keys(PAGE_MAP).includes(title))
 				.map(({ title, revisions: [{ timestamp }] }) => [title, timestamp]);
 		})).then((result) => result.flat());
+		console.info(`There are ${deletePages.length} pages to delete.`);
 		await Promise.all(deletePages.map(async ([title, timestamp]) => {
 			await api.postWithToken('csrf', {
 				action: 'delete',
