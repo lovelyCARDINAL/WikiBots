@@ -2,7 +2,7 @@ import { load } from 'cheerio';
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import clientLogin from './utils/clientLogin.js';
-import config from './utils/localConfig.js';
+import config from './utils/config.js';
 
 const api = new MediaWikiApi(config.zh.api, {
 	headers: { 'api-user-agent': config.apiuseragent },
