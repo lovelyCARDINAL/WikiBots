@@ -51,12 +51,21 @@ const config = {
 	},
 	lb: {
 		api: 'https://library.moegirl.org.cn/api.php',
+		abot: {
+			account: '星海-adminbot',
+		},
 	},
 	en: {
 		api: 'https://en.moegirl.org.cn/api.php',
+		abot: {
+			account: '星海-adminbot',
+		},
 	},
 	ja: {
 		api: 'https://ja.moegirl.org.cn/api.php',
+		abot: {
+			account: '星海-adminbot',
+		},
 	},
 	meta: {
 		api: 'https://meta.wikimedia.org/w/api.php',
