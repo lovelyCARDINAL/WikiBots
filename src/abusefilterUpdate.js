@@ -1,3 +1,4 @@
+import process from 'process';
 import { load } from 'cheerio';
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
@@ -66,7 +67,14 @@ async function getAbuseFilterDetails(id) {
 	const { formSnippet, action } = await getAbuseFilterDetails(18);
 	formSnippet.wpFilterRules = af18.replace(/(\/\*\s*下方内容由机器人同步自滥用过滤器70\s*\*\/).+$/s, '$1') + af70.replace(/^.+?\/\*\s*下方内容会被机器人同步到滥用过滤器18\s*\*\//s, '');
 	
-	await api.request.post(action, formSnippet).then(() => console.log('Try to update AbuseFilter 18!'));
+	try {
+		await api.request
+			.post(action, formSnippet)
+			.then(() => console.log('Try to update AbuseFilter 18!'));
+	} catch (error) {
+		console.error('Failed to update AbuseFilter 18!');
+		process.exit(1);
+	}
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
