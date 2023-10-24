@@ -60,7 +60,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set Node Version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: "npm"
@@ -82,7 +82,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set Node Version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: "npm"
@@ -103,7 +103,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set Node Version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: "npm"
@@ -125,7 +125,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set Node Version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: "npm"
@@ -146,7 +146,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set Node Version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: "npm"
@@ -168,7 +168,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set Node Version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: "npm"
@@ -189,7 +189,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set Node Version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: "npm"
@@ -210,7 +210,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set Node Version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: "npm"
