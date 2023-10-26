@@ -94,30 +94,30 @@ async function getAbuseFilterDetails(api, id) {
 		});
 		await clientLogin(api, config[site].abot.account, config.password);
 
-		const ids = (() => {
-			const result = [];
-			for (const key in setData) {
-				if (Object.prototype.hasOwnProperty.call(setData[key], site)) {
-					result.push(setData[key][site]);
-				}
-			}
-			return result;
-		})();
+		/* eslint-disable no-unused-vars */
+		const ids = new Set(
+			Object.entries(setData)
+				.filter(([_key, data]) => Object.prototype.hasOwnProperty.call(data, site))
+				.map(([_key, data]) => data[site]),
+		);
+		/* eslint-enable no-unused-vars */
 		
 		const data = await (async () => {
 			const origin = await getAbuseFilter(api);
 			const result = [];
-			origin
-				.filter(({ id }) => ids.includes(id))
-				.map(({ id, lastedittime }) => {
-					// eslint-disable-next-line no-unused-vars
-					const key = Object.entries(setData).find(([_key, value]) => value[site] === id)[0];
-					if (moment(lastedittime).isAfter(zhData[key].lastedittime)) {
-						console.log(`Don't need to update ${site} abuse filter ${id}.`);
-						return;
-					}
-					result.push([id, zhData[key].pattern]);
-				});
+			const idToKeyMap = new Map(Object.entries(setData).map(([key, value]) => [value[site], key]));
+
+			for (const { id, lastedittime } of origin) {
+				if (ids.has(id)) {
+					continue;
+				}
+				const key = idToKeyMap.get(id);
+				if (!key || moment(lastedittime).isAfter(zhData[key].lastedittime)) {
+					console.log(`Don't need to update ${site} abuse filter ${id}.`);
+					continue;
+				}
+				result.push([id, zhData[key].pattern]);
+			}
 			return result;
 		})();
 
