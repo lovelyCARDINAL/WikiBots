@@ -108,7 +108,7 @@ async function getAbuseFilterDetails(api, id) {
 			const idToKeyMap = new Map(Object.entries(setData).map(([key, value]) => [value[site], key]));
 
 			for (const { id, lastedittime } of origin) {
-				if (ids.has(id)) {
+				if (!ids.has(id)) {
 					continue;
 				}
 				const key = idToKeyMap.get(id);
