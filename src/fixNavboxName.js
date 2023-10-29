@@ -42,7 +42,7 @@ const api = new MediaWikiApi(config.zh.api, {
 			retry: 25,
 		});
 		await Promise.all(pages.map(async ({ title, revisions: [{ content }] }) => {
-			const wikitext = Parser.parse(content.replaceAll('<includeonly>', ''));
+			const wikitext = Parser.parse(content, true);
 			const name = wikitext.querySelector('template#Template:Navbox, template#Template:大家族, template#Template:Navbox_with_columns, template#Template:Navbox_with_collapsible_groups, magic-word#invoke[module=Module:Nav]')?.getValue('name')?.trim();
 			if (!name) {
 				console.log(`${title} 找不到navbox或缺失name参数。`);
