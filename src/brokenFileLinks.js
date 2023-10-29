@@ -91,9 +91,9 @@ async function getDetails(title) {
 			}, {
 				retry: 15,
 			});
-			await Promise.all(pages.map(async ({ title, missing }) => {
+			await Promise.all(pages.map(async ({ title, missing, known }) => {
 				if (missing) {
-					imgData[title] = lastData?.[title] || await getDetails(title);
+					imgData[title] = lastData?.[title] || (known ? `页面丢失<span class='sysop-show'>（[https://commons.moegirl.org.cn/Special:恢复被删页面/${title.replaceAll(' ', '_')} 恢复]）</span>` : await getDetails(title));
 				}
 			}));
 		}));
