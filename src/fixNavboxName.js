@@ -51,7 +51,7 @@ const api = new MediaWikiApi(config.zh.api, {
 			const value = `${name.charAt(0).toUpperCase()}${name.slice(1)}`;
 			const titleValue = title.replace('Template:', '');
 			if (value.replaceAll('_', ' ') !== titleValue) {
-				const regex = new RegExp(`(\\|\\s*name\\s*=\\s*)${value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+				const regex = new RegExp(`(\\|\\s*name\\s*=\\s*)${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
 				await api.postWithToken('csrf', {
 					action: 'edit',
 					title,
