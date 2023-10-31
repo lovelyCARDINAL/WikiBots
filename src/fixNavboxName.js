@@ -7,6 +7,20 @@ const api = new MediaWikiApi(config.zh.api, {
 	headers: { 'api-user-agent': config.apiuseragent },
 });
 
+async function querySearch(srsearch) {
+	const { data: { query: { search } } } = await api.post({
+		list: 'search',
+		srsearch,
+		srnamespace: '10',
+		srlimit: 'max',
+		srinfo: '',
+		srprop: '',
+	}, {
+		retry: 25,
+	});
+	return search;
+}
+
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
@@ -17,21 +31,15 @@ const api = new MediaWikiApi(config.zh.api, {
 		{ retry: 25, noCache: true },
 	).then(console.log);
 
-	const { data: { query: { search } } } = await api.post({
-		list: 'search',
-		srsearch: 'hastemplate:"navbox" insource:"name" insource:"navbox"',
-		srnamespace: '10',
-		srlimit: 'max',
-		srinfo: '',
-		srprop: '',
-	}, {
-		retry: 25,
-	});
+	const search = await Promise.all([
+		querySearch('hastemplate:"navbox" insource:"name" insource:"navbox"'),
+		querySearch('insource:"invoke:nav" insource:"name"'),
+	]).then((result) => result.flat());
 
 	const ids = search
-		.filter(({ title }) => !/Template:(?:Navbox|大家族)|\/doc/.test(title))
+		.filter(({ title }) => !/Template:(?:Navbox|大家族|沙盒|Sandbox)|\/doc/.test(title))
 		.map(({ pageid }) => pageid);
-	const idslist = splitAndJoin(ids, 500);
+	const idslist = splitAndJoin([...new Set(ids)], 500);
 
 	await Promise.all(idslist.map(async (pageids) => {
 		const { data: { query: { pages } } } = await api.post({
