@@ -108,7 +108,12 @@ const SITE_LIST = ['zh', 'cm'];
 			}
 
 			// 获取变体列表和正则
-			const variant = Object.values(varianttitles).map((item) => item.replace(/Category:|分类:|分類:/, ''));
+			const variant = [...new Set(Object
+				.values(varianttitles)
+				.map((item) => item
+					.replace(/Category:|分类:|分類:/, ''),
+				),
+			)];
 			const variantRegex = variant
 				.map((item) => item
 					.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -116,9 +121,7 @@ const SITE_LIST = ['zh', 'cm'];
 				.join('|');
 			const variantRegexCV = variant
 				.map((item) => item
-					.replace('配音角色', ''),
-				)
-				.map((item) => item
+					.replace('配音角色', '')
 					.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 					.replaceAll(/ /g, '[ _]'))
 				.join('|');
