@@ -45,8 +45,10 @@ const api = new MediaWikiApi(config.zh.api, {
 	let count = 1;
 	for (const page of pages) {
 		const { pageid, title, revisions: [{ content }] } = page;
-		const wikitext = Parser.parse(content.replaceAll('\n', '').replace(/[标標][题題]替[换換]|替[换換][标標][题題]/, '标题替换'));
-		const params = wikitext.querySelector('template#Template:标题替换')?.getValue();
+		const wikitext = Parser.parse(content.replaceAll('\n', ''));
+		const params = wikitext
+			.querySelector('template:regex("name, /^Template:(?:[标標][题題]替[换換]|替[换換][标標][题題])$/")')
+			?.getValue();
 		if (!params || params?.t && !['no', 'n', 'false', '0', '', '¬'].includes(params.t?.trim())) {
 			continue;
 		}

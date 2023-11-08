@@ -62,13 +62,16 @@ const api = new MediaWikiApi(config[site].api, {
 		if (!content || !userlist.includes(lastEditUser)) {
 			return;
 		}
-
-		const wikitext = Parser.parse(content);
-		const templateUser = wikitext.querySelector('template#Template:即将删除').getValue('user');
+		const template = Parser.parse(content)
+			?.querySelector('template:regex(name, /^Template:即[将將][删刪]除$/)');
+		if (!template) {
+			return;
+		}
+		const templateUser = template.getValue('user');
 		if (lastEditUser !== templateUser || !userlist.includes(templateUser)) {
 			return;
 		}
-		const reason = wikitext.querySelector('template#Template:即将删除').getValue('1')?.trim() || '';
+		const reason = template.getValue('1')?.trim() || '';
 		if (!reason) {
 			return;
 		}

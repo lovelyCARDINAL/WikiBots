@@ -2,9 +2,11 @@ import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from './utils/config.js';
+import parserConfig from './utils/parserConfig.js';
 import readData from './utils/readData.js';
 
 Parser.config = 'moegirl';
+Parser.redirects = new Map(parserConfig.redirects);
 
 const api = new MediaWikiApi(config.zh.api, {
 	headers: { 'api-user-agent': config.apiuseragent },
@@ -61,8 +63,8 @@ const api = new MediaWikiApi(config.zh.api, {
 			.map((title) => `[[:${title}]]`)
 			.join('，')
 			|| 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
-		const wikitext = Parser.parse(content.replaceAll('\n', '').replace(/[欢歡]迎[編编][辑輯]|不完整/, '欢迎编辑'));
-		const value = wikitext.querySelector('template#Template:欢迎编辑')?.getValue() || ['data-sort-value="*" | <i style="color:red;">找不到目标模板</i>'];
+		const wikitext = Parser.parse(content.replaceAll('\n', ''));
+		const value = wikitext.querySelector('template:regex(name, /^Template:[欢歡]迎[編编][辑輯]$/)')?.getValue() || ['data-sort-value="*" | <i style="color:red;">找不到目标模板</i>'];
 		const reason = Object.keys(value)
 			.filter((key) => !isNaN(key) && value[key]?.trim())
 			.map((key) => value[key]?.trim())

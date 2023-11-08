@@ -53,7 +53,7 @@ async function querySearch(srsearch) {
 		});
 		await Promise.all(pages.map(async ({ title, revisions: [{ content }] }) => {
 			const wikitext = Parser.parse(content, true);
-			const name = wikitext.querySelector('template#Template:Navbox, template#Template:大家族, template#Template:Navbox_with_columns, template#Template:Navbox_with_collapsible_groups, magic-word#invoke[module=Module:Nav]')?.getValue('name')?.trim();
+			const name = wikitext.querySelector('template:regex("name, /^Template:(?:Navbox(?:_with_collapsible_groups|_with_columns)?|大家族)$/i"), magic-word#invoke[module=Module:Nav]')?.getValue('name')?.trim();
 			if (!name) {
 				console.log(`${title} 找不到navbox或缺失name参数。`);
 				return;

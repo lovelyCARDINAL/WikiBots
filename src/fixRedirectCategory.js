@@ -164,7 +164,7 @@ const SITE_LIST = ['zh', 'cm'];
 					
 					wikitext = Parser.parse(wikitext);
 					// {{萌点}}
-					for (const temp of wikitext.querySelectorAll('template#Template:萌点, template#Template:萌點')) {
+					for (const temp of wikitext.querySelectorAll('template:regex(name, /^Template:萌[点點]$/)')) {
 						for (const arg of temp.getAllArgs()) {
 							const argArrary = arg.value.split(/[,，]/);
 							if (variant.includes(argArrary?.[0].trim())) {
@@ -198,7 +198,7 @@ const SITE_LIST = ['zh', 'cm'];
 				if (site === 'cm') {
 					wikitext = Parser.parse(wikitext);
 					// {{虚拟角色/作}}
-					const temp1 = wikitext.querySelector('template#Template:虚拟角色/作, template#Template:虛擬角色/作');
+					const temp1 = wikitext.querySelector('template:regex(name, /^Template:[虚虛][拟擬]角色/作$/)');
 					if (temp1) {
 						for (const arg of temp1.getAllArgs()) {
 							if (variant.includes(`${arg.value.trim()}角色`) && arg.name !== 'more') {
