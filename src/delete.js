@@ -3,6 +3,8 @@ import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from './utils/config.js';
 
+Parser.config = 'moegirl';
+
 const site = env.SITE;
 const api = new MediaWikiApi(config[site].api, {
 	headers: { 'api-user-agent': config.apiuseragent },
