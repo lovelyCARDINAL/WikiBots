@@ -21,7 +21,7 @@
     "jsonpath": "^1.1.1",
     "moment": "^2.29.4",
     "wiki-saikou": "^3.2.1",
-    "wikiparser-node": "^1.0.0-beta.0"
+    "wikiparser-node": "^1.0.0-beta.1"
   },
   "type": "module",
   "devDependencies": {
