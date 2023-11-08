@@ -74,12 +74,12 @@ async function getPagelist() {
 	}
 
 	switch (type) {
-		case 0:
+		case '0':
 		default:
 			console.log(sectiontitle);
 			await sendNews('User talk:星海子/月报');
 			break;
-		case 1:
+		case '1':
 			Promise.all((await getPagelist()).map(async (title) => {
 				await sendNews(title);
 			}));
