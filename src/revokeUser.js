@@ -6,16 +6,10 @@ import { MediaWikiApi } from 'wiki-saikou';
 import clientLogin from './utils/clientLogin.js';
 import config from './utils/config.js';
 
-const zhabot = new MediaWikiApi(config.zh.api, {
+const zhapi = new MediaWikiApi(config.zh.api, {
 		headers: { 'api-user-agent': config.apiuseragent },
 	}),
-	cmabot = new MediaWikiApi(config.cm.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
-	}),
-	zhsbot = new MediaWikiApi(config.zh.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
-	}),
-	cmsbot = new MediaWikiApi(config.cm.api, {
+	cmapi = new MediaWikiApi(config.cm.api, {
 		headers: { 'api-user-agent': config.apiuseragent },
 	});
 
@@ -49,7 +43,7 @@ async function getRevokeList() {
 }
 
 async function manageTags(operation) {
-	const { data } = await zhabot.postWithToken('csrf', {
+	const { data } = await zhapi.postWithToken('csrf', {
 		action: 'managetags',
 		operation,
 		tag: 'RevokeUser',
@@ -66,7 +60,7 @@ async function manageTags(operation) {
 async function deleteAvatar(user) {
 	let retry = 0;
 	while (retry < 15) {
-		const { response: { data } } = await cmabot.request.post('/index.php', {
+		const { response: { data } } = await cmapi.request.post('/index.php', {
 			title: 'Special:查看头像',
 			'delete': 'true',
 			user,
@@ -84,7 +78,7 @@ async function deleteAvatar(user) {
 }
 
 async function deleteRights(user) {
-	await cmabot.postWithToken('userrights', {
+	await cmapi.postWithToken('userrights', {
 		action: 'userrights',
 		user,
 		remove: 'goodeditor|honoredmaintainer|techeditor|manually-confirmed|file-maintainer|extendedconfirmed',
@@ -97,7 +91,7 @@ async function deleteRights(user) {
 }
 
 async function deletePages(user) {
-	const { data: { query: { allpages } } } = await zhabot.post({
+	const { data: { query: { allpages } } } = await zhapi.post({
 		list: 'allpages',
 		apprefix: user,
 		apnamespace: '2',
@@ -108,7 +102,7 @@ async function deletePages(user) {
 		.map((page) => page.title)
 		.filter((title) => title.startsWith(`User:${user}/`) || title === `User:${user}`);
 	await Promise.all(pagelist.map(async (title) => {
-		await zhsbot.postWithToken('csrf', {
+		await zhapi.postWithToken('csrf', {
 			action: 'delete',
 			title,
 			reason: '用户注销',
@@ -157,10 +151,8 @@ async function hideLogs(api, ids) {
 	const userlist = await getRevokeList();
 
 	await Promise.all([
-		clientLogin(zhabot, config.zh.abot.account, config.password),
-		clientLogin(cmabot, config.cm.abot.account, config.password),
-		clientLogin(zhsbot, config.cm.sbot.account, config.password),
-		clientLogin(cmsbot, config.cm.sbot.account, config.password),
+		clientLogin(zhapi, config.cm.sbot.account, config.password),
+		clientLogin(cmapi, config.cm.sbot.account, config.password),
 	]);
 
 	await manageTags('activate');
@@ -175,15 +167,15 @@ async function hideLogs(api, ids) {
 
 	const [cmidlist, zhidlist] = await Promise.all([
 		Promise.all([
-			queryLogs(cmsbot, 'avatar/delete', config.zh.abot.account),
-			queryLogs(cmsbot, 'rights/rights', config.zh.abot.account),
+			queryLogs(cmapi, 'avatar/delete', config.zh.sbot.account),
+			queryLogs(cmapi, 'rights/rights', config.zh.sbot.account),
 		]).then((ids) => ids.flat()),
-		queryLogs(zhabot, 'delete/delete', config.zh.sbot.account),
+		queryLogs(zhapi, 'delete/delete', config.zh.sbot.account),
 	]);
 
 	await Promise.all([
-		cmidlist.length && hideLogs(cmsbot, cmidlist),
-		zhidlist.length && hideLogs(zhsbot, zhidlist),
+		cmidlist.length && hideLogs(cmapi, cmidlist),
+		zhidlist.length && hideLogs(zhapi, zhidlist),
 	]);
 
 	await manageTags('deactivate');

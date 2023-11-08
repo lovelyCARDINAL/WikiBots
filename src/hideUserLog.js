@@ -5,10 +5,7 @@ import config from './utils/config.js';
 import { getTimeData, editTimeData } from './utils/lastTime.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
-const abot = new MediaWikiApi(config.cm.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
-	}),
-	zhapi = new MediaWikiApi(config.zh.api, {
+const zhapi = new MediaWikiApi(config.zh.api, {
 		headers: { 'api-user-agent': config.apiuseragent },
 	}),
 	cmapi = new MediaWikiApi(config.cm.api, {
@@ -147,7 +144,7 @@ async function hideAbuseLog(afluser) {
 async function deleteAvatar(user) {
 	let retry = 0;
 	while (retry < 15) {
-		const { response: { data } } = await abot.request.post('/index.php', {
+		const { response: { data } } = await cmapi.request.post('/index.php', {
 			title: 'Special:查看头像',
 			'delete': 'true',
 			user,
@@ -168,7 +165,6 @@ async function deleteAvatar(user) {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
 	await Promise.all([
-		clientLogin(abot, config.cm.abot.account, config.password),
 		clientLogin(zhapi, config.cm.sbot.account, config.password),
 		clientLogin(cmapi, config.cm.sbot.account, config.password),
 	]);
