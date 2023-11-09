@@ -195,7 +195,7 @@ const SITE_LIST = ['zh', 'cm'];
 
 				if (site === 'cm') {
 					// {{虚拟角色/作}}
-					const temp1 = wikitext.querySelector('template:regex(name, /^Template:[虚虛][拟擬]角色/作$/)');
+					const temp1 = wikitext.querySelector('template:regex(name, /^Template:[虚虛][拟擬]角色\\/作$/)');
 					if (temp1) {
 						for (const arg of temp1.getAllArgs()) {
 							if (variantList.includes(`${arg.value.trim()}角色`) && arg.name !== 'more') {
