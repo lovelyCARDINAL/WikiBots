@@ -2,8 +2,10 @@ import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from './utils/config.js';
+import parserConfig from './utils/parserConfig.js';
 
 Parser.config = 'moegirl';
+Parser.conversionTable = new Map(parserConfig.conversionTable);
 
 const SITE_LIST = ['zh', 'cm'];
 
@@ -101,30 +103,17 @@ const SITE_LIST = ['zh', 'cm'];
 		await Promise.all(pages.map(async ({ title, varianttitles }) => {
 			// 获取重定向目标
 			const target = redirects.find(({ from }) => from === title)?.to.replace('Category:', '');
-			const targetCV = target?.replace('配音角色', '');
-			if (target === undefined) {
+			if (!target) {
 				console.warn(`${site} ${title}：找不到重定向目标`);
 				return;
 			}
 
-			// 获取变体列表和正则
-			const variant = [...new Set(Object
+			// 获取变体列表
+			const variant = new Set(Object
 				.values(varianttitles)
-				.map((item) => item
-					.replace(/Category:|分类:|分類:/, ''),
-				),
-			)];
-			const variantRegex = variant
-				.map((item) => item
-					.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-					.replaceAll(/ /g, '[ _]'))
-				.join('|');
-			const variantRegexCV = variant
-				.map((item) => item
-					.replace('配音角色', '')
-					.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-					.replaceAll(/ /g, '[ _]'))
-				.join('|');
+				.map((item) => item.replace(/Category:|分类:|分類:/, '')),
+			);
+			const variantList = [...variant.add(...Array.from(variant).map((item) => item.replaceAll(' ', '_')))];
 
 			// 获取分类成员和内容
 			const members = await (async () => {
@@ -151,26 +140,32 @@ const SITE_LIST = ['zh', 'cm'];
 			})();
 
 			await Promise.all(members.map(({ pageid, revisions: [{ content }] }) => {
-				let wikitext = contentData?.[pageid]?.content || content;
-				// 分类文本替换
-				wikitext = wikitext.replaceAll(
-					new RegExp(`\\s*(Category|分类|分類|Cat):\\s*(?:${variantRegex})\\s*(?=[\\|\\]])`, 'ig'),
-					`$1:${target}`,
+				const wikitext = Parser.parse(contentData?.[pageid]?.content || content);
+
+				// 分类
+				const category = wikitext.querySelector(
+					Array.from(variant, (item) => `category#Category:${item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).join(', '),
 				);
+				if (category) {
+					category.setTarget(`Category:${target}`);
+				}
 
 				if (site === 'zh') {
 					// 声优
-					wikitext = wikitext.replaceAll(
-						new RegExp(`(\\|\\s*(?:声优|聲優|配音)\\s*=\\s*)(?:${variantRegexCV})(?=\\s*[\\|\\}])`, 'ig'),
-						`$1${targetCV}`,
-					);
+					const temp0 = wikitext.querySelector('parameter:regex("name, /^(?:声优|聲優|配音)$/")');
+					if (temp0) {
+						const value = temp0.value.trim();
+						const newValue = target.replace('配音角色', '');
+						if (variantList.includes(`${Parser.normalizeTitle(value).title}配音角色`)) {
+							temp0.setValue(temp0.lastChild.text().replace(value, newValue));
+						}
+					}
 					
-					wikitext = Parser.parse(wikitext);
 					// {{萌点}}
 					for (const temp of wikitext.querySelectorAll('template:regex(name, /^Template:萌[点點]$/)')) {
 						for (const arg of temp.getAllArgs()) {
 							const argArrary = arg.value.split(/[,，]/);
-							if (variant.includes(argArrary?.[0].trim())) {
+							if (variantList.includes(argArrary?.[0].trim())) {
 								switch (argArrary.length) {
 									case 1:
 										temp.setValue(arg.name, `${target},${arg.value}`);
@@ -191,7 +186,7 @@ const SITE_LIST = ['zh', 'cm'];
 					// {{Cate}}
 					for (const temp of wikitext.querySelectorAll('template#Template:Cate')) {
 						for (const arg of temp.getAllArgs()) {
-							if (variant.includes(arg.value.trim()) && arg.name !== '1') {
+							if (variantList.includes(arg.value.trim()) && arg.name !== '1') {
 								temp.setValue(arg.name, target);
 							}
 						}
@@ -199,12 +194,11 @@ const SITE_LIST = ['zh', 'cm'];
 				}
 
 				if (site === 'cm') {
-					wikitext = Parser.parse(wikitext);
 					// {{虚拟角色/作}}
 					const temp1 = wikitext.querySelector('template:regex(name, /^Template:[虚虛][拟擬]角色/作$/)');
 					if (temp1) {
 						for (const arg of temp1.getAllArgs()) {
-							if (variant.includes(`${arg.value.trim()}角色`) && arg.name !== 'more') {
+							if (variantList.includes(`${arg.value.trim()}角色`) && arg.name !== 'more') {
 								temp1.setValue(arg.name, target.replace(/角色$/, ''));
 							}
 						}
@@ -214,7 +208,7 @@ const SITE_LIST = ['zh', 'cm'];
 					const temp2 = wikitext.querySelector('template#Template:作品');
 					if (temp2) {
 						for(const arg of temp2.getAllArgs()) {
-							if(variant.includes(arg.value.trim()) && arg.name !== '1') {
+							if(variantList.includes(arg.value.trim()) && arg.name !== '1') {
 								temp2.setValue(arg.name, target);
 							}
 						}
