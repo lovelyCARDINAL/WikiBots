@@ -143,8 +143,9 @@ const SITE_LIST = ['zh', 'cm'];
 				const wikitext = Parser.parse(contentData?.[pageid]?.content || content);
 
 				// 分类
+				// TODO: nomoralize origin Category
 				const category = wikitext.querySelector(
-					Array.from(variant, (item) => `category#Category:${item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).join(', '),
+					Array.from(variant, (item) => `category[name=Category:${item}]`).join(', '),
 				);
 				if (category) {
 					category.setTarget(`Category:${target}`);
@@ -152,12 +153,12 @@ const SITE_LIST = ['zh', 'cm'];
 
 				if (site === 'zh') {
 					// 声优
-					const temp0 = wikitext.querySelector('parameter:regex("name, /^(?:声优|聲優|配音)$/")');
-					if (temp0) {
-						const value = temp0.value.trim();
+					const param = wikitext.querySelector('parameter:regex("name, /^(?:声优|聲優|配音)$/")');
+					if (param) {
+						const value = param.value.trim();
 						const newValue = target.replace('配音角色', '');
 						if (variantList.includes(`${Parser.normalizeTitle(value).title}配音角色`)) {
-							temp0.setValue(temp0.lastChild.text().replace(value, newValue));
+							param.setValue(param.lastChild.text().replace(value, newValue));
 						}
 					}
 					
@@ -165,7 +166,8 @@ const SITE_LIST = ['zh', 'cm'];
 					for (const temp of wikitext.querySelectorAll('template:regex(name, /^Template:萌[点點]$/)')) {
 						for (const arg of temp.getAllArgs()) {
 							const argArrary = arg.value.split(/[,，]/);
-							if (variantList.includes(argArrary?.[0].trim())) {
+							const normalizeValue = Parser.normalizeTitle(argArrary?.[0].trim()).title;
+							if (variantList.includes(normalizeValue)) {
 								switch (argArrary.length) {
 									case 1:
 										temp.setValue(arg.name, `${target},${arg.value}`);
@@ -186,7 +188,8 @@ const SITE_LIST = ['zh', 'cm'];
 					// {{Cate}}
 					for (const temp of wikitext.querySelectorAll('template#Template:Cate')) {
 						for (const arg of temp.getAllArgs()) {
-							if (variantList.includes(arg.value.trim()) && arg.name !== '1') {
+							const normalizeValue = Parser.normalizeTitle(arg.value.trim()).title;
+							if (variantList.includes(normalizeValue) && arg.name !== '1') {
 								temp.setValue(arg.name, target);
 							}
 						}
