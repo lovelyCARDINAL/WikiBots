@@ -2,9 +2,9 @@ import { Buffer } from 'buffer';
 import { env } from 'process';
 import { Octokit } from '@octokit/core';
 import { MediaWikiApi } from 'wiki-saikou';
-import config from './utils/config.js';
-import readData from './utils/readData.js';
-import splitAndJoin from './utils/splitAndJoin.js';
+import config from '../utils/config.js';
+import readData from '../utils/readData.js';
+import splitAndJoin from '../utils/splitAndJoin.js';
 
 const zhapi = new MediaWikiApi(config.zh.api, {
 		headers: { 'api-user-agent': config.apiuseragent },

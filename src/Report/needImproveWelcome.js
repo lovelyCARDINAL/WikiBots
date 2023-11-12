@@ -1,9 +1,9 @@
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
-import config from './utils/config.js';
-import parserConfig from './utils/parserConfig.js';
-import readData from './utils/readData.js';
+import config from '../utils/config.js';
+import parserConfig from '../utils/parserConfig.js';
+import readData from '../utils/readData.js';
 
 Parser.config = 'moegirl';
 Parser.redirects = new Map(parserConfig.redirects);

@@ -1,7 +1,7 @@
 import { env } from 'process';
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
-import config from './utils/config.js';
+import config from '../utils/config.js';
 
 const type = env.TYPE;
 const api = new MediaWikiApi(config.zh.api, {

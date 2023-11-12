@@ -1,5 +1,5 @@
 import { MediaWikiApi } from 'wiki-saikou';
-import config from './utils/config.js';
+import config from '../utils/config.js';
 
 const SITE_LIST = ['zh', 'cm'];
 const api = {};

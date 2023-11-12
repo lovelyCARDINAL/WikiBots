@@ -1,9 +1,9 @@
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
-import config from './utils/config.js';
-import readData from './utils/readData.js';
-import splitAndJoin from './utils/splitAndJoin.js';
+import config from '../utils/config.js';
+import readData from '../utils/readData.js';
+import splitAndJoin from '../utils/splitAndJoin.js';
 
 Parser.config = 'moegirl';
 
