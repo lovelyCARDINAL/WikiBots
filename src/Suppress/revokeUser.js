@@ -3,8 +3,8 @@ import { Octokit } from '@octokit/core';
 import { load } from 'js-yaml';
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
-import clientLogin from './utils/clientLogin.js';
-import config from './utils/config.js';
+import clientLogin from '../utils/clientLogin.js';
+import config from '../utils/config.js';
 
 const zhapi = new MediaWikiApi(config.zh.api, {
 		headers: { 'api-user-agent': config.apiuseragent },

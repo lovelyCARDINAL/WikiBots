@@ -2,8 +2,8 @@ import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import jsonpath from 'jsonpath';
 import { MediaWikiApi } from 'wiki-saikou';
-import config from './utils/config.js';
-import splitAndJoin from './utils/splitAndJoin.js';
+import config from '../utils/config.js';
+import splitAndJoin from '../utils/splitAndJoin.js';
 
 const zhapi = new MediaWikiApi(config.zh.api, {
 		headers: { 'api-user-agent': config.apiuseragent },

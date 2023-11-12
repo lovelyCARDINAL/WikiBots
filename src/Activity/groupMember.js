@@ -1,6 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
-import config from './utils/config.js';
+import config from '../utils/config.js';
 
 Parser.config = 'moegirl';
 

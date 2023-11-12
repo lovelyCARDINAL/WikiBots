@@ -1,9 +1,9 @@
 import { load } from 'cheerio';
 import { MediaWikiApi } from 'wiki-saikou';
-import clientLogin from './utils/clientLogin.js';
-import config from './utils/config.js';
-import { getTimeData, editTimeData } from './utils/lastTime.js';
-import splitAndJoin from './utils/splitAndJoin.js';
+import clientLogin from '../utils/clientLogin.js';
+import config from '../utils/config.js';
+import { getTimeData, editTimeData } from '../utils/lastTime.js';
+import splitAndJoin from '../utils/splitAndJoin.js';
 
 const zhapi = new MediaWikiApi(config.zh.api, {
 		headers: { 'api-user-agent': config.apiuseragent },
