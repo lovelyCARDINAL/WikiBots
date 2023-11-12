@@ -1,8 +1,8 @@
 name: "[schedule] 1x/daily @late night"
-# watch.js
-# purge.js
-# mainpageImages.js
-# fixRedirectCategory.js
+# Personal/watch.js
+# Clean/purge.js
+# File/mainpageImages.js
+# Cateorgy/fixRedirect.js
 
 on:
   schedule:
@@ -51,7 +51,7 @@ jobs:
       - name: Run Script
         env:
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
-        run: node src/watch.js
+        run: node src/Personal/watch.js
 
   purge:
     if: |
@@ -72,7 +72,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/purge.js
+        run: node src/Clean/purge.js
 
   mainpage-image-protection:
     if: |
@@ -94,7 +94,7 @@ jobs:
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
           CM_ABOT: ${{ secrets.CM_ABOT }}
-        run: node src/mainpageImages.js
+        run: node src/File/mainpageImages.js
 
   fix-redirect-category:
     if: |
@@ -116,4 +116,4 @@ jobs:
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
           CM_BOT: ${{ secrets.CM_BOT }}
-        run: node src/fixRedirectCategory.js
+        run: node src/Cateorgy/fixRedirect.js

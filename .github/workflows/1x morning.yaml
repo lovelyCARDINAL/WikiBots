@@ -1,7 +1,7 @@
 name: "[schedule] 1x/daily @early morning"
-# sandbox.js
-# brokenRedirectDelete.js
-# checkActivities.js
+# Clean/sandbox.js
+# Clean/brokenRedirectDelete.js
+# Activity/maintainer.js
 
 on:
   schedule:
@@ -49,7 +49,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/sandbox.js
+        run: node src/Clean/sandbox.js
 
   broken-redirect-deletion:
     if: |
@@ -70,7 +70,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/brokenRedirectDelete.js
+        run: node src/Clean/brokenRedirectDelete.js
 
   check-activities:
     if: |
@@ -92,4 +92,4 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: node src/checkActivities.js
+        run: node src/Activity/maintainer.js
