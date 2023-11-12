@@ -1,7 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
-import config from './utils/config.js';
-import splitAndJoin from './utils/splitAndJoin.js';
+import config from '../utils/config.js';
+import splitAndJoin from '../utils/splitAndJoin.js';
 
 Parser.config = 'moegirl';
 
