@@ -1,0 +1,42 @@
+name: "File"
+# src/File/info.js - 3x daily.yaml
+# src/File/mainpageImages.js - 1x evening.yaml
+
+on:
+  schedule:
+    - cron: "55 21 * * 3" # Thursday 05:55 CST
+    - cron: "50 16 11,26 * *" # 12th, 27th 00:50 CST
+  workflow_dispatch:
+    inputs:
+      task:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "revision-deletion"
+
+env:
+  MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  file-revision-deletion:
+    if: |
+      github.event.schedule == '55 21 * * 3' || 
+      github.event.inputs.task == 'revision-deletion'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          CM_ABOT: ${{ secrets.CM_ABOT }}
+        run: node src/File/revisionDelete.js

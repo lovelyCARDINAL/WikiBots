@@ -1,0 +1,61 @@
+name: "AbuseFilter"
+
+on:
+  schedule:
+    - cron: "50 13 * * 2,6" # Tuesday, Saturday 21:50 CST
+    - cron: "50 16 12,27 * *" # 13th, 28th 00:50 CST
+  workflow_dispatch:
+    inputs:
+      task:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "update"
+          - "global"
+
+env:
+  MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  update:
+    if: |
+      github.event.schedule == '50 13 * * 2,6' || 
+      github.event.inputs.task == 'update'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
+        run: node src/AbuseFilter/update.js
+
+  global:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.schedule == '50 16 12,27 * *' || 
+      github.event.inputs.task == 'global'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script @13th, 28th
+        env:
+          MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
+        run: node src/AbuseFilter/global.js
