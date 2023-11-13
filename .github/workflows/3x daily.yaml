@@ -1,11 +1,11 @@
-name: "[schedule] 6x/daily"
-# invisibleCharacter.js
-# fileInfo.js
+name: "[schedule] 3x/daily"
+# Category/nulledit.js
+# File/info.js
 
 on:
   schedule:
-    - cron: "35 18,23,4,8,12,15 * * *"
-    # 2:35, 7:35, 12:35, 16:35, 20:35, 23:35 CST
+    - cron: "35 18,6,13 * * *"
+    # 2:35, 14:35, 21:35 CST
   workflow_dispatch:
     inputs:
       task:
@@ -14,7 +14,7 @@ on:
         default: "none"
         options:
           - "none"
-          - "invisible-character"
+          - "nulledit-in-category"
           - "file-info"
       group:
         type: choice
@@ -29,10 +29,10 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  invisible-character:
+  nulledit-in-category:
     if: |
       github.event_name == 'schedule' ||
-      github.event.inputs.task == 'invisible-character' ||
+      github.event.inputs.task == 'nulledit-in-category' ||
       github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
@@ -48,7 +48,8 @@ jobs:
       - name: Run Script
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: node src/invisibleCharacter.js
+          CM_BOT: ${{ secrets.CM_BOT }}
+        run: node src/Category/nulledit.js
 
   file-info:
     if: |
@@ -70,4 +71,4 @@ jobs:
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
           CM_BOT: ${{ secrets.CM_BOT }}
-        run: node src/fileInfo.js
+        run: node src/File/info.js

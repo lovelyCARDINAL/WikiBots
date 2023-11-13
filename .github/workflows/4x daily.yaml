@@ -1,7 +1,7 @@
 name: "[schedule] 4x/daily"
-# userpageDelete.js
-# redirectDelete.js
-# nulleditInCategory.js
+# Clean/userpageDelete.js
+# Clean/redirectDelete.js
+# Clean/invisibleCharacter.js
 
 on:
   schedule:
@@ -17,7 +17,7 @@ on:
           - "none"
           - "userpage-deletion"
           - "redirect-deletion"
-          - "nulledit-in-category"
+          - "invisible-character"
       group:
         type: choice
         required: true
@@ -52,7 +52,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/userpageDelete.js
+        run: node src/Clean/userpageDelete.js
 
   redirect-deletion:
     if: |
@@ -74,12 +74,12 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/redirectDelete.js
+        run: node src/Clean/redirectDelete.js
 
-  nulledit-in-category:
+  invisible-character:
     if: |
       github.event_name == 'schedule' ||
-      github.event.inputs.task == 'nulledit-in-category' ||
+      github.event.inputs.task == 'invisible-character' ||
       github.event.inputs.group == 'all'
     runs-on: ubuntu-latest
     steps:
@@ -95,5 +95,4 @@ jobs:
       - name: Run Script
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
-          CM_BOT: ${{ secrets.CM_BOT }}
-        run: node src/nulleditInCategory.js
+        run: node src/Clean/invisibleCharacter.js
