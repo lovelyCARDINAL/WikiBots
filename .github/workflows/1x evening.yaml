@@ -116,4 +116,4 @@ jobs:
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
           CM_BOT: ${{ secrets.CM_BOT }}
-        run: node src/Cateorgy/fixRedirect.js
+        run: node src/Category/fixRedirect.js
