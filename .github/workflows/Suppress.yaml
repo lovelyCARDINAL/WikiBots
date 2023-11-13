@@ -1,0 +1,83 @@
+name: "Suppress"
+
+on:
+  schedule:
+    - cron: "50 13 * * 1,5" # Monday, Friday 21:50 CST
+    - cron: "50 13 * * 2,6" # Tuesday, Saturday 21:50 CST
+    - cron: "50 13 * * 3,0" # Wednesday, Sunday 21:50 CST
+  workflow_dispatch:
+    inputs:
+      task:
+        type: choice
+        required: true
+        default: "none"
+        options:
+          - "none"
+          - "page-log"
+          - "user-log"
+          - "revoke-user"
+
+env:
+  MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  page-log:
+    if: |
+      github.event.schedule == '50 13 * * 1,5' || 
+      github.event.inputs.task == 'page-log'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
+        run: node src/Suppress/pageLog.js
+
+  user-log:
+    if: |
+      github.event.schedule == '50 13 * * 3,0' || 
+      github.event.inputs.task == 'user-log'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
+        run: node src/Suppress/userLog.js
+
+  revoke-user:
+    if: |
+      github.event.inputs.task == 'revoke-user'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          GHP: ${{ secrets.GHP }}
+          MOEGIRL_PASSWORD: ${{ secrets.MOEGIRL_PASSWORD }}
+        run: node src/Suppress/revokeUser.js
