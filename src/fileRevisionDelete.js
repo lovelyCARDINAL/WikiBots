@@ -4,7 +4,7 @@ import { getTimeData, editTimeData } from './utils/lastTime.js';
 import splitAndJoin from './utils/splitAndJoin.js';
 
 const api = new MediaWikiApi(config.cm.api, {
-	headers: { 'api-user-agent': config.apiuseragent },
+	headers: { 'user-agent': config.useragent },
 });
 
 (async () => {

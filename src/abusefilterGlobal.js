@@ -8,7 +8,7 @@ import config from './utils/config.js';
 const SITE_LIST = ['en', 'ja', 'lb'];
 
 const zhapi = new MediaWikiApi(config.zh.api, {
-	headers: { 'api-user-agent': config.apiuseragent },
+	headers: { 'user-agent': config.useragent },
 });
 
 async function getAbuseFilter(api) {
@@ -90,7 +90,7 @@ async function getAbuseFilterDetails(api, id) {
 	let e = 0;
 	await Promise.all(SITE_LIST.map(async (site) => {
 		const api = new MediaWikiApi(config[site].api, {
-			headers: { 'api-user-agent': config.apiuseragent },
+			headers: { 'user-agent': config.useragent },
 		});
 		await clientLogin(api, config[site].abot.account, config.password);
 

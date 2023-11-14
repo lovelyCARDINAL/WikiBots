@@ -5,7 +5,7 @@ import config from './utils/config.js';
 
 const type = env.TYPE;
 const api = new MediaWikiApi(config.zh.api, {
-	headers: { 'api-user-agent': config.apiuseragent },
+	headers: { 'user-agent': config.useragent },
 });
 
 function getSectionTitle() {

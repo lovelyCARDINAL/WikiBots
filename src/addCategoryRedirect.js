@@ -7,7 +7,7 @@ const SITE_LIST = ['zh', 'cm'];
 	console.log(`Start time: ${new Date().toISOString()}`);
 	await Promise.all(SITE_LIST.map(async (site) => {
 		const api = new MediaWikiApi(config[site].api, {
-			headers: { 'api-user-agent': config.apiuseragent },
+			headers: { 'user-agent': config.useragent },
 		});
 		await api.login(
 			config[site].bot.name,

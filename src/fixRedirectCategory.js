@@ -12,7 +12,7 @@ const SITE_LIST = ['zh', 'cm'];
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	const zhapi = new MediaWikiApi(config.zh.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
+		headers: { 'user-agent': config.useragent },
 	});
 	await zhapi.login(
 		config.zh.bot.name,
@@ -40,7 +40,7 @@ const SITE_LIST = ['zh', 'cm'];
 			api = zhapi;
 		} else {
 			api = new MediaWikiApi(config[site].api, {
-				headers: { 'api-user-agent': config.apiuseragent },
+				headers: { 'user-agent': config.useragent },
 			});
 			await api.login(
 				config[site].bot.name,

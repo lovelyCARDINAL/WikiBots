@@ -5,10 +5,10 @@ import config from './utils/config.js';
 Parser.config = 'moegirl';
 
 const zhapi = new MediaWikiApi(config.zh.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
+		headers: { 'user-agent': config.useragent },
 	}),
 	cmapi = new MediaWikiApi(config.cm.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
+		headers: { 'user-agent': config.useragent },
 	});
 
 const time = {
