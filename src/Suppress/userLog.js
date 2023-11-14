@@ -6,10 +6,10 @@ import { getTimeData, editTimeData } from '../utils/lastTime.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
 const zhapi = new MediaWikiApi(config.zh.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
+		headers: { 'user-agent': config.useragent },
 	}),
 	cmapi = new MediaWikiApi(config.cm.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
+		headers: { 'user-agent': config.useragent },
 	});
 
 async function queryLogs(api, leaction, leend, lestart = undefined) {

@@ -16,7 +16,7 @@ const SUMMARY = {
 	console.groupCollapsed('LOGIN');
 	await Promise.all(SITE_LIST.map(async(site) => {
 		api[site] = new MediaWikiApi(config[site].api, {
-			headers: { 'api-user-agent': config.apiuseragent },
+			headers: { 'user-agent': config.useragent },
 		});
 		await api[site].login(
 			config[site].ibot.name,

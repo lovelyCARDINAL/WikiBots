@@ -7,7 +7,7 @@ Parser.config = 'moegirl';
 
 const site = env.SITE;
 const api = new MediaWikiApi(config[site].api, {
-	headers: { 'api-user-agent': config.apiuseragent },
+	headers: { 'user-agent': config.useragent },
 });
 
 (async () => {

@@ -7,10 +7,10 @@ import readData from '../utils/readData.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
 const zhapi = new MediaWikiApi(config.zh.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
+		headers: { 'user-agent': config.useragent },
 	}),
 	cmapi = new MediaWikiApi(config.cm.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
+		headers: { 'user-agent': config.useragent },
 	});
 
 const octokit = new Octokit({ auth: env.GITHUB_TOKEN });

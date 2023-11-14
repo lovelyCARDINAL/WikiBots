@@ -7,10 +7,10 @@ import clientLogin from '../utils/clientLogin.js';
 import config from '../utils/config.js';
 
 const zhapi = new MediaWikiApi(config.zh.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
+		headers: { 'user-agent': config.useragent },
 	}),
 	cmapi = new MediaWikiApi(config.cm.api, {
-		headers: { 'api-user-agent': config.apiuseragent },
+		headers: { 'user-agent': config.useragent },
 	});
 
 const octokit = new Octokit({ auth: env.GHP });

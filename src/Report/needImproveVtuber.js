@@ -8,7 +8,7 @@ import splitAndJoin from '../utils/splitAndJoin.js';
 Parser.config = 'moegirl';
 
 const api = new MediaWikiApi(config.zh.api, {
-	headers: { 'api-user-agent': config.apiuseragent },
+	headers: { 'user-agent': config.useragent },
 });
 
 (async () => {

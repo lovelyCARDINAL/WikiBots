@@ -2,7 +2,7 @@ import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 
 const api = new MediaWikiApi(config.zh.api, {
-	headers: { 'api-user-agent': config.apiuseragent },
+	headers: { 'user-agent': config.useragent },
 });
 
 const time = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();

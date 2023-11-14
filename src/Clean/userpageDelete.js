@@ -3,7 +3,7 @@ import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 
 const api = new MediaWikiApi(config.zh.api, {
-	headers: { 'api-user-agent': config.apiuseragent },
+	headers: { 'user-agent': config.useragent },
 });
 
 async function ruleTest(title, pageid, maintainlist) {

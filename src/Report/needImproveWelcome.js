@@ -9,7 +9,7 @@ Parser.config = 'moegirl';
 Parser.redirects = new Map(parserConfig.redirects);
 
 const api = new MediaWikiApi(config.zh.api, {
-	headers: { 'api-user-agent': config.apiuseragent },
+	headers: { 'user-agent': config.useragent },
 });
 
 (async () => {
