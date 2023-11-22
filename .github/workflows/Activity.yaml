@@ -19,7 +19,6 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-
   group-leader:
     if: |
       github.event.schedule == '55 21 * * 3' || 

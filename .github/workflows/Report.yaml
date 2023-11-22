@@ -132,7 +132,7 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: node src/Report/needImprove.js
-        
+
   need-improve-vtuber:
     runs-on: ubuntu-latest
     if: |
