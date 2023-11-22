@@ -1,93 +1,32 @@
-name: "[daily] 1x @late night"
-# Personal/watch.js
-# Clean/purge.js
-# File/mainpageImages.js
-# Cateorgy/fixRedirect.js
+name: "[manually] Personal"
+# src/Personal/watch.js - 1x evening.yaml
 
 on:
-  schedule:
-    - cron: "35 16 * * *" # 00:35 CST
-    - cron: "35 17 * * *" # 01:35 CST
   workflow_dispatch:
     inputs:
       task:
         type: choice
         required: true
         options:
-          - "watch"
-          - "purge"
-          - "mainpage-image-protection"
-          - "fix-redirect-category"
+          - "test"
+          - "deletion"
+          - "batch-undelete"
+      site:
+        type: choice
+        required: false
+        default: "all"
+        options:
+          - "zh"
+          - "cm"
+          - "all"
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
 
 jobs:
-  watch:
+  test:
     if: |
-      github.event.schedule == '35 16 * * *' || 
-      github.event.inputs.task == 'watch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set Node Version
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: "npm"
-      - name: Install dependencies
-        run: npm ci
-      - name: Run Script
-        env:
-          ZH_MAIN: ${{ secrets.ZH_MAIN }}
-        run: node src/Personal/watch.js
-
-  purge:
-    if: |
-      github.event.schedule == '35 16 * * *' || 
-      github.event.inputs.task == 'purge'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set Node Version
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: "npm"
-      - name: Install dependencies
-        run: npm ci
-      - name: Run Script
-        env:
-          ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/Clean/purge.js
-
-  mainpage-image-protection:
-    if: |
-      github.event.schedule == '35 16 * * *' || 
-      github.event.inputs.task == 'mainpage-image-protection'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set Node Version
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: "npm"
-      - name: Install dependencies
-        run: npm ci
-      - name: Run Script
-        env:
-          ZH_ABOT: ${{ secrets.ZH_ABOT }}
-          CM_ABOT: ${{ secrets.CM_ABOT }}
-        run: node src/File/mainpageImages.js
-
-  fix-redirect-category:
-    if: |
-      github.event.schedule == '35 17 * * *' || 
-      github.event.inputs.task == 'fix-redirect-category'
+      github.event.inputs.task == 'test'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -102,5 +41,68 @@ jobs:
       - name: Run Script
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
-          CM_BOT: ${{ secrets.CM_BOT }}
-        run: node src/Category/fixRedirect.js
+        run: node src/botTest.js
+
+  zh-deletion:
+    if: |
+      github.event.inputs.task == 'deletion' &&
+      (github.event.inputs.site == 'zh' || github.event.inputs.site == 'all')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          SITE: "zh"
+          ZH_MAIN: ${{ secrets.ZH_MAIN }}
+        run: node src/delete.js
+
+  cm-deletion:
+    if: |
+      github.event.inputs.task == 'deletion' &&
+      (github.event.inputs.site == 'cm' || github.event.inputs.site == 'all')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          SITE: "cm"
+          CM_MAIN: ${{ secrets.CM_MAIN }}
+        run: node src/delete.js
+
+  batch-undelete:
+    if: |
+      github.event.inputs.task == 'batch-undelete' &&
+      (github.event.inputs.site == 'zh' || github.event.inputs.site == 'cm')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          SITE: ${{ github.event.inputs.site }}
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
+          CM_ABOT: ${{ secrets.CM_ABOT }}
+        run: node src/batchUndelete.js

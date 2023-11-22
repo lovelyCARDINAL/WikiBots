@@ -1,31 +1,37 @@
-name: "[daily] 4x"
-# Clean/userpageDelete.js
-# Clean/redirectDelete.js
-# Clean/invisibleCharacter.js
+name: "[schedule] News"
 
 on:
   schedule:
-    - cron: "35 19,2,9,14 * * *" # 3:35, 10:35, 17:35, 22:35 CST
+    - cron: "35 7 1 * *" # 1st 15:35
+    - cron: "35 7 8 * *" # 8th 15:35
   workflow_dispatch:
     inputs:
       task:
         type: choice
         required: true
         options:
-          - "userpage-deletion"
-          - "redirect-deletion"
-          - "invisible-character"
+          - "protection"
+          - "subscriber"
+          - "sender"
+      number:
+        type: choice
+        required: false
+        default: "0"
+        options:
+          - "0"
+          - "1"
+          - "2"
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  userpage-deletion:
-    if: |
-      github.event_name == 'schedule' ||
-      github.event.inputs.task == 'userpage-deletion'
+  protection:
     runs-on: ubuntu-latest
+    if: |
+      github.event.schedule == '35 7 8 * *' || 
+      github.event.inputs.task == 'protection'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,33 +45,13 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/Clean/userpageDelete.js
-
-  redirect-deletion:
-    if: |
-      github.event_name == 'schedule' ||
-      github.event.inputs.task == 'redirect-deletion'
+        run: node src/News/protect.js
+  
+  subscriber:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set Node Version
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: "npm"
-      - name: Install dependencies
-        run: npm ci
-      - name: Run Script
-        env:
-          ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/Clean/redirectDelete.js
-
-  invisible-character:
     if: |
-      github.event_name == 'schedule' ||
-      github.event.inputs.task == 'invisible-character'
-    runs-on: ubuntu-latest
+      github.event.schedule == '35 7 1 * *' || 
+      github.event.inputs.task == 'subscriber'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,4 +65,29 @@ jobs:
       - name: Run Script
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: node src/Clean/invisibleCharacter.js
+        run: node src/News/subscriber.js
+  
+  sender:
+    if: |
+      github.event.inputs.task == 'sender'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          TYPE: ${{ github.event.inputs.number }}
+          ZH_BOT: ${{ secrets.ZH_BOT }}
+        run: node src/News/sender.js
+  
+
+  
+
+  
