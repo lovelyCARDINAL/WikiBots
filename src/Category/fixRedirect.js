@@ -145,7 +145,7 @@ const SITE_LIST = ['zh', 'cm'];
 				// 分类
 				// TODO: nomoralize origin Category
 				const category = wikitext.querySelector(
-					Array.from(variant, (item) => `category[name=Category:${item}]`).join(', '),
+					Array.from(variant, (item) => `category[name='Category:${item}']`).join(', '),
 				);
 				if (category) {
 					category.setTarget(`Category:${target}`);
