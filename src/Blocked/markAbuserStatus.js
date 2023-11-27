@@ -31,33 +31,28 @@ const api = new MediaWikiApi(config.zh.api, {
 	const users = root.querySelectorAll(selector);
 	const linesWithTemplate = new Set(root.querySelectorAll('template#Template:No_abuselog').map((token) => token.getBoundingClientRect().top));
 	const time = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-	const promises = [];
 
-	for (const user of users) {
+	await Promise.all(users.map(async (user) => {
 		const rect = user.getBoundingClientRect();
 		const name = user.name.slice(5);
 		const endLine = rect.top + rect.height - 1;
 		if (linesWithTemplate.has(endLine)) {
-			continue;
+			return;
 		}
-		promises.push((async () => {
-			const { data: { query: { abuselog, usercontribs } } } = await api.post({
-				list: 'abuselog|usercontribs',
-				afluser: name,
-				afllimit: '1',
-				uclimit: '1',
-				ucend: time,
-				ucuser: name,
-			}, {
-				retry: 25,
-			});
-			if (!abuselog.length && !usercontribs.length) {
-				user.after(' {{No abuselog}}');
-			}
-		})());
-	}
-
-	await Promise.all(promises);
+		const { data: { query: { abuselog, usercontribs } } } = await api.post({
+			list: 'abuselog|usercontribs',
+			afluser: name,
+			afllimit: '1',
+			uclimit: '1',
+			ucend: time,
+			ucuser: name,
+		}, {
+			retry: 25,
+		});
+		if (!abuselog.length && !usercontribs.length) {
+			user.after(' {{No abuselog}}');
+		}
+	}));
 
 	await api.postWithToken('csrf', {
 		action: 'edit',
