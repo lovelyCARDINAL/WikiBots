@@ -36,21 +36,20 @@ const api = new MediaWikiApi(config.zh.api, {
 		const rect = user.getBoundingClientRect();
 		const name = user.name.slice(5);
 		const endLine = rect.top + rect.height - 1;
-		if (linesWithTemplate.has(endLine)) {
-			return;
-		}
-		const { data: { query: { abuselog, usercontribs } } } = await api.post({
-			list: 'abuselog|usercontribs',
-			afluser: name,
-			afllimit: '1',
-			uclimit: '1',
-			ucend: time,
-			ucuser: name,
-		}, {
-			retry: 25,
-		});
-		if (!abuselog.length && !usercontribs.length) {
-			user.after(' {{No abuselog}}');
+		if (!linesWithTemplate.has(endLine)) {
+			const { data: { query: { abuselog, usercontribs } } } = await api.post({
+				list: 'abuselog|usercontribs',
+				afluser: name,
+				afllimit: '1',
+				uclimit: '1',
+				ucend: time,
+				ucuser: name,
+			}, {
+				retry: 25,
+			});
+			if (!abuselog.length && !usercontribs.length) {
+				user.after(' {{No abuselog}}');
+			}
 		}
 	}));
 
