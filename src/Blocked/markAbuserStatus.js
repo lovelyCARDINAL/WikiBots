@@ -29,7 +29,7 @@ const api = new MediaWikiApi(config.zh.api, {
 	const root = Parser.parse(content, false, 10); // 不解析语言变体转换
 	const selector = 'list + link[name^=User:], list + html#span + link[name^=User:]';
 	const users = root.querySelectorAll(selector);
-	const linesWithTemplate = new Set(root.querySelectorAll('template#Template:No_abuselog').map(token => token.getBoundingClientRect().top));
+	const linesWithTemplate = new Set(root.querySelectorAll('template#Template:No_abuselog').map((token) => token.getBoundingClientRect().top));
 	const time = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
 	const promises = [];
 
@@ -54,7 +54,7 @@ const api = new MediaWikiApi(config.zh.api, {
 		})());
 	}
 
-	const lines = (await Promise.all(promises)).filter(line => line !== false);
+	const lines = (await Promise.all(promises)).filter((line) => line !== false);
 	for (const line of lines) {
 		const range = root.createRange();
 		range.setStartPoint(root, root.getLine(line).length, line);
