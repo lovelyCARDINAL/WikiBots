@@ -26,8 +26,8 @@ const api = new MediaWikiApi(config.zh.api, {
 		retry: 25,
 	});
 
-	const root = Parser.parse(content, false, 10);
-	const selector = 'list ~ link[name^=User:], list ~ html#span ~ link[name^=user]';
+	const root = Parser.parse(content, false, 10); // 不解析语言变体转换
+	const selector = 'list + link[name^=User:], list + html#span + link[name^=user]';
 	const users = root.querySelectorAll(selector);
 	const linesWithTemplate = new Set(root.querySelectorAll('template#Template:No_abuselog').map(token => token.getBoundingClientRect().top));
 	const time = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
