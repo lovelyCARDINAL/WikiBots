@@ -35,6 +35,7 @@ const api = new MediaWikiApi(config.zh.api, {
 
 	for (const user of users) {
 		const rect = user.getBoundingClientRect();
+		const name = user.name.slice(5);
 		const endLine = rect.top + rect.height - 1;
 		if (linesWithTemplate.has(endLine)) {
 			continue;
@@ -42,11 +43,11 @@ const api = new MediaWikiApi(config.zh.api, {
 		promises.push((async () => {
 			const { data: { query: { abuselog, usercontribs } } } = await api.post({
 				list: 'abuselog|usercontribs',
-				afluser: user,
+				afluser: name,
 				afllimit: '1',
 				uclimit: '1',
 				ucend: time,
-				ucuser: user,
+				ucuser: name,
 			}, {
 				retry: 25,
 			});
