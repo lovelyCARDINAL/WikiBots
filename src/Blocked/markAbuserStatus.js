@@ -1,5 +1,8 @@
 import { MediaWikiApi } from 'wiki-saikou';
+import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+
+Parser.config = 'moegirl';
 
 const api = new MediaWikiApi(config.zh.api, {
 	headers: { 'user-agent': config.useragent },
@@ -23,14 +26,20 @@ const api = new MediaWikiApi(config.zh.api, {
 		retry: 25,
 	});
 
-	const lines = content.split('\n');
-	const lineRegex = /^\* *(?:<span.*?>|-\{)?\[\[User:.*?(?<!{{No[ _]abuselog}}\s*)$/i,
-		userRegex = /\[\[User:(.*?)\]\]/;
+	const root = Parser.parse(content, false, 10);
+	const selector = 'list ~ link[name^=User:], list ~ html#span ~ link[name^=user]';
+	const users = root.querySelectorAll(selector);
+	const linesWithTemplate = new Set(root.querySelectorAll('template#Template:No_abuselog').map(token => token.getBoundingClientRect().top));
 	const time = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+	const promises = [];
 
-	await Promise.all(lines.map(async (line, i) => {
-		if (lineRegex.test(line)) {
-			const user = line.match(userRegex)[1];
+	for (const user of users) {
+		const rect = user.getBoundingClientRect();
+		const endLine = rect.top + rect.height - 1;
+		if (linesWithTemplate.has(endLine)) {
+			continue;
+		}
+		promises.push((async () => {
 			const { data: { query: { abuselog, usercontribs } } } = await api.post({
 				list: 'abuselog|usercontribs',
 				afluser: user,
@@ -41,16 +50,22 @@ const api = new MediaWikiApi(config.zh.api, {
 			}, {
 				retry: 25,
 			});
-			if (!abuselog.length && !usercontribs.length) {
-				lines[i] += ' {{No abuselog}}';
-			}
-		}
-	}));
+			return !abuselog.length && !usercontribs.length && endLine;
+		})());
+	}
+
+	const lines = (await Promise.all(promises)).filter(line => line !== false);
+	const range = root.createRange();
+	for (const line of lines) {
+		range.setEndPoint(root, root.getLine(line).length, line);
+		range.collapse();
+		range.insertNode(' {{No abuselog}}');
+	}
 
 	await api.postWithToken('csrf', {
 		action: 'edit',
 		title: '萌娘百科:长期破坏者',
-		text: lines.join('\n'),
+		text: String(root),
 		bot: true,
 		nocreate: true,
 		tags: 'Bot',
