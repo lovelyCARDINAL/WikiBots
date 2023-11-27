@@ -55,10 +55,9 @@ const api = new MediaWikiApi(config.zh.api, {
 	}
 
 	const lines = (await Promise.all(promises)).filter(line => line !== false);
-	const range = root.createRange();
 	for (const line of lines) {
-		range.setEndPoint(root, root.getLine(line).length, line);
-		range.collapse();
+		const range = root.createRange();
+		range.setStartPoint(root, root.getLine(line).length, line);
 		range.insertNode(' {{No abuselog}}');
 	}
 
