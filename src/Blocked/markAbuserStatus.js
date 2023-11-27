@@ -51,16 +51,13 @@ const api = new MediaWikiApi(config.zh.api, {
 			}, {
 				retry: 25,
 			});
-			return !abuselog.length && !usercontribs.length && endLine;
+			if (!abuselog.length && !usercontribs.length) {
+				user.after(' {{No abuselog}}');
+			}
 		})());
 	}
 
-	const lines = (await Promise.all(promises)).filter((line) => line !== false);
-	for (const line of lines) {
-		const range = root.createRange();
-		range.setStartPoint(root, root.getLine(line).length, line);
-		range.insertNode(' {{No abuselog}}');
-	}
+	await Promise.all(promises);
 
 	await api.postWithToken('csrf', {
 		action: 'edit',
