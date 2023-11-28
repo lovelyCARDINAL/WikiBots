@@ -77,7 +77,7 @@ const SITE_LIST = ['zh', 'cm'];
 		})();
 
 		// 获取尚未清空的已重定向分类
-		pages = pages.filter(({ categoryinfo: { pages, files, subcats } }) => pages + files + subcats > 0);
+		pages = pages.filter(({ categoryinfo: { size } }) => size > 0);
 		console.info(`${site}: ${pages.length}个已重定向分类尚未清空`);
 		if (pages.length === 0) {
 			console.log(`${site}: 没有需要修复的已重定向分类`);
