@@ -6,7 +6,7 @@
     "node": ">= 20.*"
   },
   "scripts": {
-    "test": "node ./src/actiontest.js",
+    "test": "node ./src/Personal/test.js",
     "lint": "eslint src --exit-on-fatal-error --max-warnings 0 && prettier --check '**/*.yaml' '!data/*.yaml'",
     "format": "eslint src --fix && prettier --write '**/*.yaml' '**/*.json' '!data/*'"
   },
