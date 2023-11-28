@@ -40,21 +40,38 @@ const SITE_LIST = ['zh', 'cm'];
 					{ retry: 25, noCache: true },
 				).then(console.log);
 			}
+
+			async function queryCats(title) {
+				const { data: { query } } = await api.post({
+					prop: 'categoryinfo',
+					generator: 'categorymembers',
+					gcmtitle: `Category:${title}`,
+					gcmprop: 'ids|title',
+					gcmtype: 'subcat|page|file',
+					gcmlimit: 'max',
+				}, {
+					retry: 15,
+				});
+				if (!query) {
+					return [];
+				}
+				switch (title) {
+					default:
+						return query.pages.map(({ pageid }) => pageid);
+					case '尚未清空的已重定向分类':
+					case '尚未清空的消歧义分类':
+						return query.pages.map(({ pageid, categoryinfo: { size } }) => size === 0 && pageid).filter(Boolean);
+					case '消歧义分类':
+						return query.pages.map(({ pageid, categoryinfo: { size } }) => size > 0 && pageid).filter(Boolean);
+				}
+			}
 			
 			const catlist = [...setting[site], '尚未清空的已重定向分类', '尚未清空的消歧义分类'];
 
 			await Promise.all(
 				catlist.map(async (title) => {
-					const { data: { query: { categorymembers } } } = await api.post({
-						list: 'categorymembers',
-						cmtitle: `Category:${title}`,
-						cmnamespace: '*',
-						cmlimit: 'max',
-					}, {
-						retry: 15,
-					});
-					const pagelist = categorymembers.map(({ pageid }) => pageid);
-					
+					const pagelist = await queryCats(title);
+
 					if (pagelist.length) {
 						await Promise.all(
 							pagelist.map(async (pageid) => {
