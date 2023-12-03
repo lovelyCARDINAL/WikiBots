@@ -36,6 +36,7 @@ async function querySearch(srsearch) {
 	const search = await Promise.all([
 		querySearch('hastemplate:"navbox" insource:"name" insource:"navbox"'),
 		querySearch('insource:"invoke:nav" insource:"name"'),
+		querySearch('hastemplate:"大家族" insource:"name" insource:"大家族"'),
 	]).then((result) => result.flat());
 
 	const ids = search
@@ -53,7 +54,7 @@ async function querySearch(srsearch) {
 		});
 		await Promise.all(pages.map(async ({ title, revisions: [{ content }] }) => {
 			const wikitext = Parser.parse(content, true);
-			const name = wikitext.querySelector('template:regex("name, /^Template:(?:Navbox(?:_with_collapsible_groups|_with_columns)?|大家族)$/i"), magic-word#invoke[module=Module:Nav]')?.getValue('name')?.trim();
+			const name = wikitext.querySelector('template:regex("name, /^Template:(?:Navbox(?:_with_collapsible_groups|_with_columns)?|大家族(?:模板)?)$/i"), magic-word#invoke[module=Module:Nav]')?.getValue('name')?.trim();
 			if (!name) {
 				console.log(`${title} 找不到navbox或缺失name参数。`);
 				return;
