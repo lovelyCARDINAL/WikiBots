@@ -88,4 +88,5 @@ async function querySearch(srsearch) {
 		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}));
 
+	console.log(`End time: ${new Date().toISOString()}`);
 })();
