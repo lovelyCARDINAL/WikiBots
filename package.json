@@ -20,8 +20,8 @@
     "js-yaml": "^4.1.0",
     "jsonpath": "^1.1.1",
     "moment": "^2.29.4",
-    "wiki-saikou": "^3.2.1",
-    "wikiparser-node": "^1.1.1"
+    "wiki-saikou": "^3.3.0",
+    "wikiparser-node": "^1.1.2"
   },
   "type": "module",
   "devDependencies": {
