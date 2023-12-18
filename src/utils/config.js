@@ -1,7 +1,7 @@
 import { env } from 'process';
 
 const config = {
-	useragent: env.MOEGIRL_API_USER_AGENT, // for WAF
+	useragent: `${env.MOEGIRL_API_USER_AGENT} (Github Actions; Hoshimi-bot) `, // for WAF
 	password: env.MOEGIRL_PASSWORD, // for clientLogin
 	zh: {
 		api: 'https://mzh.moegirl.org.cn/api.php',
