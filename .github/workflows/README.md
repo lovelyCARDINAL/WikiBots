@@ -1,13 +1,13 @@
 Time|Job|Config
 :-:|:-:|:-:
-|00:35  | [watch](../../src/Personal/watch.js) <br> [purge](../../src/Clean/purge.js) <br> [mainpage-image-protection](../../src/File/mainpageImages.js) | [1x evening](1x%20evening.yaml)
-01:35 | [fix-redirect-category](../../src/Category/fixRedirect.js) | [1x evening](1x%20evening.yaml)
+|00:35  | [watch](../../src/Personal/watch.js) <br> [purge](../../src/Clean/purge.js) <br> [mainpage-image-protection](../../src/File/mainpageImages.js) | [1x daily](1x%20daily.yaml)
+01:35 | [fix-redirect-category](../../src/Category/fixRedirect.js) | [1x daily](1x%20daily.yaml)
 02:35 | [nulledit-in-category](../../src/Category/nulledit.js) <br> [file-info](../../src/File/info.js) | [3x daily](3x%20daily.yaml)
 03:35 | [userpage-deletion](../../src/Clean/userpageDelete.js) <br> [redirect-deletion](../../src/Clean/redirectDelete.js) <br> [invisible-character](../../src/Clean/invisibleCharacter.js) | [4x daily](4x%20daily.yaml)
-04:50 | [clean-sandbox](../../src/Clean/sandbox.js) <br> [broken-redirect-deletion](../../src/Clean/brokenRedirectDelete.js) <br> [check-activities](../../src/Activity/maintainer.js) | [1x morning](1x%20morning.yaml)
+04:50 | [clean-sandbox](../../src/Clean/sandbox.js) <br> [broken-redirect-deletion](../../src/Clean/brokenRedirectDelete.js) <br> [check-activities](../../src/Activity/maintainer.js) | [1x daily](1x%20daily.yaml)
 05:55 | [bad-file-name](../../src/Report/badFileName.js) (mon) <br> [most-transcluded-pages](../../src/Report/mostTranscludedPages.js) (mon) <br> [broken-file-links](../../src/Report/brokenFileLinks.js) (tue) <br> [short-pages](../../src/Report/shortPages.js) (tue) <br> [need-improve](../../src/Report/needImprove.js) (wed) <br> [need-improve-welcome](../../src/Report/needImproveWelcome.js) (wed) <br> [group-leader-activities](../../src/Activity/groupLeader.js) (thu) <br> fix-archives-anchor (thu) <br> language-conversion (sun) | [Activity](Activity.yaml) <br> [Report](Report.yaml)
 06:55 | log-archive <br> talk-archive
-09:35 | [url-unquote](../../src/Clean/urlUnquote.js) | [1x morning](1x%20morning.yaml)
+09:35 | [url-unquote](../../src/Clean/urlUnquote.js) | [1x daily](1x%20daily.yaml)
 10:35 | <div style="background:#ececec;color:grey;">同03:35</div>
 11:35 | [interface-messages](../../src/Interface/messages.js) (10th, 25th) | [Interface](Interface.yaml)
 12:35 | [mark-abuser-status](../../src/Blocked/markAbuserStatus.js) (mon) <br> [remove-userrights](../../src/Blocked/removeUserrights.js) (mon) <br> [file-revision-deletion](../../src/File/revisionDelete.js) (thu) <br> [add-category-redirect](../../src/Category/redirectTemplate.js) (sat) | [Blocked](Blocked.yaml) <br> [Category](Category.yaml) <br> [File](File.yaml)

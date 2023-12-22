@@ -1,10 +1,21 @@
-name: "[daily] 1x @early morning"
-# Clean/sandbox.js
-# Clean/brokenRedirectDelete.js
-# Activity/maintainer.js
+name: "[daily] 1x"
+# 0
+## Personal/watch.js
+## Clean/purge.js
+## File/mainpageImages.js
+# 1
+## Cateorgy/fixRedirect.js
+# 4
+## Clean/sandbox.js
+## Clean/brokenRedirectDelete.js
+## Activity/maintainer.js
+# 6
+## Clean/urlUnquote.js
 
 on:
   schedule:
+    - cron: "35 16 * * *" # 00:35 CST
+    - cron: "35 17 * * *" # 01:35 CST
     - cron: "50 20 * * *" # 04:50 CST
     - cron: "35 1 * * *" # 09:35 CST
   workflow_dispatch:
@@ -13,6 +24,10 @@ on:
         type: choice
         required: true
         options:
+          - "watch"
+          - "purge"
+          - "mainpage-image-protection"
+          - "fix-redirect-category"
           - "clean-sandbox"
           - "broken-redirect-deletion"
           - "check-activities"
@@ -22,6 +37,88 @@ env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
 
 jobs:
+  watch:
+    if: |
+      github.event.schedule == '35 16 * * *' || 
+      github.event.inputs.task == 'watch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          ZH_MAIN: ${{ secrets.ZH_MAIN }}
+        run: node src/Personal/watch.js
+
+  purge:
+    if: |
+      github.event.schedule == '35 16 * * *' || 
+      github.event.inputs.task == 'purge'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
+        run: node src/Clean/purge.js
+
+  mainpage-image-protection:
+    if: |
+      github.event.schedule == '35 16 * * *' || 
+      github.event.inputs.task == 'mainpage-image-protection'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
+          CM_ABOT: ${{ secrets.CM_ABOT }}
+        run: node src/File/mainpageImages.js
+
+  fix-redirect-category:
+    if: |
+      github.event.schedule == '35 17 * * *' || 
+      github.event.inputs.task == 'fix-redirect-category'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          ZH_BOT: ${{ secrets.ZH_BOT }}
+          CM_BOT: ${{ secrets.CM_BOT }}
+        run: node src/Category/fixRedirect.js
+
   clean-sandbox:
     if: |
       github.event.schedule == '50 20 * * *' ||
