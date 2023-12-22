@@ -5,9 +5,9 @@ on:
     - cron: "55 21 * * 0" # Monday 05:55 CST
     - cron: "55 21 * * 1" # Tuesday 05:55 CST
     - cron: "55 21 * * 2" # Wednesday 05:55 CST
-    - cron: "35 7 3,18 * *" # 3rd & 18th of every month 15:35 CST
     - cron: "35 7 6,21 * *" # 6th & 21st of every month 15:35 CST
     - cron: "35 7 7,22 * *" # 7th & 22nd of every month 15:35 CST
+    - cron: "35 7 23 * *" # 23th of every month 15:35 CST
   workflow_dispatch:
     inputs:
       task:
@@ -136,7 +136,7 @@ jobs:
   need-improve-vtuber:
     runs-on: ubuntu-latest
     if: |
-      github.event.schedule == '35 7 3,18 * *' ||
+      github.event.schedule == '35 7 23 * *' ||
       github.event.inputs.task == 'need-improve-vtuber'
     steps:
       - name: Checkout

@@ -6,6 +6,7 @@ name: "[daily] 1x @early morning"
 on:
   schedule:
     - cron: "50 20 * * *" # 04:50 CST
+    - cron: "35 1 * * *" # 09:35 CST
   workflow_dispatch:
     inputs:
       task:
@@ -15,6 +16,7 @@ on:
           - "clean-sandbox"
           - "broken-redirect-deletion"
           - "check-activities"
+          - "url-unquote"
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -22,7 +24,7 @@ env:
 jobs:
   clean-sandbox:
     if: |
-      github.event_name == 'schedule' ||
+      github.event.schedule == '50 20 * * *' ||
       github.event.inputs.task == 'clean-sandbox'
     runs-on: ubuntu-latest
     steps:
@@ -42,7 +44,7 @@ jobs:
 
   broken-redirect-deletion:
     if: |
-      github.event_name == 'schedule' ||
+      github.event.schedule == '50 20 * * *' ||
       github.event.inputs.task == 'broken-redirect-deletion'
     runs-on: ubuntu-latest
     steps:
@@ -62,7 +64,7 @@ jobs:
 
   check-activities:
     if: |
-      github.event_name == 'schedule' ||
+      github.event.schedule == '50 20 * * *' ||
       github.event.inputs.task == 'check-activities'
     runs-on: ubuntu-latest
     steps:
@@ -80,3 +82,24 @@ jobs:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
         run: node src/Activity/maintainer.js
+
+  url-unquote:
+    if: |
+      github.event.schedule == '35 1 * * *' ||
+      github.event.inputs.task == 'url-unquote'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+          CM_IBOT: ${{ secrets.CM_IBOT }}
+        run: node src/Clean/urlUnquote.js
