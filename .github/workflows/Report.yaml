@@ -52,8 +52,9 @@ jobs:
         run: node src/Report/badDisplayTitle.js
 
   bad-file-name:
+    needs: most-transcluded-pages
     if: |
-      github.event.schedule == '55 21 * * 0' || 
+      github.event.schedule == '55 21 * * 0' && needs.most-transcluded-pages.result == 'success' || 
       github.event.inputs.task == 'bad-file-name'
     runs-on: ubuntu-latest
     steps:
@@ -73,8 +74,9 @@ jobs:
         run: node src/Report/badFileName.js
 
   broken-file-links:
+    needs: short-pages
     if: |
-      github.event.schedule == '55 21 * * 1' || 
+      github.event.schedule == '55 21 * * 1' && needs.short-pages.result == 'success' ||
       github.event.inputs.task == 'broken-file-links'
     runs-on: ubuntu-latest
     steps:
@@ -154,8 +156,9 @@ jobs:
         run: node src/Report/needImproveVtuber.js
 
   need-improve-welcome:
+    needs: need-improve
     if: |
-      github.event.schedule == '55 21 * * 2' || 
+      github.event.schedule == '55 21 * * 2' && needs.need-improve.result == 'success' ||
       github.event.inputs.task == 'need-improve-welcome'
     runs-on: ubuntu-latest
     steps:

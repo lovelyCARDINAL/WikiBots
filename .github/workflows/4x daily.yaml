@@ -62,8 +62,9 @@ jobs:
         run: node src/Clean/redirectDelete.js
 
   invisible-character:
+    needs: [userpage-deletion, redirect-deletion]
     if: |
-      github.event_name == 'schedule' ||
+      github.event_name == 'schedule' && needs.userpage-deletion.result == 'success' && needs.redirect-deletion.result == 'success' ||
       github.event.inputs.task == 'invisible-character'
     runs-on: ubuntu-latest
     steps:
