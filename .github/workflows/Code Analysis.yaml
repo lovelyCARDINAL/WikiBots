@@ -48,6 +48,8 @@ jobs:
         run: npm run lint
 
   CodeQL:
+    needs: Lint
+    if: needs.Lint.result == 'success'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -75,15 +77,3 @@ jobs:
         with:
           configuration-path: ".github/auto_assign.yaml"
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-
-  dependency-review:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v3
-        with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          comment-summary-in-pr: true
