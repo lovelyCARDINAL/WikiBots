@@ -1,1 +1,55 @@
-
+{| class="wikitable" 
+|- style="text-align:center;"
+! colspan="2" | Time
+! Job
+! Config
+|- style="text-align:center;"
+| rowspan="4" colspan="2" | 00:35
+| [[../../src/Personal/watch.js|watch]]
+| rowspan="4" | [[1x daily.yaml|1x daily]]
+|- style="text-align:center;"
+| [[../../src/Clean/purge.js|purge]]
+|- style="text-align:center;"
+| [[../../src/File/mainpageImages.js|mainpage-image-protection]]
+|-
+| style="text-align:center;" | [[../../src/Category/fixRedirect.js|fix-redirect-category]]
+|-
+| rowspan="2" colspan="2" | 02:35
+| style="text-align:center;" | [[../../src/Category/nulledit.js|nulledit-in-category]]
+| rowspan="2" | [[3x daily.yaml|3x daily]]
+|-
+| style="text-align:center;" | [[../../src/File/info.js|file-info]]
+|-
+| rowspan="3" colspan="2" | 03:35
+| style="text-align:center;" | [[../../src/Clean/userpageDelete.js|userpage-deletion]]
+| rowspan="3" | [[4x daily.yaml|4x daily]]
+|-
+| style="text-align:center;" | [[../../src/Clean/redirectDelete.js|redirect-deletion]]
+|-
+| style="text-align:center;" | [[../../src/Clean/invisibleCharacter.js|invisible-character]]
+|-
+| 
+| 
+| style="text-align:center;" | 
+| 
+|-
+| 
+| 
+| style="text-align:center;" | 
+| 
+|-
+| 
+| 
+| style="text-align:center;" | 
+| 
+|-
+| 
+| 
+| style="text-align:center;" | 
+| 
+|-
+| 
+| 
+| style="text-align:center;" | 
+| 
+|}
