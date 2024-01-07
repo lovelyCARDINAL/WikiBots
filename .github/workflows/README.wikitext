@@ -1,55 +1,180 @@
-{| class="wikitable" 
-|- style="text-align:center;"
+{| class="wikitable" style="text-align:center;"
+|-
 ! colspan="2" | Time
 ! Job
 ! Config
-|- style="text-align:center;"
+|-
 | rowspan="4" colspan="2" | 00:35
 | [[../../src/Personal/watch.js|watch]]
 | rowspan="4" | [[1x daily.yaml|1x daily]]
-|- style="text-align:center;"
+|-
 | [[../../src/Clean/purge.js|purge]]
-|- style="text-align:center;"
+|-
 | [[../../src/File/mainpageImages.js|mainpage-image-protection]]
 |-
-| style="text-align:center;" | [[../../src/Category/fixRedirect.js|fix-redirect-category]]
+| [[../../src/Category/fixRedirect.js|fix-redirect-category]]
+|-
+| colspan="2" | 01:35
+| colspan="2" style="background-color:#c0c0c0; color:#656565;" | -
 |-
 | rowspan="2" colspan="2" | 02:35
-| style="text-align:center;" | [[../../src/Category/nulledit.js|nulledit-in-category]]
+| [[../../src/Category/nulledit.js|nulledit-in-category]]
 | rowspan="2" | [[3x daily.yaml|3x daily]]
 |-
-| style="text-align:center;" | [[../../src/File/info.js|file-info]]
+| [[../../src/File/info.js|file-info]]
 |-
 | rowspan="3" colspan="2" | 03:35
-| style="text-align:center;" | [[../../src/Clean/userpageDelete.js|userpage-deletion]]
+| [[../../src/Clean/userpageDelete.js|userpage-deletion]]
 | rowspan="3" | [[4x daily.yaml|4x daily]]
 |-
-| style="text-align:center;" | [[../../src/Clean/redirectDelete.js|redirect-deletion]]
+| [[../../src/Clean/redirectDelete.js|redirect-deletion]]
 |-
-| style="text-align:center;" | [[../../src/Clean/invisibleCharacter.js|invisible-character]]
+| [[../../src/Clean/invisibleCharacter.js|invisible-character]]
 |-
-| 
-| 
-| style="text-align:center;" | 
+| rowspan="3" colspan="2" | 04:50
+| [[../../src/Clean/sandbox.js|clean-sandbox]]
+| rowspan="3" | [[1x daily.yaml|1x daily]]
+|-
+| [[../../src/Clean/brokenRedirectDelete.js|broken-redirect-deletion]]
+|-
+| [[../../src/Activity/maintainer.js|check-activities]]
+|-
+| rowspan="9" | 05:55
+| rowspan="2" | mon
+| [[../../src/Report/badFileName.js|bad-file-name]]
+| rowspan="9" | [[Activity.yaml|Activity]]<br>[[Report.yaml|Report]]
+|-
+| [[../../src/Report/mostTranscludedPages.js|most-transcluded-pages]]
+|-
+| rowspan="2" | tue
+| [[../../src/Report/brokenFileLinks.js|broken-file-links]]
+|-
+| [[../../src/Report/shortPages.js|short-pages]]
+|-
+| rowspan="2" | wed
+| [[../../src/Report/needImprove.js|need-improve]]
+|-
+| [[../../src/Report/needImproveWelcome.js|need-improve-welcome]]
+|-
+| rowspan="2" | thu
+| [[../../src/Activity/groupLeader.js|group-leader-activities]]
+|-
+| fix-archives-anchor
+|-
+| sun
+| language-conversion
+|-
+| rowspan="2" colspan="2" | 06:55
+| log-archive
+| rowspan="2" | 
+|-
+| talk-archive
+|-
+| colspan="2" | 09:35
+| [[../../src/Clean/urlUnquote.js|url-unquote]]
+| [[1x daily.yaml|1x daily]]
+|-
+| colspan="2" | 10:35
+| colspan="2" style="background-color:#c0c0c0; color:#656565;" | 同3:35
+|-
+| 11:35
+| 10th, 25th
+| [[../../src/Interface/messages.js|interface-messages]]
+| [[Interface.yaml|Interface]]
+|-
+| rowspan="4" | 12:35
+| rowspan="2" | mon
+| [[../../src/Blocked/markAbuserStatus.js|mark-abuser-status]]
+| rowspan="4" | [[Blocked.yaml|Blocked]]<br>[[Category.yaml|Category]]<br>[[File.yaml|File]]
+|-
+| [[../../src/Blocked/removeUserrights.js|remove-userrights]]
+|-
+| thu
+| [[../../src/File/revisionDelete.js|file-revision-deletion]]
+|-
+| sat
+| [[../../src/Category/redirectTemplate.js|add-category-redirect]]
+|-
+| 13:35
+| mon, fri
+| [[../../src/Interface/protect.js|interface-protection]]
+| [[Interface.yaml|Interface]]
+|-
+| colspan="2" | 14:35
+| colspan="2" style="background-color:#C0C0C0; color:#656565;" | 同2:35
+|-
+| rowspan="8" | 15:35
+| 1st
+| [[../../src/News/subscriber.js|news-subscriber]]
+| rowspan="8" | [[Internal.yaml|Internal]]<br>[[Navbox.yaml|Navbox]]<br>[[News.yaml|News]]<br>[[Report.yaml|Report]]
+|-
+| 2nd
+| [[../../src/Internal/updateOverrideCategory.js|override-category]]
+|-
+| 4th
+| [[../../src/Navbox/fixName.js|navbox-fix-name]]
+|-
+| 5th
+| [[../../src/Navbox/article.js|navbox-in-article]]
+|-
+| 6th, 21st
+| [[../../src/Report/badDisplayTitle.js|bad-display-title]]
+|-
+| 7th, 22nd
+| [[../../src/Report/tentativeTitle.js|tentative-title]]
+|-
+| 8th
+| [[../../src/News/protect.js|news-protection]]
+|-
+| 23rd
+| [[../../src/Report/needImproveVtuber.js|need-improve-vtuber]]
+|-
+| rowspan="2" | 16:35
+| mon, fri
+| [[../../src/Suppress/pageLog.js|hide-page-log]]
+| rowspan="2" | [[Suppress.yaml|Suppress]]
+|-
+| wed, sun
+| [[../../src/Suppress/userLog.js|hide-user-log]]
+|-
+| colspan="2" | 17:35
+| colspan="2" style="background-color:#C0C0C0; color:#656565;" | 同3:35
+|-
+| 19:35
+| 10th, 25th
+| [[../../src/Activity/groupMember.js|group-member-activities]]
+| [[Activity.yaml|Activity]]
+|-
+| 20:35
+| thu, sun
+| [[../../src/AbuseFilter/update.js|abusefilter-update]]
+| [[AbuseFilter.yaml|AbuseFilter]]
+|-
+| colspan="2" | 21:35
+| colspan="2" style="background-color:#C0C0C0; color:#656565;" | 同2:35
+|-
+| colspan="2" | 22:35
+| colspan="2" style="background-color:#C0C0C0; color:#656565;" | 同3:35
+|-
+| 23:35
+| 10th, 25th
+| [[../../src/AbuseFilter/global.js|abusefilter-global]]
+| [[AbuseFilter.yaml|AbuseFilter]]
+|-
+| rowspan="3" colspan="2" | Continuous
+| topiclist
 | 
 |-
-| 
-| 
-| style="text-align:center;" | 
+| signature
 | 
 |-
-| 
-| 
-| style="text-align:center;" | 
+| fix-anchor
 | 
 |-
-| 
-| 
-| style="text-align:center;" | 
-| 
+| rowspan="2" colspan="2" | Manually
+| [[../../src/News/sender.js|news-sender]]
+| [[News.yaml|News]]
 |-
-| 
-| 
-| style="text-align:center;" | 
-| 
+| [[../../src/Suppress/revokeUser.js|revoke-user]]
+| [[Suppress.yaml|Suppress]]
 |}
