@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Add Reviews
-        uses: kentaro-m/auto-assign-action@v1.2.5
+        uses: kentaro-m/auto-assign-action@v1.2.6
         with:
           configuration-path: ".github/auto_assign.yaml"
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
