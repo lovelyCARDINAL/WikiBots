@@ -90,7 +90,8 @@ async function deleteRights(user) {
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
-async function deletePages(user) {
+async function deletePages(username) {
+	const user = username.replaceAll('_', ' ');
 	const { data: { query: { allpages } } } = await zhapi.post({
 		list: 'allpages',
 		apprefix: user,
