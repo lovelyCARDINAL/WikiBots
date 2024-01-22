@@ -160,6 +160,7 @@ jobs:
         run: node src/Clean/brokenRedirectDelete.js
 
   check-activities:
+    needs: [clean-sandbox, broken-redirect-deletion]
     if: |
       github.event.schedule == '50 20 * * *' && needs.clean-sandbox.result == 'success' && needs.broken-redirect-deletion.result == 'success' ||
       github.event.inputs.task == 'check-activities'
