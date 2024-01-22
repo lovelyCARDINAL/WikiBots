@@ -79,7 +79,7 @@ jobs:
     needs: [watch, purge]
     if: |
       github.event.schedule == '35 16 * * *' && needs.watch.result == 'success' && needs.purge.result == 'success' ||
-      github.event.inputs.task == 'mainpage-image-protection' && needs.watch.result == 'skiped' && needs.purge.result == 'skiped'
+      github.event.inputs.task == 'mainpage-image-protection'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -101,7 +101,7 @@ jobs:
     needs: mainpage-image-protection
     if: |
       github.event.schedule == '35 16 * * *' && needs.mainpage-image-protection.result == 'success' ||
-      github.event.inputs.task == 'fix-redirect-category' && needs.mainpage-image-protection.result == 'skiped'
+      github.event.inputs.task == 'fix-redirect-category'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -160,10 +160,9 @@ jobs:
         run: node src/Clean/brokenRedirectDelete.js
 
   check-activities:
-    needs: [clean-sandbox, broken-redirect-deletion]
     if: |
       github.event.schedule == '50 20 * * *' && needs.clean-sandbox.result == 'success' && needs.broken-redirect-deletion.result == 'success' ||
-      github.event.inputs.task == 'check-activities' && needs.clean-sandbox.result == 'skiped' && needs.broken-redirect-deletion.result == 'skipped'
+      github.event.inputs.task == 'check-activities'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
