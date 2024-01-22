@@ -75,12 +75,12 @@ async function queryLatestContribs(api, ucuser, ucnamespace, ucend) {
 }
 
 async function queryLatestEvents(api, user, end) {
-	const res = await api.post({
+	const { data: { query: { usercontribs, logevents } } } = await api.post({
 		list: 'usercontribs|logevents',
 		uclimit: '1',
 		lelimit: '1',
 		ucstart: time[0],
-		lestrat: time[0],
+		lestart: time[0],
 		ucend: end,
 		leend: end,
 		ucnamespace: '*',
@@ -93,8 +93,6 @@ async function queryLatestEvents(api, user, end) {
 	}, {
 		retry: 15,
 	});
-	console.log(user, JSON.stringify(res));
-	const { usercontribs, logevents } = res.data.query;
 	const contribsTimestamp = usercontribs.length
 		? timestampCST(usercontribs[0].timestamp)
 		: api === cmapi || ['AnnAngela-cbot', '星海-oversightbot', '萌百娘'].includes(user)
