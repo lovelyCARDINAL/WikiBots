@@ -93,6 +93,7 @@ async function queryLatestEvents(api, user, end) {
 	}, {
 		retry: 15,
 	});
+	console.log(JSON.stringify(query));
 	const { usercontribs, logevents } = query;
 	const contribsTimestamp = usercontribs.length
 		? timestampCST(usercontribs[0].timestamp)
