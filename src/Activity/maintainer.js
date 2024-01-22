@@ -75,7 +75,7 @@ async function queryLatestContribs(api, ucuser, ucnamespace, ucend) {
 }
 
 async function queryLatestEvents(api, user, end) {
-	const { data: { query: { usercontribs, logevents } } } = await api.post({
+	const { data: { query } } = await api.post({
 		list: 'usercontribs|logevents',
 		uclimit: '1',
 		lelimit: '1',
@@ -93,6 +93,8 @@ async function queryLatestEvents(api, user, end) {
 	}, {
 		retry: 15,
 	});
+	console.log(JSON.stringify(query));
+	const { usercontribs, logevents } = query;
 	const contribsTimestamp = usercontribs.length
 		? timestampCST(usercontribs[0].timestamp)
 		: api === cmapi || ['AnnAngela-cbot', '星海-oversightbot', '萌百娘'].includes(user)
@@ -307,8 +309,8 @@ async function updateData(pageid, text) {
 	};
 
 	await Promise.all([
-		maintainTable(),
-		techTable(),
+		//maintainTable(),
+		//techTable(),
 		botTable(),
 	]);
 
