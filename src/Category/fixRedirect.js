@@ -175,10 +175,14 @@ const SITE_LIST = ['zh', 'cm'];
 									case 2:
 										['del', '黑幕', 'heimu', '加粗', 'b'].includes(argArrary[1].trim())
 											? temp.setValue(arg.name, `${target},${arg.value}`)
-											: temp.setValue(arg.name, `${target},${argArrary[1]}`);
+											: target === argArrary[1]
+												? temp.setValue(arg.name, `${target}`)
+												: temp.setValue(arg.name, `${target},${argArrary[1]}`);
 										break;
 									case 3:
-										temp.setValue(arg.name, `${target},${argArrary[1]},${argArrary[2]}`);
+										target === argArrary[1]
+											? temp.setValue(arg.name, `${target},${argArrary[2]}`)
+											: temp.setValue(arg.name, `${target},${argArrary[1]},${argArrary[2]}`);
 										break;
 								}
 							}
