@@ -3,6 +3,8 @@ import axiosRetry from 'axios-retry';
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import getAvatar from '../utils/getAvatar.js';
+import readData from '../utils/readData.js';
 
 const zhapi = new MediaWikiApi(config.zh.api, {
 		headers: { 'user-agent': config.useragent },
@@ -27,10 +29,6 @@ axiosRetry(axios, {
 		return retryCount * 1000;
 	},
 });
-
-function userInfo(user) {
-	return `<img class="userlink-avatar-small" src="https://commons.moegirl.org.cn/extensions/Avatar/avatar.php?user=${user.replaceAll(' ', '_')}">{{User|${user}}}`;
-}
 
 function timestampCST(timestamp) {
 	return `${moment(timestamp).utcOffset('+08:00').format('YYYY-MM-DD HH:mm:ss')} (CST)`;
@@ -162,6 +160,17 @@ async function updateData(pageid, text) {
 		data.bot = allusers.filter((user) => !filterBots.includes(user.name)).map((user) => user.name);
 		return data;
 	})();
+
+	const users = new Set(Object.values(userData).flatMap((array) => array));
+	const userids = JSON.parse(await readData('userIds.json'));
+	const userHasId = new Set(Object.keys(userids));
+	const userHasNoId = [...users].filter((x) => !userHasId.has(x));
+	const userIdData = userHasNoId.length
+		? await getAvatar(zhapi, userHasNoId)
+		: userids;
+	function userInfo(user) {
+		return `<img class="userlink-avatar-small" src="https://img.moegirl.org.cn/common/avatars/${userIdData[user]}/128.png">{{User|${user}}}`;
+	}
 
 	const maintainTable = async () => {
 		const processData = [

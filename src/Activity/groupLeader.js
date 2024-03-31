@@ -1,6 +1,8 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import getAvatar from '../utils/getAvatar.js';
+import readData from '../utils/readData.js';
 
 Parser.config = 'moegirl';
 
@@ -15,10 +17,6 @@ const time = {
 	start: new Date().toISOString(),
 	end: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
 };
-
-function userInfo(user) {
-	return `<img class="userlink-avatar-small" src="https://commons.moegirl.org.cn/extensions/Avatar/avatar.php?user=${user.replaceAll(' ', '_')}">{{User|${user}}}`;
-}
 
 async function queryContribs(api, ucuser) {
 	const result = [];
@@ -91,6 +89,16 @@ async function updateData(text) {
 		const data = Array.from(wikitext.matchAll(regex), (match) => match[1]?.replace(/^\w/, (first) => first.toUpperCase()));
 		return [...new Set(data)].sort();
 	})();
+
+	const userids = JSON.parse(await readData('userIds.json'));
+	const userHasId = new Set(Object.keys(userids));
+	const userHasNoId = userlist.filter((x) => !userHasId.has(x));
+	const userIdData = userHasNoId.length
+		? await getAvatar(zhapi, userHasNoId)
+		: userids;
+	function userInfo(user) {
+		return `<img class="userlink-avatar-small" src="https://img.moegirl.org.cn/common/avatars/${userIdData[user]}/128.png">{{User|${user}}}`;
+	}
 
 	const data = await Promise.all([
 		queryContribs(zhapi, userlist, '0|10|14|12|4|6'),
