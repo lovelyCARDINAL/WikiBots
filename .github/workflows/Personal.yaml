@@ -11,6 +11,7 @@ on:
           - "test"
           - "deletion"
           - "batch-undelete"
+          - "batch-delete-prefix"
       site:
         type: choice
         required: false
@@ -19,6 +20,14 @@ on:
           - "zh"
           - "cm"
           - "all"
+      filterredir:
+        type: choice
+        required: false
+        default: "all"
+        options:
+          - "all"
+          - "redirects"
+          - "nonredirects"
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -106,3 +115,26 @@ jobs:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
           CM_ABOT: ${{ secrets.CM_ABOT }}
         run: node src/Personal/undelete.js
+
+  batch-delete-prefix:
+    if: |
+      github.event.inputs.task == 'batch-delete-prefix' &&
+      (github.event.inputs.site == 'zh' || github.event.inputs.site == 'cm')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          SITE: ${{ github.event.inputs.site }}
+          FILTERREDIR: ${{ github.event.inputs.filterredir }}
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
+          CM_ABOT: ${{ secrets.CM_ABOT }}
+        run: node src/Personal/deletePrefix.js
