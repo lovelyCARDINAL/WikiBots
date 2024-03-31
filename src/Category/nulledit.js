@@ -61,8 +61,6 @@ const SITE_LIST = ['zh', 'cm'];
 					case '尚未清空的已重定向分类':
 					case '尚未清空的消歧义分类':
 						return query.pages.map(({ pageid, categoryinfo: { size } }) => size === 0 && pageid).filter(Boolean);
-					case '消歧义分类':
-						return query.pages.map(({ pageid, categoryinfo: { size } }) => size > 0 && pageid).filter(Boolean);
 				}
 			}
 			
