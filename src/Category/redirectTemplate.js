@@ -87,7 +87,7 @@ const SITE_LIST = ['zh', 'cm'];
 				await api.postWithToken('csrf', {
 					action: 'edit',
 					pageid,
-					appendtext: `\n{{Cr|${target.replace('Category:', '')}}}`,
+					text: `#Redirect [[:${target}]]\n{{Cr|${target.replace('Category:', '')}}}`,
 					minor: true,
 					bot: true,
 					nocreate: true,
