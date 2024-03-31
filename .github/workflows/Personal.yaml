@@ -10,8 +10,8 @@ on:
         options:
           - "test"
           - "deletion"
-          - "batch-undelete"
           - "batch-delete-prefix"
+          - "batch-undelete"
       site:
         type: choice
         required: false
