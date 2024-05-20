@@ -26,10 +26,10 @@ const NS_REASON_MAP = {
 	const { data: { query: { logevents } } } = await api.post({
 		list: 'logevents',
 		letype: 'move',
-		leprop: 'ids|title|type|user|timestamp|comment|details',
+		leprop: 'ids|title|type|user|comment|details',
 		lelimit: 'max',
 		lestart: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
-		leend: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+		leend: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
 	}, {
 		retry: 15,
 	});
@@ -45,7 +45,7 @@ const NS_REASON_MAP = {
 		console.log('No pages to delete.');
 	}
 
-	await Promise.all(pages.map(async ({ pageid, ns, params, timestamp }) => {
+	await Promise.all(pages.map(async ({ pageid, ns, params }) => {
 		const [targetns, reason] = NS_REASON_MAP[ns] || [ [ns], '自动删除移动讨论页面残留重定向'];
 		if (!targetns.includes(params.target_ns)) {
 			return;
@@ -54,17 +54,12 @@ const NS_REASON_MAP = {
 			const { data: { query: { pages: [{ missing, revisions }] } } } = await api.post({
 				prop: 'revisions',
 				pageids: pageid,
-				rvprop: 'timestamp',
+				rvprop: 'tags',
 				rvlimit: '2',
 			}, {
 				retry: 15,
 			});
-			if (missing || revisions.length > 1) {
-				console.log(pageid, missing, revisions?.length);
-				return false;
-			}
-			const { timestamp: timestamp2 } = revisions[0];
-			return Math.abs(new Date(timestamp) - new Date(timestamp2)) < 5000;
+			return !missing && revisions.length === 1 && revisions[0]?.tags?.includes('mw-new-redirect');
 		})();
 		if (needsDelete) {
 			await api.postWithToken('csrf', {
