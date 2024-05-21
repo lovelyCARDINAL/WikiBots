@@ -14,6 +14,7 @@ on:
         options:
           - "userpage-deletion"
           - "redirect-deletion"
+          - "redirect-suppression"
           - "invisible-character"
 
 env:
@@ -61,10 +62,31 @@ jobs:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/Clean/redirectDelete.js
 
-  invisible-character:
-    needs: [userpage-deletion, redirect-deletion]
+  redirect-suppression:
     if: |
-      github.event_name == 'schedule' && needs.userpage-deletion.result == 'success' && needs.redirect-deletion.result == 'success' ||
+      github.event_name == 'schedule' ||
+      github.event.inputs.task == 'redirect-suppression'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
+          CM_BOT: ${{ secrets.CM_ABOT }}
+        run: node src/Clean/redirectSuppress.js
+
+  invisible-character:
+    needs: [userpage-deletion, redirect-deletion, redirect-suppression]
+    if: |
+      github.event_name == 'schedule' && needs.userpage-deletion.result == 'success' && needs.redirect-deletion.result == 'success' && needs.redirect-suppression.result == 'success' ||
       github.event.inputs.task == 'invisible-character'
     runs-on: ubuntu-latest
     steps:
