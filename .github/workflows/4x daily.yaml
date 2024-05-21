@@ -80,7 +80,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-          CM_BOT: ${{ secrets.CM_ABOT }}
+          CM_ABOT: ${{ secrets.CM_ABOT }}
         run: node src/Clean/redirectSuppress.js
 
   invisible-character:
