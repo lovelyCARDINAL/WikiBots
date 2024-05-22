@@ -55,7 +55,7 @@ const SITE_LIST = ['zh', 'cm'];
 
 		const pages = logevents.filter(({ pageid, comment, params, commenthidden, userid }) => pageid !== 0
 		&& userids.includes(userid)
-		&& /移动至创建者用户页|不留重(定|新導)向|suppressredirec|no ?redir(ec)?|no ?rdr/i.test(comment)
+		&& /移动至创建者用户页|不留重(定|新導)向|suppressredirec|no ?redir(ec)?|no? ?rdr?/i.test(comment)
 		&& !params.suppressredirect
 		&& !commenthidden,
 		);
