@@ -13,7 +13,7 @@
   "author": "hoshimi",
   "license": "MIT",
   "dependencies": {
-    "@octokit/core": "^6.1.1",
+    "@octokit/core": "^6.1.2",
     "axios": "^1.7.2",
     "axios-retry": "^4.3.0",
     "cheerio": "^1.0.0-rc.12",
