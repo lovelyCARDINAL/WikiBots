@@ -68,12 +68,21 @@ const SITE_LIST = ['zh', 'cm'];
 			const { data: { query: { pages: [{ missing, revisions }] } } } = await api.post({
 				prop: 'revisions',
 				pageids: pageid,
-				rvprop: 'tags',
-				rvlimit: '2',
+				rvprop: 'tags|userid|content',
+				rvlimit: '3',
 			}, {
 				retry: 15,
 			});
-			if (!missing && revisions.length === 1 && revisions[0]?.tags?.includes('mw-new-redirect')) {
+			if (missing || revisions.length === 3) {
+				return;
+			}
+			const { userid, content, tags } = revisions[0];
+			if (!userids.includes(userid)) {
+				return;
+			}
+			if (revisions.length === 1 && tags.includes('mw-new-redirect')
+				|| revisions.length === 2 && content.includes('{{即将删除|') && revisions[1]?.tags?.includes('mw-new-redirect')
+			) {
 				await api.postWithToken('csrf', {
 					action: 'delete',
 					pageid,
