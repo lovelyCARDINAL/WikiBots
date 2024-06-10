@@ -79,7 +79,7 @@ jobs:
   mainpage-image-protection:
     needs: [watch, purge]
     if: |
-      github.event.schedule == '35 16 * * *' && needs.watch.result == 'success' && needs.purge.result == 'success' ||
+      github.event.schedule == '35 16 * * *' && needs.purge.result == 'success' ||
       github.event.inputs.task == 'mainpage-image-protection'
     runs-on: ubuntu-latest
     steps:
