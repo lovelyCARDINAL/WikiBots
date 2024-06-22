@@ -77,7 +77,7 @@ jobs:
         run: node src/Clean/purge.js
 
   mainpage-image-protection:
-    needs: [watch, purge]
+    needs: purge
     if: |
       github.event.schedule == '35 16 * * *' && needs.purge.result == 'success' ||
       github.event.inputs.task == 'mainpage-image-protection'
