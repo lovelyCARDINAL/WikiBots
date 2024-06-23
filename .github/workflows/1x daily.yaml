@@ -38,7 +38,7 @@ env:
 jobs:
   watch:
     if: |
-      github.event.schedule == '35 16 * * *' || 
+      github.event.schedule == '35 16 * * 0' || 
       github.event.inputs.task == 'watch'
     runs-on: ubuntu-latest
     steps:
