@@ -169,7 +169,7 @@ async function updateData(pageid, text) {
 		? await getAvatar(zhapi, userHasNoId)
 		: userids;
 	function userInfo(user) {
-		return `<img class="userlink-avatar-small" src="https://img.moegirl.org.cn/common/avatars/${userIdData[user]}/128.png">{{User|${user}}}`;
+		return `<img class="userlink-avatar-small" src="https://img.moegirl.org.cn/common/avatars/${userIdData[user]}/128.png?ver=0">{{User|${user}}}`;
 	}
 
 	const maintainTable = async () => {
