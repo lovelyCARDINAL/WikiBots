@@ -70,7 +70,7 @@ jobs:
       - name: Run Script
         env:
           SITE: "zh"
-          ZH_MAIN: ${{ secrets.ZH_MAIN }}
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/Personal/delete.js
 
   cm-deletion:
@@ -91,7 +91,7 @@ jobs:
       - name: Run Script
         env:
           SITE: "cm"
-          CM_MAIN: ${{ secrets.CM_MAIN }}
+          CM_ABOT: ${{ secrets.CM_ABOT }}
         run: node src/Personal/delete.js
 
   batch-undelete:
