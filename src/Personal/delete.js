@@ -14,8 +14,8 @@ const api = new MediaWikiApi(config[site].api, {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
 	await api.login(
-		config[site].main.name,
-		config[site].main.password,
+		config[site].abot.name,
+		config[site].abot.password,
 		undefined,
 		{ retry: 25, noCache: true },
 	).then(console.log);
@@ -80,7 +80,7 @@ const api = new MediaWikiApi(config[site].api, {
 			action: 'delete',
 			reason: `批量删除[[Cat:即将删除的页面]]（[[User_talk:${lastEditUser}|${lastEditUser}]]的挂删理由：${reason} ）`,
 			pageid,
-			tags: 'Automation tool',
+			tags: 'Bot',
 		}, {
 			retry: 50,
 			noCache: true,
