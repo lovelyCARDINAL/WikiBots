@@ -219,7 +219,7 @@ async function updateData(pageid, text) {
 	};
 
 	const techTable = async () => {
-		const { data: ghiaData } = await axios.get('https://raw.githubusercontent.com/MoegirlPediaInterfaceAdmins/MoegirlPediaInterfaceCodes/master/src/global/zh/MediaWiki:GHIAHistory.json');
+		const { data: ghiaData } = await axios.get('https://raw.githubusercontent.com/MoegirlPediaInterfaceAdmins/MoegirlPediaInterfaceCodes/master/src/global/zh/GHIAHistory.json');
 		const processData = [
 			Promise.all([
 				queryContribs(zhapi, userData.techeditor, '10|828', time[180]),
