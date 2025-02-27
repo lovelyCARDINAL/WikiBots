@@ -132,6 +132,7 @@ async function getAbuseFilterDetails(api, id) {
 		} catch (error) {
 			// Avoid outputting detailed rules for filters.
 			console.error(`Error: ${site} abuse filter update failed!`);
+			console.error(error);
 			e++;
 		}
 	}));

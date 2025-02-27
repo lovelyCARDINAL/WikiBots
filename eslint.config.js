@@ -96,6 +96,11 @@ export default {
 			{ blankLine: 'always', prev: 'import', next: '*' },
 			{ blankLine: 'never', prev: 'import', next: 'import' },
 		],
-		'import/no-unresolved': 'warn',
+		'import/no-unresolved': [
+			"error",
+			{
+				"ignore": ["^@octokit/core$"]
+			}
+		]
 	},
 };

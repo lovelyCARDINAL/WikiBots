@@ -73,6 +73,7 @@ async function getAbuseFilterDetails(id) {
 			.then(() => console.log('Try to update AbuseFilter 18!'));
 	} catch (error) {
 		console.error('Failed to update AbuseFilter 18!');
+		console.error(error);
 		process.exit(1);
 	}
 
