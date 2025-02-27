@@ -145,4 +145,8 @@ rules:
     - blankLine: never
       prev: import
       next: import
+  import/no-unresolved:
+    - warn
+    - ignore:
+        - "^@octokit/core$"
 root: true
