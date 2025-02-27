@@ -42,7 +42,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "npm"
       - name: Install dependencies
         run: npm ci
@@ -63,7 +63,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "npm"
       - name: Install dependencies
         run: npm ci
@@ -85,7 +85,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "npm"
       - name: Install dependencies
         run: npm ci
@@ -106,7 +106,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "npm"
       - name: Install dependencies
         run: npm ci
@@ -126,7 +126,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "npm"
       - name: Install dependencies
         run: npm ci
@@ -146,7 +146,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "npm"
       - name: Install dependencies
         run: npm ci
@@ -167,7 +167,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "npm"
       - name: Install dependencies
         run: npm ci
@@ -187,7 +187,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "npm"
       - name: Install dependencies
         run: npm ci
@@ -207,7 +207,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "npm"
       - name: Install dependencies
         run: npm ci
