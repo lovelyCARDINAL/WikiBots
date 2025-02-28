@@ -7,8 +7,8 @@
   },
   "scripts": {
     "test": "node ./src/Personal/test.js",
-    "lint": "eslint src --exit-on-fatal-error --max-warnings 0 && prettier --check **/*.yaml",
-    "format": "eslint src --fix && prettier --write **/*.yaml **/*.json"
+    "lint": "eslint src --exit-on-fatal-error --max-warnings 0",
+    "format": "eslint src --fix"
   },
   "author": "hoshimi",
   "license": "MIT",
@@ -30,7 +30,6 @@
     "@types/jsonpath": "^0.2.4",
     "eslint": "^9.21.0",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-vue": "^9.32.0",
-    "prettier": "^3.5.2"
+    "eslint-plugin-yml": "^1.17.0"
   }
 }

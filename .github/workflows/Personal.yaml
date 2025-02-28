@@ -8,26 +8,26 @@ on:
         type: choice
         required: true
         options:
-          - "test"
-          - "deletion"
-          - "batch-delete-prefix"
-          - "batch-undelete"
+          - test
+          - deletion
+          - batch-delete-prefix
+          - batch-undelete
       site:
         type: choice
         required: false
-        default: "all"
+        default: all
         options:
-          - "zh"
-          - "cm"
-          - "all"
+          - zh
+          - cm
+          - all
       filterredir:
         type: choice
         required: false
-        default: "all"
+        default: all
         options:
-          - "all"
-          - "redirects"
-          - "nonredirects"
+          - all
+          - redirects
+          - nonredirects
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -44,7 +44,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
@@ -64,12 +64,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
         env:
-          SITE: "zh"
+          SITE: zh
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: node src/Personal/delete.js
 
@@ -85,12 +85,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
         env:
-          SITE: "cm"
+          SITE: cm
           CM_ABOT: ${{ secrets.CM_ABOT }}
         run: node src/Personal/delete.js
 
@@ -106,7 +106,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
@@ -128,7 +128,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script

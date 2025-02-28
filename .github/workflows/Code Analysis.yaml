@@ -1,4 +1,4 @@
-name: "Code Analysis"
+name: Code Analysis
 
 on:
   push:
@@ -41,7 +41,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Lint
@@ -75,5 +75,5 @@ jobs:
       - name: Add Reviews
         uses: kentaro-m/auto-assign-action@v2.0.0
         with:
-          configuration-path: ".github/auto_assign.yaml"
+          configuration-path: .github/auto_assign.yaml
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
