@@ -1,12 +1,16 @@
 import js from '@eslint/js';
-import pluginImport from 'eslint-plugin-import';
-import pluginYml from 'eslint-plugin-yml';
+import json from '@eslint/json';
+import markdown from '@eslint/markdown';
+import importPlugin from 'eslint-plugin-import';
+import yml from 'eslint-plugin-yml';
 import globals from 'globals';
 
 export default [
-	...pluginYml.configs['flat/standard'],
 	{
-		ignores: ['node_modules/', 'data/*.yaml'],
+		ignores: ['node_modules/'],
+	},
+	{
+		files: ['**/*.js'],
 		languageOptions: {
 			sourceType: 'module',
 			globals: {
@@ -19,11 +23,11 @@ export default [
 			},
 		},
 		plugins: {
-			'import': pluginImport,
+			'import': importPlugin,
 		},
 		rules: {
 			...js.configs.recommended.rules,
-			//...pluginImport.configs.recommended.rules,
+			...importPlugin.flatConfigs.recommended.rules,
 			'logical-assignment-operators': 'error',
 			'no-new-func': 'error',
 			'no-new-object': 'error',
@@ -83,6 +87,19 @@ export default [
 			'comma-spacing': ['warn', { before: false, after: true }],
 			'key-spacing': ['warn', { beforeColon: false, afterColon: true }],
 			'space-in-parens': ['warn', 'never'],
+			'implicit-arrow-linebreak': ['warn', 'beside'],
+			'function-call-argument-newline': ['warn', 'consistent'],
+			'no-extra-semi': 'error',
+			'padding-line-between-statements': [
+				'warn',
+				{ blankLine: 'always', prev: 'import', next: '*' },
+				{ blankLine: 'never', prev: 'import', next: 'import' },
+			],
+			'import/first': 'warn',
+			'import/no-unresolved': [
+				'error',
+				{ ignore: ['^@octokit/core$'] }, // ignore this package
+			],
 			'import/order': [
 				'warn',
 				{
@@ -90,20 +107,38 @@ export default [
 					alphabetize: { order: 'asc', caseInsensitive: false },
 				},
 			],
-			'implicit-arrow-linebreak': ['warn', 'beside'],
-			'function-call-argument-newline': ['warn', 'consistent'],
-			'no-extra-semi': 'error',
-			'import/first': 'warn',
-			'padding-line-between-statements': [
-				'warn',
-				{ blankLine: 'always', prev: 'import', next: '*' },
-				{ blankLine: 'never', prev: 'import', next: 'import' },
-			],
-			'import/no-unresolved': [
-				'error',
-				{ ignore: ['^@octokit/core$'] },
-			],
-			'yml/no-empty-mapping-value': 'warn',
+		},
+	},
+	{
+		files: ['**/*.json'],
+		language: 'json/json',
+		ignores: ['package-lock.json'],
+		...json.configs.recommended,
+	},
+	{
+		files: ['**/*.md'],
+		language: 'markdown/gfm',
+		plugins: { markdown },
+		rules: {
+			...markdown.configs.recommended[0].rules,
+			'markdown/heading-increment': 'off',
+		},
+
+	},
+	{
+		files: ['**/*.{yml,yaml}'],
+		ignores: ['data/*.yaml'],
+		languageOptions: {
+			...yml.configs['flat/standard'][1].languageOptions,
+		},
+		plugins: {
+			...yml.configs['flat/standard'][0].plugins,
+		},
+		rules: {
+			...yml.configs['flat/standard'][1].rules,
+			...yml.configs['flat/standard'][2].rules,
+			...yml.configs['flat/prettier'][2].rules,
+			'yml/no-empty-mapping-value': 'off',
 		},
 	},
 ];
