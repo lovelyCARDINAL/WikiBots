@@ -9,7 +9,7 @@ on:
         type: choice
         required: true
         options:
-          - "override-category"
+          - override-category
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script

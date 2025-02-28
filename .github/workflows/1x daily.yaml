@@ -1,15 +1,15 @@
 name: "[daily] 1x"
 # 0
-## Personal/watch.js
-## Clean/purge.js
-## File/mainpageImages.js
-## Cateorgy/fixRedirect.js
+# # Personal/watch.js
+# # Clean/purge.js
+# # File/mainpageImages.js
+# # Cateorgy/fixRedirect.js
 # 4
-## Clean/sandbox.js
-## Clean/brokenRedirectDelete.js
-## Activity/maintainer.js
+# # Clean/sandbox.js
+# # Clean/brokenRedirectDelete.js
+# # Activity/maintainer.js
 # 6
-## Clean/urlUnquote.js
+# # Clean/urlUnquote.js
 
 on:
   schedule:
@@ -22,14 +22,14 @@ on:
         type: choice
         required: true
         options:
-          - "watch"
-          - "purge"
-          - "mainpage-image-protection"
-          - "fix-redirect-category"
-          - "clean-sandbox"
-          - "broken-redirect-deletion"
-          - "check-activities"
-          - "url-unquote"
+          - watch
+          - purge
+          - mainpage-image-protection
+          - fix-redirect-category
+          - clean-sandbox
+          - broken-redirect-deletion
+          - check-activities
+          - url-unquote
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -48,7 +48,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
@@ -68,7 +68,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
@@ -89,7 +89,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
@@ -111,7 +111,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
@@ -132,7 +132,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
@@ -152,7 +152,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
@@ -173,7 +173,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
@@ -194,7 +194,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
