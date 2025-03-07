@@ -14,7 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "@octokit/core": "^6.1.4",
-    "axios": "^1.8.1",
+    "axios": "^1.8.2",
     "axios-retry": "^4.5.0",
     "cheerio": "^1.0.0",
     "js-yaml": "^4.1.0",
