@@ -25,7 +25,7 @@
   },
   "type": "module",
   "devDependencies": {
-    "@eslint/js": "^9.21.0",
+    "@eslint/js": "^9.22.0",
     "@eslint/json": "^0.10.0",
     "@eslint/markdown": "^6.2.2",
     "@types/js-yaml": "^4.0.9",
