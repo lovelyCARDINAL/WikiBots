@@ -52,7 +52,7 @@ async function querySearch(srsearch) {
 		const template = wikitext.querySelector('template:regex("name, /^Template:(?:Navbox(?:_with_collapsible_groups|_with_columns)?|大家族(?:模板)?)$/i"), magic-word#invoke[module=Module:Nav]');
 		if (template) {
 			const name = template.getValue('name')?.trim();
-			const talkpage = ((token) => {token.ns += 1; return token.title;})(Parser.normalizeTitle(title)); // getTalkPage
+			const talkpage = Parser.normalizeTitle(title).toTalkPage().title;
 			navdata.add([talkpage, name]);
 		}
 	}));
