@@ -23,13 +23,11 @@
 |-
 | [[../../src/File/info.js|file-info]]
 |-
-| rowspan="4" colspan="2" | 03:35
+| rowspan="3" colspan="2" | 03:35
 | [[../../src/Clean/userpageDelete.js|userpage-deletion]]
-| rowspan="4" | [[4x daily.yaml|4x daily]]
+| rowspan="3" | [[4x daily.yaml|4x daily]]
 |-
 | [[../../src/Clean/redirectDelete.js|redirect-deletion]]
-|-
-| [[../../src/Clean/redirectSuppress.js|redirect-suppression]]
 |-
 | [[../../src/Clean/invisibleCharacter.js|invisible-character]]
 |-
