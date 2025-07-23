@@ -49,6 +49,7 @@ async function querySearch(srsearch) {
 
 	await Promise.all(pages.map(({ title, revisions: [{ content }] }) => {
 		const wikitext = Parser.parse(content, true);
+		/** @type {Parser.TranscludeToken | undefined} */
 		const template = wikitext.querySelector('template:regex("name, /^Template:(?:Navbox(?:_with_collapsible_groups|_with_columns)?|大家族(?:模板)?)$/i"), magic-word#invoke[module=Module:Nav]');
 		if (template) {
 			const name = template.getValue('name')?.trim();
