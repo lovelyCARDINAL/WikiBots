@@ -3,8 +3,6 @@ import axiosRetry from 'axios-retry';
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
-import getAvatar from '../utils/getAvatar.js';
-import readData from '../utils/readData.js';
 
 const zhapi = new MediaWikiApi(config.zh.api, {
 		headers: { 'user-agent': config.useragent },
@@ -161,15 +159,8 @@ async function updateData(pageid, text) {
 		return data;
 	})();
 
-	const users = new Set(Object.values(userData).flatMap((array) => array));
-	const userids = JSON.parse(await readData('userIds.json'));
-	const userHasId = new Set(Object.keys(userids));
-	const userHasNoId = [...users].filter((x) => !userHasId.has(x));
-	const userIdData = userHasNoId.length
-		? await getAvatar(zhapi, userHasNoId)
-		: userids;
 	function userInfo(user) {
-		return `<img class="userlink-avatar-small" src="https://img.moegirl.org.cn/common/avatars/${userIdData[user]}/128.png?ver=0">{{User|${user}}}`;
+		return `{{#Avatar:${user}|class=userlink-avatar-small}}{{User|${user}}}`;
 	}
 
 	const maintainTable = async () => {

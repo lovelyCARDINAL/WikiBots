@@ -1,8 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
-import getAvatar from '../utils/getAvatar.js';
-import readData from '../utils/readData.js';
 
 Parser.config = 'moegirl';
 
@@ -90,14 +88,8 @@ async function updateData(text) {
 		return [...new Set(data)].sort();
 	})();
 
-	const userids = JSON.parse(await readData('userIds.json'));
-	const userHasId = new Set(Object.keys(userids));
-	const userHasNoId = userlist.filter((x) => !userHasId.has(x));
-	const userIdData = userHasNoId.length
-		? await getAvatar(zhapi, userHasNoId)
-		: userids;
 	function userInfo(user) {
-		return `<img class="userlink-avatar-small" src="https://img.moegirl.org.cn/common/avatars/${userIdData[user]}/128.png?ver=0">{{User|${user}}}`;
+		return `{{#Avatar:${user}|class=userlink-avatar-small}}{{User|${user}}}`;
 	}
 
 	const data = await Promise.all([
