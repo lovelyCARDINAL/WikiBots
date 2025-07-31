@@ -23,9 +23,9 @@ const PAGE_MAP = {
 		content: '/* [[Category:在模板名字空间下的CSS页面]] */',
 		summary: '沙盒清理作业。如有需要请查阅页面历史并再次编辑本页。',
 	},
-	'模块:Sandbox': {
+	'Module:Sandbox': {
 		content: '',
-		summary: '沙盒清理作业。如有长期测试需要请创建以「模块:Sandbox/您的用户名」命名的子页面。',
+		summary: '沙盒清理作业。如有长期测试需要请创建以「Module:Sandbox/您的用户名」命名的子页面。',
 	},
 };
 
