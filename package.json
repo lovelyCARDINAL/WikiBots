@@ -30,7 +30,7 @@
     "@eslint/markdown": "^7.2.0",
     "@types/js-yaml": "^4.0.9",
     "@types/jsonpath": "^0.2.4",
-    "eslint": "^9.33.0",
+    "eslint": "^9.34.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-yml": "^1.18.0"
   }
