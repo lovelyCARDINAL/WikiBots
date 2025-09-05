@@ -43,26 +43,32 @@ const api = new MediaWikiApi(config.zh.api, {
 		console.log(`处理 ${title} 中！`);
 
 		const parser = Parser.parse(content);
-		const temp = parser.querySelector('template#Template:信息栏2.0');
-		if (!temp) { continue; }
-		let legacy = false;
-		for (const arg of temp.getAllArgs()) {
-			arg.escape();
-			if (!legacy) {
-				legacy = /^(class|.+-style|border|float|cellpadding|cellspacing)$/.test(arg.name);
-			}
-			if (!/^(class|m-style|border|float|m-width|m-b?color|notitle|标题|title|top-style|top-b?color|图片|image|图片大小|size|alt|图片信息|图片说明|image-style|tabs|t-style|t-b?color|l-style|l-width|l-b?color|r-style|i-style|bottom|b-style|cellpadding|cellspacing|\d+)$/.test(arg.name)) {
-				temp.newAnonArg(`${arg.name} :: ${arg.value}\n`);
-				temp.removeArg(arg.name);
-			}
+		const templates = parser.querySelectorAll('template#Template:信息栏2.0');
+		if (templates.length === 0) {
+			continue;
 		}
-		legacy ? temp.replaceTemplate('Infobox3/legacy\n') : temp.replaceTemplate('Infobox3\n');
+		let summary = '替换{{[[T:信息栏2.0|信息栏2.0]]}}为';
+		for (const temp of templates) {
+			let legacy = false;
+			for (const arg of temp.getAllArgs()) {
+				arg.escape();
+				if (!legacy) {
+					legacy = /^(class|.+-style|border|float|cellpadding|cellspacing)$/.test(arg.name);
+				}
+				if (!/^(class|m-style|border|float|m-width|m-b?color|notitle|标题|title|top-style|top-b?color|图片|image|图片大小|size|alt|图片信息|图片说明|image-style|tabs|t-style|t-b?color|l-style|l-width|l-b?color|r-style|i-style|bottom|b-style|cellpadding|cellspacing|\d+)$/.test(arg.name)) {
+					temp.newAnonArg(`${arg.name} :: ${arg.value}\n`);
+					temp.removeArg(arg.name);
+				}
+			}
+			legacy ? temp.replaceTemplate('Infobox3/legacy\n') : temp.replaceTemplate('Infobox3\n');
+			summary += `{{[[T:${legacy ? 'Infobox3/legacy|Infobox3/legacy' : 'Infobox3|Infobox3'}]]}}`;
+		}
 
 		await api.postWithToken('csrf', {
 			action: 'edit',
 			title,
 			text: parser.toString(),
-			summary: `替换{{[[T:信息栏2.0|信息栏2.0]]}}为{{[[T:${legacy ? 'Infobox3/legacy|Infobox3/legacy' : 'Infobox3|Infobox3'}]]}}`,
+			summary,
 			bot: true,
 			notminor: true,
 			tags: 'Bot',
