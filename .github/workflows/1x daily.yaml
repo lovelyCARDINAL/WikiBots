@@ -10,6 +10,7 @@ name: "[daily] 1x"
 # # Activity/maintainer.js
 # 6
 # # Clean/urlUnquote.js
+# # Report/songCounter.js
 
 on:
   schedule:
@@ -31,6 +32,7 @@ on:
           - broken-redirect-deletion
           - check-activities
           - url-unquote
+          - song-counter
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -184,8 +186,9 @@ jobs:
         run: node src/Activity/maintainer.js
 
   url-unquote:
+    needs: song-counter
     if: |
-      github.event.schedule == '35 1 * * *' ||
+      github.event.schedule == '35 1 * * *' && needs.song-counter.result == 'success' ||
       github.event.inputs.task == 'url-unquote'
     runs-on: ubuntu-latest
     steps:
@@ -203,3 +206,24 @@ jobs:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
         run: node src/Clean/urlUnquote.js
+
+  song-counter:
+    if: |
+      github.event.schedule == '35 1 * * *' ||
+      github.event.inputs.task == 'song-counter'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+          CM_IBOT: ${{ secrets.CM_IBOT }}
+        run: node src/Report/songCounter.js
