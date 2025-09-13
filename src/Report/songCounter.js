@@ -10,10 +10,9 @@ function templateCount(parsed) {
 	let nocount = 0;
 	const templates = parsed.querySelectorAll('template#Template:China_Temple_Song, template#Template:Temple_Song, template#Template:China_Legendary_Song');
 	for (const template of templates) {
-		for (const arg of template.getAllArgs()) {
-			if (arg.name === 'nocount' && arg.value.trim() === 'true') {
-				nocount++;
-			}
+		const arg = template.getArg('nocount');
+		if (arg && arg.value.trim() === 'true') {
+			nocount++;
 		}
 	}
 	return templates.length - nocount;
