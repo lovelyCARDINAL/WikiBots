@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       task:
+        description: 'Select the task to run'
         type: choice
         required: true
         options:
@@ -13,6 +14,7 @@ on:
           - batch-delete-prefix
           - batch-undelete
       site:
+        description: 'Select the site to run on'
         type: choice
         required: false
         default: all
@@ -21,6 +23,7 @@ on:
           - cm
           - all
       filterredir:
+        description: 'Select the redirect filter'
         type: choice
         required: false
         default: all

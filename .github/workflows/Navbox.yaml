@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       task:
+        description: 'Select the task to run'
         type: choice
         required: true
         options:
