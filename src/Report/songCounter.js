@@ -18,6 +18,17 @@ function templateCount(parsed) {
 	return templates.length - nocount;
 }
 
+function sectionCount(parsed, setData, root, sub) {
+	parsed.sections().forEach((section) => {
+		const sectionParsed = Parser.parse(section.toString());
+		const { childNodes: [headerParsed] } = sectionParsed;
+		const header = headerParsed.innerText;
+		if (header in setData[root][sub]) {
+			setData[root][sub][header] = templateCount(sectionParsed);
+		}
+	});
+}
+
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
@@ -35,10 +46,32 @@ function templateCount(parsed) {
 	});
 	const setData = JSON.parse(setPage);
 	const titles = Object.keys(setData).flatMap((page) => {
-		if (typeof setData[page] !== 'number') {
-			return Object.keys(setData[page]).map((subpage) => `${page}/${subpage}`);
-		} 
-		return [page];
+		if (typeof setData[page] === 'number') {
+			return page;
+		}
+		if (typeof setData[page].root === 'number' || setData[page]?.section
+			|| setData[page]?.['bilibili投稿'] || setData[page]?.['YouTube投稿']) {
+			return Object.keys(setData[page]).flatMap((subpage) => {
+				const result = [];
+				switch (subpage) {
+					case 'root':
+					case 'section':
+						result.push(page);
+						break;
+					case 'bilibili投稿':
+					case 'YouTube投稿':
+						typeof setData[page][subpage] === 'number'
+							? result.push(`${page}/${subpage}`)
+							: result.push(...Object.keys(setData[page][subpage]).map((subsub) => `${page}/${subpage}/${subsub}`));
+						break;
+					default:
+						result.push(`${page}/${subpage}`);
+						break;
+				}
+				return result;
+			});
+		}
+		return Object.keys(setData[page]).map((subpage) => `${page}/${subpage}`);
 	});
 
 	const { data: { query: { pages } } } = await api.post({
@@ -50,28 +83,31 @@ function templateCount(parsed) {
 	});
 
 	await Promise.all(pages.map(({ title, revisions: [{ content }] }) => {
-		const [root, sub] = title.split('/');
+		const [root, sub, subsub] = title.split(/\/(?!Ego)/);
 		const parsed = Parser.parse(content);
 		switch (sub) {
 			case undefined:
-				setData[root] = templateCount(parsed);
+				typeof setData[root]?.root === 'number'
+					? setData[root].root = templateCount(parsed)
+				    : setData[root]?.section
+						? sectionCount(parsed, setData, root, 'section')
+						: setData[root] = templateCount(parsed);
 				break;
 			case '梗曲相关':
-				parsed.sections().forEach((section) => {
-					const sectionParsed = Parser.parse(section.toString());
-					const { childNodes: [headerParsed] } = sectionParsed;
-					const header = headerParsed.innerText;
-					if (header in setData[root][sub]) {
-						setData[root][sub][header] = templateCount(sectionParsed);
-					}
-				});
+				sectionCount(parsed, setData, root, sub);
+				break;
+			case 'YouTube投稿':
+			case 'bilibili投稿':
+				subsub
+					? setData[root][sub][subsub] = templateCount(parsed)
+					: setData[root][sub] = templateCount(parsed);
 				break;
 			default:
 				setData[root][sub] = templateCount(parsed);
 				break;
 		}
 	}));
-
+	
 	await api.postWithToken('csrf', {
 		action: 'edit',
 		title: 'Module:VOCALOID_Song_Counter/data.json',
