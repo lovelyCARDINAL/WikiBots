@@ -9,22 +9,16 @@ const api = new MediaWikiApi(config.zh.api, {
 function templateCount(parsed) {
 	let nocount = 0;
 	const templates = parsed.querySelectorAll('template#Template:China_Temple_Song, template#Template:Temple_Song, template#Template:China_Legendary_Song');
-	for (const template of templates) {
-		const arg = template.getArg('nocount');
-		if (arg && arg.value.trim() === 'true') {
-			nocount++;
-		}
-	}
-	return templates.length - nocount;
+	return templates.filter((template) => template.getValue('nocount') !== 'true').length;
 }
 
 function sectionCount(parsed, setData, root, sub) {
 	parsed.sections()
 		.slice(1) // 忽略序言
-		.forEach(({firstChild}) => {
-			const header = firstChild.innerText;
+		.forEach((section) => {
+			const header = section.firstChild.innerText;
 			if (header in setData[root][sub]) {
-				setData[root][sub][header] = templateCount(sectionParsed);
+				setData[root][sub][header] = templateCount(section);
 			}
 		});
 }
