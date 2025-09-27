@@ -7,7 +7,6 @@ const api = new MediaWikiApi(config.zh.api, {
 });
 
 function templateCount(parsed) {
-	let nocount = 0;
 	const templates = parsed.querySelectorAll('template#Template:China_Temple_Song, template#Template:Temple_Song, template#Template:China_Legendary_Song');
 	return templates.filter((template) => template.getValue('nocount') !== 'true').length;
 }
