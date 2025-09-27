@@ -19,14 +19,14 @@ function templateCount(parsed) {
 }
 
 function sectionCount(parsed, setData, root, sub) {
-	parsed.sections().forEach((section) => {
-		const sectionParsed = Parser.parse(section.toString());
-		const { childNodes: [headerParsed] } = sectionParsed;
-		const header = headerParsed.innerText;
-		if (header in setData[root][sub]) {
-			setData[root][sub][header] = templateCount(sectionParsed);
-		}
-	});
+	parsed.sections()
+		.slice(1) // 忽略序言
+		.forEach(({firstChild}) => {
+			const header = firstChild.innerText;
+			if (header in setData[root][sub]) {
+				setData[root][sub][header] = templateCount(sectionParsed);
+			}
+		});
 }
 
 (async () => {
