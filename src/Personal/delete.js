@@ -62,6 +62,7 @@ const api = new MediaWikiApi(config[site].api, {
 		if (!content || !userlist.includes(lastEditUser)) {
 			return;
 		}
+		/** @type {Parser.TranscludeToken | undefined} */
 		const template = Parser.parse(content)
 			?.querySelector('template:regex(name, /^Template:即[将將][删刪]除$/)');
 		if (!template) {
