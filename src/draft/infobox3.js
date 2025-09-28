@@ -43,6 +43,7 @@ const api = new MediaWikiApi(config.zh.api, {
 		console.log(`处理 ${title} 中！`);
 
 		const parser = Parser.parse(content);
+        /** @type {Parser.TranscludeToken[]} */
 		const templates = parser.querySelectorAll('template#Template:信息栏2.0');
 		if (templates.length === 0) {
 			continue;
