@@ -115,6 +115,7 @@ async function edit(pageid, text) {
 		)).filter(Boolean);
 
 		const content = Parser.parse(wikitext);
+		/** @type {Parser.TranscludeToken[]} */
 		const templates = content.querySelectorAll('template#Template:Hlist');
 		const regex = new RegExp(`{{\\s*(?:User|Supu)\\s*\\|\\s*(?:${inactive.join('|')})\\s*[|}]`, 'i');
 

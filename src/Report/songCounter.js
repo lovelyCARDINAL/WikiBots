@@ -6,27 +6,23 @@ const api = new MediaWikiApi(config.zh.api, {
 	headers: { 'user-agent': config.useragent },
 });
 
+/** @param {Parser.Token} parsed */
 function templateCount(parsed) {
-	let nocount = 0;
+	/** @type {Parser.TranscludeToken[]} */
 	const templates = parsed.querySelectorAll('template#Template:China_Temple_Song, template#Template:Temple_Song, template#Template:China_Legendary_Song');
-	for (const template of templates) {
-		const arg = template.getArg('nocount');
-		if (arg && arg.value.trim() === 'true') {
-			nocount++;
-		}
-	}
-	return templates.length - nocount;
+	return templates.filter((template) => template.getValue('nocount') !== 'true').length;
 }
 
+/** @param {Parser.Token} parsed */
 function sectionCount(parsed, setData, root, sub) {
-	parsed.sections().forEach((section) => {
-		const sectionParsed = Parser.parse(section.toString());
-		const { childNodes: [headerParsed] } = sectionParsed;
-		const header = headerParsed.innerText;
-		if (header in setData[root][sub]) {
-			setData[root][sub][header] = templateCount(sectionParsed);
-		}
-	});
+	parsed.sections()
+		.slice(1) // 忽略序言
+		.forEach((section) => {
+			const header = section.firstChild.innerText;
+			if (header in setData[root][sub]) {
+				setData[root][sub][header] = templateCount(section);
+			}
+		});
 }
 
 (async () => {
