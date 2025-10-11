@@ -62,6 +62,7 @@ const api = new MediaWikiApi(config.zh.api, {
 			.join('，')
 			: 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
 		const wikitext = Parser.parse(content.replaceAll('\n', ''));
+		/** @type {Parser.TranscludeToken | undefined} */
 		const template = wikitext.querySelector('template:regex(name, /^Template:[暂暫]定[標标][题題]$/)');
 		const reason = template?.getValue('1')?.trim() || (template ? 'data-sort-value="*" | <i style="color:red;">无</i>' : 'data-sort-value="*" | <i style="color:red;">找不到目标模板</i>');
 		const time = `${moment(timestamp).utcOffset('+08:00').format('YYYY-MM-DD HH:mm')} (CST)`;
