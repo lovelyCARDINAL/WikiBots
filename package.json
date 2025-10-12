@@ -32,6 +32,6 @@
     "@types/jsonpath": "^0.2.4",
     "eslint": "^9.37.0",
     "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-yml": "^1.18.0"
+    "eslint-plugin-yml": "^1.19.0"
   }
 }
