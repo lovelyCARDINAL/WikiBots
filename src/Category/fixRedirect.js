@@ -152,6 +152,7 @@ const SITE_LIST = ['zh', 'cm'];
 
 				if (site === 'zh') {
 					// 声优
+					/** @type {Parser.ParameterToken | undefined} */
 					const param = wikitext.querySelector('parameter:regex("name, /^(?:声优|聲優|配音)$/")');
 					if (param) {
 						const value = param.value.trim();
@@ -201,6 +202,7 @@ const SITE_LIST = ['zh', 'cm'];
 
 				if (site === 'cm') {
 					// {{虚拟角色/作}}
+					/** @type {Parser.TranscludeToken | undefined} */
 					const temp1 = wikitext.querySelector('template:regex(name, /^Template:[虚虛][拟擬]角色\\/作$/)');
 					if (temp1) {
 						for (const arg of temp1.getAllArgs()) {
@@ -211,6 +213,7 @@ const SITE_LIST = ['zh', 'cm'];
 					}
 
 					// {{作品}}
+					/** @type {Parser.TranscludeToken | undefined} */
 					const temp2 = wikitext.querySelector('template#Template:作品');
 					if (temp2) {
 						for(const arg of temp2.getAllArgs()) {
