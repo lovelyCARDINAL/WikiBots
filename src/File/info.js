@@ -90,9 +90,9 @@ async function pageEdit(title, text, summary, sectiontitle) {
 
 	// 获取上次运行时间
 	const lastTime = await getTimeData('file-info');
-	const gaiend = lastTime['file-info'],
-		gaistart = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-	
+	const gaistart = lastTime['file-info'],
+		gaiend = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
 	// 获取上传文件
 	const fileData = await cmapi.post({
 		prop: 'revisions|categories',
@@ -215,7 +215,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		}
 	}
 
-	await editTimeData(lastTime, 'file-info', gaistart);
+	await editTimeData(lastTime, 'file-info', gaiend);
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
