@@ -1,7 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 import { getTimeData, editTimeData } from '../utils/lastTime.js';
-import splitAndJoin from '../utils/splitAndJoin.js';
 
 const zhapi = new MediaWikiApi(config.zh.api, {
 		headers: { 'user-agent': config.useragent },
@@ -9,36 +8,6 @@ const zhapi = new MediaWikiApi(config.zh.api, {
 	cmapi = new MediaWikiApi(config.cm.api, {
 		headers: { 'user-agent': config.useragent },
 	});
-
-const titleRegex = new RegExp('^File:(.+?)\\..{3,4}$'),
-	nameRegex = new RegExp('^[A-z0-9.\\-@\\+]+$'),
-	numberRegex = new RegExp('\\d\\D+\\d.*\\d|\\d.*\\d\\D+\\d'),
-	linkRegex = new RegExp('源地址:(.*?)\\n');
-
-function titleRuleTest(title) {
-	if (!title.includes(' ')) {
-		const match = titleRegex.exec(title);
-		if (match) {
-			const name = match[1];
-			return name.length > 15 && nameRegex.test(name) && numberRegex.test(name);
-		}
-	}
-	return false;
-}
-
-function linkRuleTest(str) {
-	if (!str.includes('源地址')) {
-		return false;
-	}
-	const match = linkRegex.exec(str);
-	if (match && match[1]) {
-		const sourceAddress = match[1].trim();
-		if (sourceAddress && !sourceAddress.toLowerCase().startsWith('http')) {
-			return sourceAddress;
-		}
-	}
-	return false;
-}
 
 async function pageEdit(title, text, summary, sectiontitle) {
 	await zhapi.postWithToken('csrf', {
@@ -75,6 +44,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		).then(console.log),
 	]);
 
+	// 获取分类配置
 	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await zhapi.post({
 		prop: 'revisions',
 		titles: 'User:星海子/BotConfig/incorrectFileInfo.json',
@@ -82,26 +52,22 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	}, {
 		retry: 15,
 	});
-	const setting = JSON.parse(content);
-	const catData = await (async() => {
-		const set = new Set(),
-			prefixes = ['Category:', '分类:', 'Category:作者:', '分类:作者:'],
-			overridePrefixes = ['Category:', '分类:'],
-			categoryNames = setting.category,
-			overrideNames = setting.override;
-		await Promise.all(categoryNames.map((categoryName) => {
-			Promise.all(prefixes.map((prefix) => {
-				set.add(`[[${prefix}${categoryName}]]`);
-			}));
-		}));
-		await Promise.all(overrideNames.map((overrideName) => {
-			Promise.all(overridePrefixes.map((prefix) => {
-				set.delete(`[[${prefix}${overrideName}]]`);
-			}));
-		}));
-		return Array.from(set);
-	})();
-	const prefixRegex = new RegExp(`File:(?:${setting.prefix.join('|')})`);
+	const jsonContent = JSON.parse(content);
+
+	// 错误分类配置
+	const badCatSet = new Set(
+		jsonContent.badCategory
+			.flatMap((name) => ['Category:', 'Category:作者:'].map((prefix) => `${prefix}${name}`))
+			.filter((item) => !jsonContent.badCategoryOverride.includes(item.replace('Category:', ''))),
+	);
+
+	// 文件名前缀忽略配置
+	const prefixRegex = new RegExp(`File:(?:${jsonContent.titlePrefixOverride.join('|')})`);
+
+	// 无分类忽略配置
+	const noCatSet = new Set(jsonContent.noCategory.map((name) => `Category:${name}`));
+
+	// 获取不接受bot操作的用户列表
 	const noBotsUser = await (async () => {
 		const { data: { query: { pages } } } = await zhapi.post({
 			prop: 'revisions',
@@ -114,105 +80,142 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		}, {
 			retry: 15,
 		});
-		const set = new Set();
-		const regex = /{{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=.*?机娘星海酱.*?|optout=all|optout=.*?fileInfo.*?|deny=all))}}/;
-		await Promise.all(pages.map((page) => {
-			const user = page.title.replace('User talk:', ''),
-				{ content } = page.revisions[0];
-			if (regex.test(content.replaceAll(/\s\n/g, ''))) {
-				set.add(user);
-			}
-		}));
-		return set;
+		const regex = /{{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=.*?机娘星海酱|optout=(?:all|.*?fileInfo)|deny=all))}}/;
+		return new Set(
+			pages
+				.filter((page) => regex.test(page.revisions[0].content.replace(/\s\n/g, '')))
+				.map((page) => page.title.slice('User talk:'.length)),
+		);
 	})();
 
+	// 获取上次运行时间
 	const lastTime = await getTimeData('file-info');
-	const leend = lastTime['file-info'],
-		lestart = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+	const gaiend = lastTime['file-info'],
+		gaistart = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+	
+	// 获取上传文件
+	const fileData = await cmapi.post({
+		prop: 'revisions|categories',
+		generator: 'allimages',
+		rvprop: 'user|content|timestamp|ids',
+		cllimit: 'max',
+		gaisort: 'timestamp',
+		gaidir: 'newer',
+		gaistart,
+		gaiend,
+		gaifilterbots: 'nobots',
+		gailimit: '500',
+	}, {
+		retry: 15,
+	}).then(({ data }) => data?.query?.pages?.filter((page) => page.revisions[0].parentid === 0));
 
-	const fileData = await (async () => {
-		const { data: { query: { logevents } } } = await cmapi.post({
-			list: 'logevents',
-			leprop: 'title|ids',
-			leaction: 'upload/upload',
-			lelimit: 'max',
-			leend,
-			lestart,
-		}, {
-			retry: 15,
-		});
-		const titleData = logevents
-			.filter((item) => item.pageid !== 0)
-			.map((item) => item.title);
-		const titlesGroup = splitAndJoin(titleData, 500);
-		const result = await Promise.all(titlesGroup.map(async(titles) => {
-			const { data: { query: { pages } } } = await cmapi.post({
-				prop: 'revisions',
-				titles,
-				rvprop: 'content|ids|user',
-			}, {
-				retry: 15,
-			});
-			return pages.filter((page) => page.revisions[0].parentid === 0);
-		}));
-		return [].concat(...result);
-	})();
-
-	let appendtext = '';
-	const catUser = new Set(),
-		titleUser = new Set(),
-		linkUser = new Set();
-	await Promise.all(fileData.map(async(item) => {
-		const { title, revisions: [{ content, user }] } = item;
+	if (fileData) {
+		let appendtext = '';
+		const badCatUser = new Set(),
+			titleUser = new Set(),
+			linkUser = new Set(),
+			noCatUser = new Set();
 		
-		if (!titleUser.has(user) && !prefixRegex.test(title) && titleRuleTest(title)) {
-			titleUser.add(user);
-			if (!noBotsUser.has(user)) {
-				await pageEdit(`User talk:${user}`, `{{subst:User:星海子/BotMessages/FileName|filename=${title}}}`, '关于您近期上传的文件～', '关于您近期上传的文件');
+		// bad title rule
+		const titleRegex = /^File:(.+?)\..{3,4}$/,
+			nameRegex = /^[A-z0-9.\-@+]+$/,
+			numberRegex = /\d\D+\d.*\d|\d.*\d\D+\d/;
+		function badTitleCheck(title) {
+			if (title.includes(' ')) {
+				return false;
 			}
-			appendtext += `\n|-\n|{{user|${user}}} || [[cm:${title}|${title}]] || 文件名 || ||${noBotsUser.has(user) ? ' {{tlx|bots}}' : ''}`;
+			const match = titleRegex.exec(title);
+			if (!match) {
+				return false;
+			}
+			const name = match[1];
+			return name.length > 15 && nameRegex.test(name) && numberRegex.test(name);
 		}
 
-		if (!catUser.has(user)) {
-			const foundCat = catData.find((cat) => content.includes(cat));
-			if (foundCat) {
-				catUser.add(user);
-				if (!noBotsUser.has(user)) {
-					await pageEdit(`User talk:${user}`, `{{subst:User:星海子/BotMessages/FileCat|filename=${title}|category=<code><nowiki>${foundCat}</nowiki></code>}}`, '关于您近期上传的文件～', '关于您近期上传的文件');
+		// bad link rule
+		const linkRegex = /源地址[:：](.*?)\n/;
+		function badLinkCheck(str) {
+			if (!str.includes('源地址')) {return false;}
+			const match = linkRegex.exec(str);
+			if (match && match[1]) {
+				const sourceAddress = match[1].trim();
+				if (sourceAddress && !sourceAddress.toLowerCase().startsWith('http')) {
+					return sourceAddress;
 				}
-				appendtext += `\n|-\n|{{user|${user}}} || [[cm:${title}|${title}]] || 分类 || <code><nowiki>${foundCat}</nowiki></code> ||${noBotsUser.has(user) ? ' {{tlx|bots}}' : ''}`;
 			}
+			return false;
 		}
 
-		if (!linkUser.has(user)) {
-			const foundLink = linkRuleTest(content);
-			if (foundLink) {
-				linkUser.add(user);
-				if (!noBotsUser.has(user)) {
-					await pageEdit(`User talk:${user}`, `{{subst:User:星海子/BotMessages/FileLink|filename=${title}|link=<code><nowiki>${foundLink}</nowiki></code>}}`, '关于您近期上传的文件～', '关于您近期上传的文件');
+		await Promise.all(fileData.map(async ({ title, revisions: [{ content, user }], categories }) => {
+			// 检查是否不需要用户页通知
+			const hasNoBots = noBotsUser.has(user);
+			// 检查文件命名
+			if (!titleUser.has(user) && !prefixRegex.test(title) && badTitleCheck(title)) {
+				titleUser.add(user);
+				if (!hasNoBots) {
+					await pageEdit(`User talk:${user}`, `{{subst:User:星海子/BotMessages/FileName|filename=${title}}}`, '关于您近期上传的文件～', '关于您近期上传的文件');
 				}
-				appendtext += `\n|-\n|{{user|${user}}} || [[cm:${title}|${title}]] || 源地址 || <code><nowiki>${foundLink}</nowiki></code> ||${noBotsUser.has(user) ? ' {{tlx|bots}}' : ''}`;
+				appendtext += `\n|-\n|{{user|${user}}} || [[cm:${title}|${title}]] || 文件名 || ||${hasNoBots ? ' {{tlx|bots}}' : ''}`;
 			}
+			// 检查源地址
+			if (!linkUser.has(user)) {
+				const foundLink = badLinkCheck(content);
+				if (foundLink) {
+					linkUser.add(user);
+					if (!hasNoBots) {
+						await pageEdit(`User talk:${user}`, `{{subst:User:星海子/BotMessages/FileLink|filename=${title}|link=<code><nowiki>${foundLink}</nowiki></code>}}`, '关于您近期上传的文件～', '关于您近期上传的文件');
+					}
+					appendtext += `\n|-\n|{{user|${user}}} || [[cm:${title}|${title}]] || 源地址 || <code><nowiki>${foundLink}</nowiki></code> ||${hasNoBots ? ' {{tlx|bots}}' : ''}`;
+				}
+			}
+			// 获取页面分类
+			const categoryData = categories?.map((item) => item.title) || [];
+			// 检查无分类
+			if (!noCatUser.has(user)) {
+				const hasCategory = categoryData.some((cat) => !noCatSet.has(cat));
+				if (!hasCategory) {
+					noCatUser.add(user);
+					if (!hasNoBots) {
+						await pageEdit(`User talk:${user}`, `{{subst:User:星海子/BotMessages/FileNoCat|filename=${title}}}`, '关于您近期上传的文件～', '关于您近期上传的文件');
+					}
+					appendtext += `\n|-\n|{{user|${user}}} || [[cm:${title}|${title}]] || 分类 || 无实质分类 ||${hasNoBots ? ' {{tlx|bots}}' : ''}`;
+				}
+			}
+			// 检查错误分类
+			if (!badCatUser.has(user)) {
+				const badCategories = categoryData.filter((cat) => badCatSet.has(cat));
+				const badCategoryLinks = badCategories
+					.map((title) => `[[[[:cm:${title}|${title}]]]]`)
+					.join('、');
+				if (badCategories.length > 0) {
+					badCatUser.add(user);
+					if (!hasNoBots) {
+						await pageEdit(`User talk:${user}`, `{{subst:User:星海子/BotMessages/FileCat|filename=${title}|category=${badCategoryLinks}}}`, '关于您近期上传的文件～', '关于您近期上传的文件');
+					}
+					appendtext += `\n|-\n|{{user|${user}}} || [[cm:${title}|${title}]] || 分类 || ${badCategoryLinks} ||${hasNoBots ? ' {{tlx|bots}}' : ''}`;
+				}
+			}
+		}));
+		
+		// 输出日志
+		if (appendtext) {
+			await zhapi.postWithToken('csrf', {
+				action: 'edit',
+				pageid: '541069',
+				summary: 'log: file-info',
+				appendtext,
+				tags: 'Bot',
+				bot: true,
+				minor: true,
+				watchlist: 'nochange',
+			}, {
+				retry: 50,
+				noCache: true,
+			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}
-	}));
-
-	if (appendtext) {
-		await zhapi.postWithToken('csrf', {
-			action: 'edit',
-			pageid: '541069',
-			summary: 'log: file-info',
-			appendtext,
-			tags: 'Bot',
-			bot: true,
-			minor: true,
-			watchlist: 'nochange',
-		}, {
-			retry: 50,
-			noCache: true,
-		}).then(({ data }) => console.log(JSON.stringify(data)));
 	}
 
-	await editTimeData(lastTime, 'file-info', lestart);
+	await editTimeData(lastTime, 'file-info', gaistart);
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
