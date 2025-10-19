@@ -36,11 +36,11 @@ jobs:
       github.event.inputs.task == 'protection'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -56,11 +56,11 @@ jobs:
       github.event.inputs.task == 'subscriber'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -75,11 +75,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: npm
       - name: Install dependencies
         run: npm ci
