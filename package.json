@@ -27,7 +27,7 @@
   "devDependencies": {
     "@eslint/js": "^9.37.0",
     "@eslint/json": "^0.13.2",
-    "@eslint/markdown": "^7.4.0",
+    "@eslint/markdown": "^7.4.1",
     "@types/js-yaml": "^4.0.9",
     "@types/jsonpath": "^0.2.4",
     "eslint": "^9.37.0",
