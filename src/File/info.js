@@ -118,7 +118,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		
 		// bad title rule
 		const titleRegex = /^File:(.+?)\..{3,4}$/,
-			nameRegex = /^[A-z0-9.\-@+]+$/,
+			nameRegex = /^[a-z0-9.\-@+]+$/i,
 			numberRegex = /\d\D+\d.*\d|\d.*\d\D+\d/;
 		function badTitleCheck(title) {
 			if (title.includes(' ')) {
