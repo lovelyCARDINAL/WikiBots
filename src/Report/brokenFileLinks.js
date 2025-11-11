@@ -129,7 +129,7 @@ async function getDetails(title) {
 		console.error('ERROR:', error.message);
 	}
 
-	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的[[:Category:含有受损文件链接的页面|受损文件]]详细信息，完成修复的<b>任何用户</b>都可以<b class="plainlinks">[{{fullurl:{{FULLPAGENAME}}|action=edit}} 编辑下方表格]</b>。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}} \n\n{| class="wikitable sortable plainlinks" style="word-break:break-all" width=100%\n|-\n! 页面名 || 名字空间 || 文件名 || 文件状态 \n|-\n';
+	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的[[:Category:含有受损文件链接的页面|受损文件]]详细信息，完成修复的<b>任何用户</b>都可以<b class="plainlinks">[{{fullurl:{{FULLPAGENAME}}|action=edit}} 编辑下方表格]</b>。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}} \n\n{| class="wikitable sortable plainlinks" style="word-break:break-all" width=100%\n|-\n! 页面名 || 命名空间 || 文件名 || 文件状态 \n|-\n';
 	for (const { title, ns, images } of Object.values(pageData)) {
 		const namespace = `data-sort-value="${ns}"|${ns === 0 ? '（主）' : `{{ns:${ns}}}`}`;
 		const rowspan = Object.keys(images).length;
