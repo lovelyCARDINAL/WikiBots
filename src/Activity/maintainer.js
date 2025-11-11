@@ -227,7 +227,7 @@ async function updateData(pageid, text) {
 			data['interface-admin'] = results[1];
 		});
 
-		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的技术人员有效编辑数统计与特定名字空间最后编辑时间。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 界面管理员\n|-\n! 用户名 !! 180日编辑数 !! MediaWiki或Widget最后编辑时间 \n';
+		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的技术人员有效编辑数统计与特定命名空间最后编辑时间。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 界面管理员\n|-\n! 用户名 !! 180日编辑数 !! MediaWiki或Widget最后编辑时间 \n';
 
 		for (const user of userData['interface-admin']) {
 			const contribsData = data['interface-admin'] && data['interface-admin'].filter((item) => item.user === user) || [];

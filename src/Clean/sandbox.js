@@ -20,7 +20,7 @@ const PAGE_MAP = {
 		summary: '沙盒清理作业。如有需要请查阅页面历史并再次编辑本页。',
 	},
 	'Template:沙盒/styles.css': {
-		content: '/* [[Category:在模板名字空间下的CSS页面]] */',
+		content: '/* [[Category:在模板命名空间下的CSS页面]] */',
 		summary: '沙盒清理作业。如有需要请查阅页面历史并再次编辑本页。',
 	},
 	'Module:Sandbox': {

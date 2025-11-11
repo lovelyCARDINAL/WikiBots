@@ -31,7 +31,7 @@ const api = new MediaWikiApi(config.zh.api, {
 		return result.flat();
 	})();
 	
-	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的极短页面（不超过15字节），以供维护人员检查。\n* 不含{{ns:2}}、{{ns:3}}、{{ns:8}}名字空间的页面。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable center plainlinks"\n|-\n! 序号 !! 页面ID !! 页面名 !! 操作\n';
+	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的极短页面（不超过15字节），以供维护人员检查。\n* 不含{{ns:2}}、{{ns:3}}、{{ns:8}}命名空间的页面。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n\n{| class="wikitable sortable center plainlinks"\n|-\n! 序号 !! 页面ID !! 页面名 !! 操作\n';
 	const titleRegex = /^(?:模块|Help|Template|Module):(?:Sandbox|沙盒)/;
 	let count = 1;
 	for (const page of pages) {
