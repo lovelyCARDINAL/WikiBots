@@ -16,11 +16,11 @@ const PAGE_MAP = {
 		summary: '沙盒清理作业。若想保留较长时间，可在[[Special:MyPage/Sandbox|个人沙盒]]进行测试，或查阅页面历史并再次编辑本页。',
 	},
 	'Help:沙盒/styles.css': {
-		content: '',
+		content: '._addText { content: "<!-- 请勿删除此行 -->{{沙盒顶部}}<!-- 请勿删除此行 -->" }',
 		summary: '沙盒清理作业。如有需要请查阅页面历史并再次编辑本页。',
 	},
 	'Template:沙盒/styles.css': {
-		content: '/* [[Category:在模板命名空间下的CSS页面]] */',
+		content: '._addText { content: "<!-- 请勿删除此行 -->{{沙盒顶部}}[[Category:在模板命名空间下的CSS页面]]<!-- 请勿删除此行 -->" }',
 		summary: '沙盒清理作业。如有需要请查阅页面历史并再次编辑本页。',
 	},
 	'Module:Sandbox': {
