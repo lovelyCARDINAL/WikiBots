@@ -12,7 +12,7 @@ const PAGE_MAP = {
 		summary: '沙盒清理作业。若想保留较长时间，可在[[Special:MyPage/Sandbox|个人沙盒]]进行测试，或查阅页面历史并再次编辑本页。',
 	},
 	'Template:沙盒': {
-		content: '<noinclude><!-- 请勿删除此行 -->{{帮助导航}}{{沙盒顶部}}<!-- 请勿删除此行 --></noinclude>',
+		content: '<noinclude><!-- 请勿删除此行 -->{{帮助导航}}{{沙盒顶部}} __EXPECTUNUSEDTEMPLATE__ <!-- 请勿删除此行 --></noinclude>',
 		summary: '沙盒清理作业。若想保留较长时间，可在[[Special:MyPage/Sandbox|个人沙盒]]进行测试，或查阅页面历史并再次编辑本页。',
 	},
 	'Help:沙盒/styles.css': {
