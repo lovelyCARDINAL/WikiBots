@@ -71,7 +71,6 @@ const deleteAvatar = async (username) => {
 	} catch (error) {
 		const errorCode = error?.response?.data?.errors?.[0]?.code;
 		if (errorCode === 'viewavatar-noavatar') {
-			console.warn(`User ${username} has no avatar. Skipping avatar deletion.`);
 			return;
 		}
 		throw error;
@@ -117,7 +116,7 @@ const deletePages = async (username) => {
 			});
 			console.log(JSON.stringify(data));
 		} catch (error) {
-			const errorCode = error?.data?.errors?.[0]?.code;
+			const errorCode = error?.response?.data?.errors?.[0]?.code;
 			if (errorCode && /cantedit|protected/.test(errorCode)) {
 				console.warn(`[[${title}]] is protected.`);
 			} else {

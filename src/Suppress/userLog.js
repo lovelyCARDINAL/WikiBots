@@ -155,7 +155,6 @@ const deleteAvatar = async (username) => {
 	} catch (error) {
 		const errorCode = error?.response?.data?.errors?.[0]?.code;
 		if (errorCode === 'viewavatar-noavatar') {
-			console.warn(`User ${username} has no avatar. Skipping avatar deletion.`);
 			return;
 		}
 		throw error;
