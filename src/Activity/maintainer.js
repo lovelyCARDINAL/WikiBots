@@ -28,11 +28,11 @@ axiosRetry(axios, {
 	},
 });
 
-function timestampCST(timestamp) {
+const timestampCST = (timestamp) => {
 	return `${moment(timestamp).utcOffset('+08:00').format('YYYY-MM-DD HH:mm:ss')} (CST)`;
-}
+};
 
-async function queryContribs(api, ucuser, ucnamespace, ucend) {
+const queryContribs = async (api, ucuser, ucnamespace, ucend) => {
 	const result = [];
 	const eol = Symbol();
 	let uccontinue = undefined;
@@ -53,9 +53,9 @@ async function queryContribs(api, ucuser, ucnamespace, ucend) {
 		result.push(...data.query.usercontribs);
 	}
 	return result;
-}
+};
 
-async function queryLatestContribs(api, ucuser, ucnamespace, ucend) {
+const queryLatestContribs = async (api, ucuser, ucnamespace, ucend) => {
 	const { data: { query: { usercontribs } } } = await api.post({
 		list: 'usercontribs',
 		uclimit: '1',
@@ -68,9 +68,9 @@ async function queryLatestContribs(api, ucuser, ucnamespace, ucend) {
 		retry: 15,
 	});
 	return usercontribs?.[0]?.timestamp;
-}
+};
 
-async function queryLatestEvents(api, user, end) {
+const queryLatestEvents = async (api, user, end) => {
 	const { data: { query: { usercontribs, logevents } } } = await api.post({
 		list: 'usercontribs|logevents',
 		uclimit: '1',
@@ -98,9 +98,9 @@ async function queryLatestEvents(api, user, end) {
 		? timestampCST(logevents[0].timestamp)
 		: '-';
 	return `|| ${contribsTimestamp} || ${logeventsTimestamp} `;
-}
+};
 
-async function updateData(pageid, text) {
+const updateData = async (pageid, text) => {
 	await zhapi.postWithToken('csrf', {
 		action: 'edit',
 		pageid,
@@ -115,7 +115,7 @@ async function updateData(pageid, text) {
 		retry: 50,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
-}
+};
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
@@ -159,26 +159,25 @@ async function updateData(pageid, text) {
 		return data;
 	})();
 
-	function userInfo(user) {
-		return `{{#Avatar:${user}|class=userlink-avatar-small}}{{User|${user}}}`;
-	}
+	const userInfo = (user) => {
+    	return `{{#Avatar:${user}|class=userlink-avatar-small}}{{User|${user}}}`;
+	};
 
 	const maintainTable = async () => {
-		const processData = [
+		const [sysop, patroller] = await Promise.all([
 			Promise.all([
 				queryContribs(zhapi, userData.sysop, '0|10|14|12|4|6', time[30]),
 				queryContribs(cmapi, userData.sysop, '0|10|14|12|4|6', time[30]),
-			]).then((result) => result.flat()),
+			]),
 			Promise.all([
 				queryContribs(zhapi, userData.patroller, '0|10|14|12|4|6', time[60]),
 				queryContribs(cmapi, userData.patroller, '0|10|14|12|4|6', time[60]),
-			]).then((result) => result.flat()),
-		];
-		const data = {};
-		await Promise.all(processData).then((results) => {
-			data.sysop = results[0];
-			data.patroller = results[1];
-		});
+			]),
+		]);
+		const data = {
+			sysop: sysop.flat(),
+			patroller: patroller.flat(),
+		};
 	
 		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的维护人员有效编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 管理员\n|-\n! 用户名 !! 30日编辑数 !! 最后编辑时间\n';
 	
@@ -211,21 +210,20 @@ async function updateData(pageid, text) {
 
 	const techTable = async () => {
 		const { data: ghiaData } = await axios.get('https://raw.githubusercontent.com/MoegirlPediaInterfaceAdmins/MoegirlPediaInterfaceCodes/master/src/global/zh/GHIAHistory.json');
-		const processData = [
+		const [techeditor, interfaceAdmin] = await Promise.all([
 			Promise.all([
 				queryContribs(zhapi, userData.techeditor, '10|828', time[180]),
 				queryContribs(cmapi, userData.techeditor, '10|828', time[180]),
-			]).then((result) => result.flat()),
+			]),
 			Promise.all([
 				queryContribs(zhapi, userData['interface-admin'], '10|828|8|274', time[180]),
 				queryContribs(cmapi, userData['interface-admin'], '10|828|8|274', time[180]),
-			]).then((result) => result.flat()),
-		];
-		const data = {};
-		await Promise.all(processData).then((results) => {
-			data.techeditor = results[0];
-			data['interface-admin'] = results[1];
-		});
+			]),
+		]);
+		const data = {
+			techeditor: techeditor.flat(),
+			'interface-admin': interfaceAdmin.flat(),
+		};
 
 		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的技术人员有效编辑数统计与特定命名空间最后编辑时间。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 界面管理员\n|-\n! 用户名 !! 180日编辑数 !! MediaWiki或Widget最后编辑时间 \n';
 
