@@ -57,28 +57,20 @@ async function manageTags(operation) {
 	console.log(JSON.stringify(data));
 }
 
-async function deleteAvatar(user) {
-	let retry = 0;
-	while (retry < 15) {
-		const { response: { data } } = await cmapi.request.post('/index.php', {
-			title: 'Special:查看头像',
-			'delete': 'true',
-			user,
-			reason: '用户注销',
-		});
-		if (data.includes('该用户没有头像。')) {
-			console.log(`Successful deleted the avatar of ${user}`);
-			break;
-		}
-		retry++;
-		if (retry === 10) {
-			console.warn(`Failed to delete the avatar of ${user}`);
-		}
-	}
-}
+const deleteAvatar = async (username) => {
+	const { data } = await cmapi.post({
+		action: 'avatardelete',
+		username,
+		reason: '用户注销',
+	}, {
+		retry: 50,
+		noCache: true,
+	});
+	console.log(JSON.stringify(data));
+};
 
-async function deleteRights(user) {
-	await cmapi.postWithToken('userrights', {
+const deleteRights = async (user) => {
+	const { data } = await cmapi.postWithToken('userrights', {
 		action: 'userrights',
 		user,
 		remove: 'goodeditor|honoredmaintainer|techeditor|manually-confirmed|file-maintainer|extendedconfirmed',
@@ -87,10 +79,11 @@ async function deleteRights(user) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
-}
+	});
+	console.log(JSON.stringify(data));
+};
 
-async function deletePages(username) {
+const deletePages = async (username) => {
 	const user = username.replaceAll('_', ' ');
 	const { data: { query: { allpages } } } = await zhapi.post({
 		list: 'allpages',
@@ -103,19 +96,30 @@ async function deletePages(username) {
 		.map((page) => page.title)
 		.filter((title) => title.startsWith(`User:${user}/`) || title === `User:${user}`);
 	await Promise.all(pagelist.map(async (title) => {
-		await zhapi.postWithToken('csrf', {
-			action: 'delete',
-			title,
-			reason: '用户注销',
-			tags: 'Bot|RevokeUser',
-		}, {
-			retry: 50,
-			noCache: true,
-		}).then(({ data }) => /cantedit|protected/.test(data?.errors?.[0]?.code) ? console.warn(`[[${title}]] is protected.`) : console.log(JSON.stringify(data)));
-	}));
-}
+		try {
+			const { data } = await zhapi.postWithToken('csrf', {
+				action: 'delete',
+				title,
+				reason: '用户注销',
+				tags: 'Bot|RevokeUser',
+			}, {
+				retry: 50,
+				noCache: true,
+			});
+			console.log(JSON.stringify(data));
+		} catch (error) {
+			const errorCode = error?.data?.errors?.[0]?.code;
+			if (errorCode && /cantedit|protected/.test(errorCode)) {
+				console.warn(`[[${title}]] is protected.`);
+			} else {
+				console.error(`Failed to delete [[${title}]]:`, error);
+			}
+		}
+	}),
+	);
+};
 
-async function queryLogs(api, leaction, leuser) {
+const queryLogs = async (api, leaction, leuser) => {
 	const { data: { query: { logevents } } } = await api.post({
 		list: 'logevents',
 		leprop: 'ids|comment',
@@ -129,10 +133,10 @@ async function queryLogs(api, leaction, leuser) {
 	return logevents
 		.filter(({ suppressed, comment }) => !suppressed && comment === '用户注销')
 		.map(({ logid }) => logid);
-}
+};
 
-async function hideLogs(api, ids) {
-	await api.postWithToken('csrf', {
+const hideLogs = async (api, ids) => {
+	const { data } = await api.postWithToken('csrf', {
 		action: 'revisiondelete',
 		type: 'logging',
 		ids,
@@ -143,8 +147,9 @@ async function hideLogs(api, ids) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
-}
+	});
+	console.log(JSON.stringify(data));
+};
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);

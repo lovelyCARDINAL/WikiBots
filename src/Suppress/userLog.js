@@ -12,7 +12,7 @@ const zhapi = new MediaWikiApi(config.zh.api, {
 		headers: { 'user-agent': config.useragent },
 	});
 
-async function queryLogs(api, leaction, leend, lestart = undefined) {
+const queryLogs = async (api, leaction, leend, lestart = undefined) => {
 	const result = [];
 	const eol = Symbol();
 	let lecontinue = undefined;
@@ -35,9 +35,9 @@ async function queryLogs(api, leaction, leend, lestart = undefined) {
 	return leaction === 'avatar/delete'
 		? [...new Set(result.filter(({ comment, suppressed }) => !suppressed && comment === '被隐藏的用户').map(({ logid }) => logid))]
 		: [...new Set(result.map(({ title }) => title))];
-}
+};
 
-async function queryPages(apprefix, apnamespace) {
+const queryPages = async (apprefix, apnamespace) => {
 	const { data: { query: { allpages } } } = await zhapi.post({
 		list: 'allpages',
 		apprefix,
@@ -50,9 +50,9 @@ async function queryPages(apprefix, apnamespace) {
 	return allpages
 		.map((page) => page.title)
 		.filter((title) => prefixRegex.test(title));
-}
+};
 
-async function hidePages(user) {
+const hidePages = async (user) => {
 	const pagelist = await Promise.all([
 		queryPages(user, '2'),
 		queryPages(user, '3'),
@@ -96,9 +96,9 @@ async function hidePages(user) {
 			retry++;
 		}
 	}));
-}
+};
 
-async function hideAbuseLog(afluser) {
+const hideAbuseLog = async (afluser) => {
 	let retry = 0;
 	while (retry < 30) {
 		const ids = await (async () => {
@@ -139,27 +139,19 @@ async function hideAbuseLog(afluser) {
 
 		retry++;
 	}
-}
+};
 
-async function deleteAvatar(user) {
-	let retry = 0;
-	while (retry < 15) {
-		const { response: { data } } = await cmapi.request.post('/index.php', {
-			title: 'Special:查看头像',
-			'delete': 'true',
-			user,
-			reason: '被隐藏的用户',
-		});
-		if (data.includes('该用户没有头像。')) {
-			console.log('Successful deleted the avatar!');
-			break;
-		}
-		retry++;
-		if (retry === 10) {
-			console.warn('Failed to delete the avatar!');
-		}
-	}
-}
+const deleteAvatar = async (username) => {
+	const { data } = await cmapi.post({
+		action: 'avatardelete',
+		username,
+		reason: '被隐藏的用户',
+	}, {
+		retry: 50,
+		noCache: true,
+	});
+	console.log(JSON.stringify(data));
+};
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
