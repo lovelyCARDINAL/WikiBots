@@ -8,28 +8,30 @@ const api = new MediaWikiApi(config.zh.api, {
 	headers: { 'user-agent': config.useragent },
 });
 
-function getSectionTitle() {
+const getSectionTitle = () => {
 	const previousMonth = moment().subtract(1, 'month');
 	const year = previousMonth.year();
 	const month = previousMonth.month() + 1;
 
-	function toChineseNumber(num) {
+	const toChineseNumber = (num) => {
 		const chineseNumbers = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
-		const digits = num.toString().split('');
-		const chineseDigits = digits.map((digit) => chineseNumbers[digit]);
-		return chineseDigits.join('');
-	}
+		return num
+			.toString()
+			.split('')
+			.map((digit) => chineseNumbers[digit])
+			.join('');
+	};
 
-	function toChineseMonth(month) {
+	const toChineseMonth = (m) => {
 		const chineseMonths = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
-		return chineseMonths[month - 1];
-	}
+		return chineseMonths[m - 1];
+	};
 
-	const zhYear = toChineseNumber(year),
-		zhMonth = toChineseMonth(month);
-	
+	const zhYear = toChineseNumber(year);
+	const zhMonth = toChineseMonth(month);
+
 	return `《[[萌娘百科:萌娘百科月报|萌娘百科月报]]》[[萌娘百科:萌娘百科月报/${year}年${month}月|${zhYear}年${zhMonth}月号]]`;
-}
+};
 
 async function getPagelist() {
 	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await api.post({
@@ -57,8 +59,8 @@ async function getPagelist() {
 
 	const sectiontitle = getSectionTitle();
 
-	async function sendNews(title) {
-		await api.postWithToken('csrf', {
+	const sendNews = async (title) => {
+		const { data } = await api.postWithToken('csrf', {
 			action: 'edit',
 			title,
 			section: 'new',
@@ -70,8 +72,9 @@ async function getPagelist() {
 			bot: true,
 		}, {
 			retry: 50,
-		}).then(({ data }) => console.log(JSON.stringify(data)));
-	}
+		});
+		console.log(JSON.stringify(data));
+	};
 
 	switch (type) {
 		case '0':

@@ -88,9 +88,7 @@ async function updateData(text) {
 		return [...new Set(data)].sort();
 	})();
 
-	function userInfo(user) {
-		return `{{#Avatar:${user}|class=userlink-avatar-small}}{{User|${user}}}`;
-	}
+	const userInfo = (user) => `{{#Avatar:${user}|class=userlink-avatar-small}}{{User|${user}}}`;
 
 	const data = await Promise.all([
 		queryContribs(zhapi, userlist, '0|10|14|12|4|6'),
@@ -120,12 +118,12 @@ async function updateData(text) {
 		const isActive = Math.max(...users.map((user) => userContribsCount[user])) >= 3
 			? '是'
 			: '<b style="color:red">否</b>';
-		function userContribs(user) {
+		const userContribs = (user) => {
 			const contribsCount = userContribsCount[user];
 			return contribsCount >= 3
 				? `data-sort-value="${contribsCount}"|${contribsCount}次`
 				: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`;
-		}
+		};
 		text += userCount === 1 
 			? `\n|-\n${groupCell} || ${userInfo(users[0])} || ${userContribs(users[0])} || ${isActive}`
 			: `\n|-\n| rowspan=${userCount}${groupCell} || ${userInfo(users[0])} || ${userContribs(users.shift())} || rowspan=${userCount} |${isActive}${users.map((user) => `\n|-\n| ${userInfo(user)} || ${userContribs(user)}`).join('')}`;

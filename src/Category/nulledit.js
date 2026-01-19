@@ -40,8 +40,7 @@ const SITE_LIST = ['zh', 'cm'];
 					{ retry: 25, noCache: true },
 				).then(console.log);
 			}
-
-			async function queryCats(title) {
+			const queryCats = async (title) => {
 				const { data: { query } } = await api.post({
 					prop: 'categoryinfo',
 					generator: 'categorymembers',
@@ -56,13 +55,15 @@ const SITE_LIST = ['zh', 'cm'];
 					return [];
 				}
 				switch (title) {
-					default:
-						return query.pages.map(({ pageid }) => pageid);
 					case '尚未清空的已重定向分类':
 					case '尚未清空的消歧义分类':
-						return query.pages.map(({ pageid, categoryinfo: { size } }) => size === 0 && pageid).filter(Boolean);
+						return query.pages
+							.map(({ pageid, categoryinfo: { size } }) => size === 0 && pageid)
+							.filter(Boolean);
+					default:
+						return query.pages.map(({ pageid }) => pageid);
 				}
-			}
+			};
 			
 			const catlist = [...setting[site], '尚未清空的已重定向分类', '尚未清空的消歧义分类'];
 

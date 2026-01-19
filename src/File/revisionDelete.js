@@ -55,15 +55,13 @@ const api = new MediaWikiApi(config.cm.api, {
 			}, {
 				retry: 15,
 			});
-			return await Promise.all(pages.map((page) => {
+			return pages.map((page) => {
 				const ids = page.imageinfo
-					.map((item) => !item?.filehidden && item?.archivename)
+					.filter((item) => !item?.filehidden && item?.archivename)
 					.map((name) => /^\d+/.exec(name)?.[0])
 					.filter(Boolean);
-				if (ids.length > 0) {
-					return [page.title, ids];
-				}
-			}));
+				return ids.length > 0 ? [page.title, ids] : null;
+			}).filter(Boolean);
 		})();
 	})).then((result) => result.flat().filter(Boolean));
 

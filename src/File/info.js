@@ -120,7 +120,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		const titleRegex = /^File:(.+?)\..{3,4}$/,
 			nameRegex = /^[a-z0-9.\-@+]+$/i,
 			numberRegex = /\d\D+\d.*\d|\d.*\d\D+\d/;
-		function badTitleCheck(title) {
+		const badTitleCheck = (title) => {
 			if (title.includes(' ')) {
 				return false;
 			}
@@ -130,12 +130,14 @@ async function pageEdit(title, text, summary, sectiontitle) {
 			}
 			const name = match[1];
 			return name.length > 15 && nameRegex.test(name) && numberRegex.test(name);
-		}
+		};
 
 		// bad link rule
 		const linkRegex = /源地址[:：](.*?)\n/;
-		function badLinkCheck(str) {
-			if (!str.includes('源地址')) {return false;}
+		const badLinkCheck = (str) => {
+			if (!str.includes('源地址')) {
+				return false;
+			}
 			const match = linkRegex.exec(str);
 			if (match && match[1]) {
 				const sourceAddress = match[1].trim();
@@ -144,7 +146,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 				}
 			}
 			return false;
-		}
+		};
 
 		await Promise.all(fileData.map(async ({ title, revisions: [{ content, user }], categories }) => {
 			// 检查是否不需要用户页通知
