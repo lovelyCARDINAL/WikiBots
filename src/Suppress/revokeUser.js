@@ -58,15 +58,24 @@ async function manageTags(operation) {
 }
 
 const deleteAvatar = async (username) => {
-	const { data } = await cmapi.post({
-		action: 'avatardelete',
-		username,
-		reason: '用户注销',
-	}, {
-		retry: 50,
-		noCache: true,
-	});
-	console.log(JSON.stringify(data));
+	try {
+		const { data } = await cmapi.post({
+			action: 'avatardelete',
+			username,
+			reason: '用户注销',
+		}, {
+			retry: 50,
+			noCache: true,
+		});
+		console.log(JSON.stringify(data));
+	} catch (error) {
+		const errorCode = error?.response?.data?.errors?.[0]?.code;
+		if (errorCode === 'viewavatar-noavatar') {
+			console.warn(`User ${username} has no avatar. Skipping avatar deletion.`);
+			return;
+		}
+		throw error;
+	}
 };
 
 const deleteRights = async (user) => {
