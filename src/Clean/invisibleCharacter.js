@@ -1,8 +1,10 @@
+import { env } from 'process';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
-const api = new MediaWikiApi(config.zh.api, {
+const site = env.SITE;
+const api = new MediaWikiApi(config[site].api, {
 	headers: { 'user-agent': config.useragent },
 });
 
@@ -12,23 +14,23 @@ const regexMap = {
 	'default': /[\u180E\u2005-\u200C\u200E\u200F\u2028-\u202F\u205F\u2060-\u206E\u3164\uFEFF]+/g,
 };
 
-function replaceSpecialCharacters(wikitext, pageid, setting) {
+const replaceSpecialCharacters = (wikitext, pageid, setting) => {
 	switch (true) {
-		case setting['180e'].includes(pageid):
+		case setting['180e']?.includes(pageid):
 			return wikitext.replaceAll(regexMap['180e'], '');
-		case setting['3164'].includes(pageid):
+		case setting['3164']?.includes(pageid):
 			return wikitext.replaceAll(regexMap['3164'], '');
 		default:
 			return wikitext.replaceAll(regexMap.default, '');
 	}
-}
+};
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
 	await api.login(
-		config.zh.bot.name,
-		config.zh.bot.password,
+		config[site].bot.name,
+		config[site].bot.password,
 		undefined,
 		{ retry: 25, noCache: true },
 	).then(console.log);

@@ -1,9 +1,11 @@
 name: "[daily] 1x"
 # 0
-# # Personal/watch.js
 # # Clean/purge.js
 # # File/mainpageImages.js
 # # Cateorgy/fixRedirect.js
+# 1
+# # Clean/invisibleCharacter.js
+# # Personal/watch.js
 # 4
 # # Clean/sandbox.js
 # # Clean/brokenRedirectDelete.js
@@ -15,6 +17,7 @@ name: "[daily] 1x"
 on:
   schedule:
     - cron: "35 16 * * *" # 00:35 CST
+    - cron: "35 17 * * *" # 01:35 CST
     - cron: "50 20 * * *" # 04:50 CST
     - cron: "35 1 * * *" # 09:35 CST
   workflow_dispatch:
@@ -25,6 +28,7 @@ on:
         required: true
         options:
           - watch
+          - invisible-character
           - purge
           - mainpage-image-protection
           - fix-redirect-category
@@ -39,9 +43,30 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  watch:
+  invisible-character:
     if: |
-      github.event.schedule == '35 16 * * 0' || 
+      github.event.schedule == '35 17 * * *' || 
+      github.event.inputs.task == 'invisible-character'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set Node Version
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          SITE: 'cm'
+          CM_BOT: ${{ secrets.CM_BOT }}
+        run: node src/Clean/invisibleCharacter.js
+  watch:
+    needs: [invisible-character]
+    if: |
+      github.event.schedule == '35 17 * * *' && needs.invisible-character.result == 'success' ||
       github.event.inputs.task == 'watch'
     runs-on: ubuntu-latest
     steps:
