@@ -16,7 +16,7 @@
     "@octokit/core": "^7.0.6",
     "axios": "^1.13.5",
     "axios-retry": "^4.5.0",
-    "cheerio": "^1.1.0",
+    "cheerio": "^1.2.0",
     "js-yaml": "^4.1.1",
     "jsonpath": "^1.2.1",
     "moment": "^2.30.1",
