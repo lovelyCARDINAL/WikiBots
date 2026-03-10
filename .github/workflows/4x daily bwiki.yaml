@@ -32,4 +32,4 @@ jobs:
       - name: Run Script
         env:
           BOT: ${{ secrets.BWIKI_VALORANT_BOT }}
-        run: node src/valorant/userpageDelete.js
+        run: node src_bwiki/valorant/userpageDelete.js
