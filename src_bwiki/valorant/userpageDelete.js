@@ -23,8 +23,8 @@ async function pageDelete(pageid) {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
 	await api.login(
-		config.valorant.bot.name,
-		config.valorant.bot.password,
+		config.valorant.account,
+		config.valorant.password,
 		undefined,
 		{ retry: 25, noCache: true },
 	).then(console.log);
