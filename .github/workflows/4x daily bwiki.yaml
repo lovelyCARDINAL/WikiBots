@@ -1,0 +1,35 @@
+name: "[daily] 4x bwiki"
+# valorant/userpageDelete.js
+
+on:
+  schedule:
+    - cron: "35 19,2,9,14 * * *" # 3:35, 10:35, 17:35, 22:35 CST
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'Select the task to run'
+        type: choice
+        required: true
+        options:
+          - valorant-userpage-deletion
+
+jobs:
+  valorant-userpage-deletion:
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.task == 'valorant-userpage-deletion'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set Node Version
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          BOT: ${{ secrets.BWIKI_VALORANT_BOT }}
+        run: node src/valorant/userpageDelete.js

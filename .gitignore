@@ -198,4 +198,4 @@ dist
 
 # Personal
 */test*
-src/utils/localConfig.js
+localConfig.js
