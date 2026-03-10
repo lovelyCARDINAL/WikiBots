@@ -5,7 +5,7 @@ const config = {
 		api: 'https://wiki.biligame.com/valorant/api.php',
 		bot: {
 			name: 'Hoshi4mi-bot@bot',
-			password: env.BOT,
+			password: env.BWIKI_VALORANT_BOT,
 		},
 	},
 };

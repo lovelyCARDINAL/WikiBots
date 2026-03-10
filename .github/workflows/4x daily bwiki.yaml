@@ -31,5 +31,5 @@ jobs:
         run: npm ci
       - name: Run Script
         env:
-          BOT: ${{ secrets.BWIKI_VALORANT_BOT }}
+          BWIKI_VALORANT_BOT: ${{ secrets.BWIKI_VALORANT_BOT }}
         run: node src_bwiki/valorant/userpageDelete.js
