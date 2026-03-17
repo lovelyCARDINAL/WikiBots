@@ -1,10 +1,9 @@
 import { env } from 'process';
 
 const config = {
+	useragent: `${env.BWIKI_API_USER_AGENT} (Github Actions) `, // for WAF
 	valorant: {
 		api: 'https://wiki.biligame.com/valorant/api.php',
-		account: 'Hoshi4mi-bot',
-		password: env.MOEGIRL_PASSWORD, // for clientLogin
 		bot: {
 			name: 'Hoshi4mi-bot@bot',
 			password: env.BWIKI_VALORANT_BOT,

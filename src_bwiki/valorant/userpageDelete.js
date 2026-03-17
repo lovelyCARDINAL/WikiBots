@@ -2,7 +2,10 @@ import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 
 const api = new MediaWikiApi(config.valorant.api, {
-	headers: { cookie: 'SESSDATA=INVALID' },
+	headers: {
+		cookie: 'SESSDATA=INVALID',
+		'user-agent': config.useragent, 
+	},
 });
 
 async function pageDelete(pageid) {
@@ -23,8 +26,8 @@ async function pageDelete(pageid) {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
 	await api.login(
-		config.valorant.account,
-		config.valorant.password,
+		config.valorant.bot.name,
+		config.valorant.bot.password,
 		undefined,
 		{ retry: 25, noCache: true },
 	).then(console.log);
