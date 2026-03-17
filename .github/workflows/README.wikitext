@@ -129,10 +129,13 @@
 | 23rd
 | [[../../src/Report/needImproveVtuber.js|need-improve-vtuber]]
 |-
-| rowspan="2" | 16:35
+| rowspan="3" | 16:35
 | mon, fri
 | [[../../src/Suppress/pageLog.js|hide-page-log]]
-| rowspan="2" | [[Suppress.yaml|Suppress]]
+| rowspan="3" | [[Suppress.yaml|Suppress]]
+|-
+| tue, sat
+| [[../../src/Suppress/revokeUser.js|revoke-user]]
 |-
 | wed, sun
 | [[../../src/Suppress/userLog.js|hide-user-log]]

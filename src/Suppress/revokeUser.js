@@ -1,153 +1,64 @@
-import { env } from 'process';
-import { Octokit } from '@octokit/core';
-import { load } from 'js-yaml';
-import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import clientLogin from '../utils/clientLogin.js';
 import config from '../utils/config.js';
 
-const zhapi = new MediaWikiApi(config.zh.api, {
-		headers: { 'user-agent': config.useragent },
-	}),
-	cmapi = new MediaWikiApi(config.cm.api, {
-		headers: { 'user-agent': config.useragent },
-	});
+const api = new MediaWikiApi(config.zh.api, {
+	headers: { 'user-agent': config.useragent },
+});
 
-const octokit = new Octokit({ auth: env.GHP });
+(async () => {
+	console.log(`Start time: ${new Date().toISOString()}`);
 
-async function getRevokeList() {
-	const pages = await (async () => {
-		const { data } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
-			owner: 'moepad',
-			repo: 'revoke-user',
-			path: 'data',
-		});
-		return data
-			.filter((item) => item.type === 'file')
-			.map((item) => item.name);
-	})();
-	const dates = pages.map((date) => moment(date.replace('.yaml', ''), 'YYYY-MM-DD'));
-	const maxDate = moment.max(dates);
-	const newPage = pages[dates.indexOf(maxDate)];
-	return await (async () => {
-		const { data } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
-			owner: 'moepad',
-			repo: 'revoke-user',
-			path: `data/${newPage}`,
-			mediaType: {
-				format: 'raw',
-			},
-		});
-		return load(data);
-	})();
-}
+	await clientLogin(api, config.cm.sbot.account, config.password);
 
-async function manageTags(operation) {
-	const { data } = await zhapi.postWithToken('csrf', {
-		action: 'managetags',
-		operation,
-		tag: 'RevokeUser',
-		reason: '用户注销',
-		ignorewarnings: true,
-		tags: 'Bot',
+	const avatarLogs = await api.post({
+		action: 'query',
+		format: 'json',
+		list: 'logevents',
+		formatversion: '2',
+		leprop: 'title|details|ids',
+		leaction: 'avatar/delete',
+		leend: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+		ledir: 'older',
+		leuser: '萌娘百科·注销管理员',
+		lelimit: 'max',
 	}, {
-		retry: 50,
-		noCache: true,
-	});
-	console.log(JSON.stringify(data));
-}
+		retry: 15,
+	}).then(({ data: { query: { logevents } } }) => logevents.filter(({ suppressed }) => !suppressed));
+	console.log(JSON.stringify(avatarLogs));
+	const avatarLogIds = avatarLogs.map(({ logid }) => logid);
+	const userList = avatarLogs.map(({ title }) => title.replace(/^User:(.+?)\/?$/, '$1'));
 
-const deleteAvatar = async (username) => {
-	try {
-		const { data } = await cmapi.post({
-			action: 'avatardelete',
-			username,
+	await Promise.all(userList.map(async (user) => {
+		const { data } = await api.postWithToken('userrights', {
+			action: 'userrights',
+			user,
+			remove: 'goodeditor|honoredmaintainer|techeditor|manually-confirmed|file-maintainer|extendedconfirmed|flood', /*TODO: 可能需要行政员用户组移除Bot用户组 */
 			reason: '用户注销',
+			tags: 'Bot',
 		}, {
 			retry: 50,
 			noCache: true,
 		});
 		console.log(JSON.stringify(data));
-	} catch (error) {
-		const errorCode = error?.response?.data?.errors?.[0]?.code;
-		if (errorCode === 'viewavatar-noavatar') {
-			return;
-		}
-		throw error;
-	}
-};
+	}));
 
-const deleteRights = async (user) => {
-	const { data } = await cmapi.postWithToken('userrights', {
-		action: 'userrights',
-		user,
-		remove: 'goodeditor|honoredmaintainer|techeditor|manually-confirmed|file-maintainer|extendedconfirmed',
-		reason: '用户注销',
-		tags: 'Bot',
-	}, {
-		retry: 50,
-		noCache: true,
-	});
-	console.log(JSON.stringify(data));
-};
-
-const deletePages = async (username) => {
-	const user = username.replaceAll('_', ' ');
-	const { data: { query: { allpages } } } = await zhapi.post({
-		list: 'allpages',
-		apprefix: user,
-		apnamespace: '2',
-	}, {
-		retry: 15,
-	});
-	const pagelist = allpages
-		.map((page) => page.title)
-		.filter((title) => title.startsWith(`User:${user}/`) || title === `User:${user}`);
-	await Promise.all(pagelist.map(async (title) => {
-		try {
-			const { data } = await zhapi.postWithToken('csrf', {
-				action: 'delete',
-				title,
-				reason: '用户注销',
-				tags: 'Bot|RevokeUser',
-			}, {
-				retry: 50,
-				noCache: true,
-			});
-			console.log(JSON.stringify(data));
-		} catch (error) {
-			const errorCode = error?.response?.data?.errors?.[0]?.code;
-			if (errorCode && /cantedit|protected/.test(errorCode)) {
-				console.warn(`[[${title}]] is protected.`);
-			} else {
-				console.error(`Failed to delete [[${title}]]:`, error);
-			}
-		}
-	}),
-	);
-};
-
-const queryLogs = async (api, leaction, leuser) => {
-	const { data: { query: { logevents } } } = await api.post({
+	const rightLogIds = await api.post({
 		list: 'logevents',
 		leprop: 'ids|comment',
-		leaction,
+		leaction: 'rights/rights',
+		ledir: 'older',
 		leend: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-		leuser,
+		leuser: '星海-oversightbot',
 		lelimit: 'max',
 	}, {
 		retry: 15,
-	});
-	return logevents
-		.filter(({ suppressed, comment }) => !suppressed && comment === '用户注销')
-		.map(({ logid }) => logid);
-};
+	}).then(({ data: { query: { logevents } } }) => logevents.filter(({ suppressed, comment }) => !suppressed && comment === '用户注销').map(({ logid }) => logid));
 
-const hideLogs = async (api, ids) => {
 	const { data } = await api.postWithToken('csrf', {
 		action: 'revisiondelete',
 		type: 'logging',
-		ids,
+		ids: [...avatarLogIds, ...rightLogIds],
 		hide: 'content|user|comment',
 		suppress: 'yes',
 		reason: '用户注销',
@@ -157,42 +68,6 @@ const hideLogs = async (api, ids) => {
 		noCache: true,
 	});
 	console.log(JSON.stringify(data));
-};
-
-(async () => {
-	console.log(`Start time: ${new Date().toISOString()}`);
-
-	const userlist = await getRevokeList();
-
-	await Promise.all([
-		clientLogin(zhapi, config.cm.sbot.account, config.password),
-		clientLogin(cmapi, config.cm.sbot.account, config.password),
-	]);
-
-	await manageTags('activate');
-
-	await Promise.all(userlist.map(async (user) => {
-		await Promise.all([
-			deleteAvatar(user),
-			deleteRights(user),
-			deletePages(user),
-		]);
-	}));
-
-	const [cmidlist, zhidlist] = await Promise.all([
-		Promise.all([
-			queryLogs(cmapi, 'avatar/delete', config.zh.sbot.account),
-			queryLogs(cmapi, 'rights/rights', config.zh.sbot.account),
-		]).then((ids) => ids.flat()),
-		queryLogs(zhapi, 'delete/delete', config.zh.sbot.account),
-	]);
-
-	await Promise.all([
-		cmidlist.length && hideLogs(cmapi, cmidlist),
-		zhidlist.length && hideLogs(zhapi, zhidlist),
-	]);
-
-	await manageTags('deactivate');
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

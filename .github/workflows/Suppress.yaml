@@ -3,6 +3,7 @@ name: "[schedule] Suppress"
 on:
   schedule:
     - cron: "35 8 * * 1,5" # Monday, Friday 16:35 CST
+    - cron: "35 8 * * 2,6" # Tuesday, Saturday 16:35 CST
     - cron: "35 8 * * 3,0" # Wednesday, Sunday 16:35 CST
   workflow_dispatch:
     inputs:
@@ -59,6 +60,7 @@ jobs:
 
   revoke-user:
     if: |
+      github.event.schedule == '35 8 * * 2,6' || 
       github.event.inputs.task == 'revoke-user'
     runs-on: ubuntu-latest
     steps:
@@ -72,6 +74,4 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run Script
-        env:
-          GHP: ${{ secrets.GHP }}
         run: node src/Suppress/revokeUser.js
