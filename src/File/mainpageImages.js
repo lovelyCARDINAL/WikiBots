@@ -21,7 +21,7 @@ axiosRetry(axios, {
 
 function findImageSrc(data) {
 	const matches = jsonpath.query(data, '$..imageSrc');
-	const regex = /(?:(?:app|storage)\.moegirl\.org|aojiaostudio\.com\/meogirl)/i;
+	const regex = /(?:(?:app)\.moegirl\.org|aojiaostudio\.com|storage\.moegirl\.org(?=.*\/moegirl\/(?!commons\/|en\/|ja\/|library\/)))/i;
 	return matches.filter((match) => match && !regex.test(match));
 }
 
@@ -36,20 +36,12 @@ function findImageName(imgSrc) {
 		bad_image_info: '',
 		image_name: '',
 	};
-	if (imgSrc.startsWith('https://commons.moegirl.org.cn/thumb.php')) {
-		result.image_name = decodeURIComponent(imgSrc.split('=')[1].split('&')[0]);
+	const regex = /(?:https:\/\/commons\.moegirl\.org\.cn\/thumb\.php\?[^\s=]*=([^&]+))|(?:https:\/\/(?:img|storage)\.moegirl\.org\.cn\/(?:common\/[a-f0-9]\/[a-f0-9]{2}|moegirl\/commons\/[a-f0-9]\/[a-f0-9]{2})\/([^/!?]+))/i;
+	const match = imgSrc.match(regex);
+	console.log(`Finding image name from src: ${imgSrc}`);
+	if (match) {
+		result.image_name = decodeURIComponent(match[1] || match[2]);
 		return result;
-	}
-	if (imgSrc.startsWith('https://img.moegirl.org.cn/common/')) {
-		const imgSrcSplit = imgSrc.split('/');
-		if (imgSrcSplit[4] === 'thumb' && /\d/.test(imgSrcSplit.at(-1)[0])) {
-			result.image_name = decodeURIComponent(imgSrcSplit[7]);
-			return result;
-		}
-		if (imgSrcSplit[4] !== 'thumb') {
-			result.image_name = decodeURIComponent(imgSrcSplit[6]);
-			return result;
-		}
 	}
 	result.bad_image_info = `* 非法图片：<code><nowiki>${imgSrc}</nowiki></code>\n`;
 	return result;
@@ -91,7 +83,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
-	const partlist = ['banner-slider', 'topics-acgn', 'topics-weekly-bangumi', 'topics-vtubers', 'topics-music', 'topics-memes', 'topics-others'];
+	const partlist = ['banner-slider', 'topics-acgn', 'topics-weekly-bangumi', 'topics-vtubers', 'topics-music', 'topics-memes', 'topics-others', 'topics-weekly-bangumi-30'];
 	const imgSrcGroup = await Promise.all(
 		partlist.map((part) => getMainpageJson(part)),
 	);
