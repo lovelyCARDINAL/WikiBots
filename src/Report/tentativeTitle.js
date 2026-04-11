@@ -6,8 +6,11 @@ import readData from '../utils/readData.js';
 
 Parser.config = 'moegirl';
 
-const api = new MediaWikiApi(config.zh.api, {
-	headers: { 'user-agent': config.useragent },
+const api = new MediaWikiApi({
+	baseURL: config.zh.api,
+	fexiosConfig: {
+		headers: { 'user-agent': config.useragent },
+	},
 });
 
 (async () => {

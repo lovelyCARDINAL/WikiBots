@@ -7,8 +7,11 @@ import config from '../utils/config.js';
 
 const SITE_LIST = ['en', 'ja', 'lb'];
 
-const zhapi = new MediaWikiApi(config.zh.api, {
-	headers: { 'user-agent': config.useragent },
+const zhapi = new MediaWikiApi({
+	baseURL: config.zh.api,
+	fexiosConfig: {
+		headers: { 'user-agent': config.useragent },
+	},
 });
 
 async function getAbuseFilter(api) {

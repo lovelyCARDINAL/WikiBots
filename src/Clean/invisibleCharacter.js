@@ -4,8 +4,11 @@ import config from '../utils/config.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
 const site = env.SITE;
-const api = new MediaWikiApi(config[site].api, {
-	headers: { 'user-agent': config.useragent },
+const api = new MediaWikiApi({
+	baseURL: config[site].api,
+	fexiosConfig: {
+		headers: { 'user-agent': config.useragent },
+	},
 });
 
 const regexMap = {

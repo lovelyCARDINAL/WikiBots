@@ -25,8 +25,11 @@ const PAGE_LIST = [
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	await Promise.all(SITE_LIST.map(async (site) => {
-		const api = new MediaWikiApi(config[site].api, {
-			headers: { 'user-agent': config.useragent },
+		const api = new MediaWikiApi({
+			baseURL: config[site].api,
+			fexiosConfig: {
+				headers: { 'user-agent': config.useragent },
+			},
 		});
 		await api.login(
 			config[site].abot.name,

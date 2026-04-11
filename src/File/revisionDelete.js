@@ -3,8 +3,11 @@ import config from '../utils/config.js';
 import { getTimeData, editTimeData } from '../utils/lastTime.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
-const api = new MediaWikiApi(config.cm.api, {
-	headers: { 'user-agent': config.useragent },
+const api = new MediaWikiApi({
+	baseURL: config.cm.api,
+	fexiosConfig: {
+		headers: { 'user-agent': config.useragent },
+	},
 });
 
 (async () => {

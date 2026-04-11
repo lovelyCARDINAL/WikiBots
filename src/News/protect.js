@@ -2,8 +2,11 @@ import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 
-const api = new MediaWikiApi(config.zh.api, {
-	headers: { 'user-agent': config.useragent },
+const api = new MediaWikiApi({
+	baseURL: config.zh.api,
+	fexiosConfig: {
+		headers: { 'user-agent': config.useragent },
+	},
 });
 
 async function queryPages(apprefix, apprtype, apprlevel) {

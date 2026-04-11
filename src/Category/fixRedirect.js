@@ -11,8 +11,11 @@ const SITE_LIST = ['zh', 'cm'];
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
-	const zhapi = new MediaWikiApi(config.zh.api, {
-		headers: { 'user-agent': config.useragent },
+	const zhapi = new MediaWikiApi({
+		baseURL: config.zh.api,
+		fexiosConfig: {
+			headers: { 'user-agent': config.useragent },
+		},
 	});
 	await zhapi.login(
 		config.zh.bot.name,

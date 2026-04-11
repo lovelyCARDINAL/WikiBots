@@ -2,11 +2,17 @@ import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 import { getTimeData, editTimeData } from '../utils/lastTime.js';
 
-const zhapi = new MediaWikiApi(config.zh.api, {
-		headers: { 'user-agent': config.useragent },
+const zhapi = new MediaWikiApi({
+		baseURL: config.zh.api,
+		fexiosConfig: {
+			headers: { 'user-agent': config.useragent },
+		},
 	}),
-	cmapi = new MediaWikiApi(config.cm.api, {
-		headers: { 'user-agent': config.useragent },
+	cmapi = new MediaWikiApi({
+		baseURL: config.cm.api,
+		fexiosConfig: {
+			headers: { 'user-agent': config.useragent },
+		},
 	});
 
 async function pageEdit(title, text, summary, sectiontitle) {

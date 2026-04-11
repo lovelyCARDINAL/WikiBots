@@ -3,11 +3,17 @@ import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 
 const site = env.SITE;
-const api = new MediaWikiApi(config[site].api, {
-		headers: { 'user-agent': config.useragent },
+const api = new MediaWikiApi({
+		baseURL: config[site].api,
+		fexiosConfig: {
+			headers: { 'user-agent': config.useragent },
+		},
 	}),
-	main = new MediaWikiApi(config.zh.api, {
-		headers: { 'user-agent': config.useragent },
+	main = new MediaWikiApi({
+		baseURL: config.zh.api,
+		fexiosConfig: {
+			headers: { 'user-agent': config.useragent },
+		},
 	});
 
 (async () => {

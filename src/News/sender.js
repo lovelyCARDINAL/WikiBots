@@ -4,8 +4,11 @@ import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 
 const type = env.TYPE;
-const api = new MediaWikiApi(config.zh.api, {
-	headers: { 'user-agent': config.useragent },
+const api = new MediaWikiApi({
+	baseURL: config.zh.api,
+	fexiosConfig: {
+		headers: { 'user-agent': config.useragent },
+	},
 });
 
 const getSectionTitle = () => {

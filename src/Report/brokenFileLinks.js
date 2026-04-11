@@ -6,11 +6,17 @@ import config from '../utils/config.js';
 import readData from '../utils/readData.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
-const zhapi = new MediaWikiApi(config.zh.api, {
-		headers: { 'user-agent': config.useragent },
+const zhapi = new MediaWikiApi({
+		baseURL: config.zh.api,
+		fexiosConfig: {
+			headers: { 'user-agent': config.useragent },
+		},
 	}),
-	cmapi = new MediaWikiApi(config.cm.api, {
-		headers: { 'user-agent': config.useragent },
+	cmapi = new MediaWikiApi({
+		baseURL: config.cm.api,
+		fexiosConfig: {
+			headers: { 'user-agent': config.useragent },
+		},
 	});
 
 const octokit = new Octokit({ auth: env.GITHUB_TOKEN });

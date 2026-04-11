@@ -41,8 +41,11 @@ async function protect(site, title, protections) {
 
 	console.groupCollapsed('LOGIN');
 	await Promise.all(SITE_LIST.map(async(site) => {
-		api[site] = new MediaWikiApi(config[site].api, {
-			headers: { 'user-agent': config.useragent },
+		api[site] = new MediaWikiApi({
+			baseURL: config[site].api,
+			fexiosConfig: {
+				headers: { 'user-agent': config.useragent },
+			},
 		});
 		await api[site].login(
 			config[site].abot.name,
