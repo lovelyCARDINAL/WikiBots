@@ -97,7 +97,7 @@ const queryLatestEvents = async (api, user, end) => {
 	});
 	const contribsTimestamp = usercontribs.length
 		? timestampCST(usercontribs[0].timestamp)
-		: api === cmapi || ['AnnAngela-bbot', 'AnnAngela-cbot', '星海-oversightbot', '星海-userrightsbot', '萌百娘'].includes(user)
+		: api === cmapi || ['AnnAngela-bbot', 'AnnAngela-cbot', '星海-oversightbot', '星海-userrightsbot', '萌百娘', '萌娘百科·注销管理员'].includes(user)
 			? '-'
 			: '<i style="color:red">无相关编辑</i>';
 	const logeventsTimestamp = logevents.length
