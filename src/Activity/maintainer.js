@@ -97,7 +97,7 @@ const queryLatestEvents = async (api, user, end) => {
 	});
 	const contribsTimestamp = usercontribs.length
 		? timestampCST(usercontribs[0].timestamp)
-		: api === cmapi || ['AnnAngela-bbot', 'AnnAngela-cbot', '星海-oversightbot', '星海-userrightsbot', '萌百娘', '萌娘百科·注销管理员'].includes(user)
+		: api === cmapi || ['AnnAngela-bbot', 'AnnAngela-cbot', '星海-oversightbot', '星海-userrightsbot', '萌百娘'].includes(user)
 			? '-'
 			: '<i style="color:red">无相关编辑</i>';
 	const logeventsTimestamp = logevents.length
@@ -160,7 +160,7 @@ const updateData = async (pageid, text) => {
 			}),
 		]);
 		const data = JSON.parse(content);
-		const filterBots = ['滥用过滤器', 'Abuse filter', '不正利用フィルター', 'Delete page script', '重定向修复器'];
+		const filterBots = ['滥用过滤器', 'Abuse filter', '不正利用フィルター', 'Delete page script', '重定向修复器', '萌娘百科·注销管理员'];
 		data.bot = allusers.filter((user) => !filterBots.includes(user.name)).map((user) => user.name);
 		return data;
 	})();
