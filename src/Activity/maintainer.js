@@ -160,7 +160,7 @@ const updateData = async (pageid, text) => {
 			}),
 		]);
 		const data = JSON.parse(content);
-		const filterBots = ['滥用过滤器', 'Abuse filter', '不正利用フィルター', 'Delete page script', '重定向修复器'];
+		const filterBots = ['滥用过滤器', 'Abuse filter', '不正利用フィルター', 'Delete page script', '重定向修复器', '萌娘百科·注销管理员'];
 		data.bot = allusers.filter((user) => !filterBots.includes(user.name)).map((user) => user.name);
 		return data;
 	})();
