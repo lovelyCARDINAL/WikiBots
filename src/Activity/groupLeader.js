@@ -19,7 +19,7 @@ const zhapi = new MediaWikiApi({
 
 const time = {
 	start: new Date().toISOString(),
-	end: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+	end: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
 };
 
 async function queryContribs(api, ucuser) {
@@ -111,7 +111,7 @@ async function updateData(text) {
 	/** @type {Parser.TableToken} */
 	const table = parser.querySelector('table');
 	const rowCount = table.getRowCount();
-	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的编辑组负责人90日内中文萌娘百科与萌娘共享主、模板、分类、帮助、萌娘百科、文件命名空间下编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="min-width: 60%; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|-\n! width=35%|编辑组 !! width=35%|用户名 !! 编辑数 !! 是否活跃';
+	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的编辑组负责人30日内中文萌娘百科与萌娘共享主、模板、分类、帮助、萌娘百科、文件命名空间下编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="min-width: 60%; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|-\n! width=35%|编辑组 !! width=35%|用户名 !! 编辑数 !! 是否活跃';
 
 	for (let i = 1; i < rowCount; i++) {
 		const groupCell = String(table.getNthCell({ row: i, column: 0 })).trim();
