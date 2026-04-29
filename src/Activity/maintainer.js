@@ -218,8 +218,8 @@ const updateData = async (pageid, text) => {
 		const { data: ghiaData } = await axios.get('https://raw.githubusercontent.com/MoegirlPediaInterfaceAdmins/MoegirlPediaInterfaceCodes/master/src/global/zh/GHIAHistory.json');
 		const [techeditor, interfaceAdmin] = await Promise.all([
 			Promise.all([
-				queryContribs(zhapi, userData.techeditor, '10|828', time[180]),
-				queryContribs(cmapi, userData.techeditor, '10|828', time[180]),
+				queryContribs(zhapi, userData.techeditor, '10|828', time[365]),
+				queryContribs(cmapi, userData.techeditor, '10|828', time[365]),
 			]),
 			Promise.all([
 				queryContribs(zhapi, userData['interface-admin'], '10|828|8|274', time[180]),
