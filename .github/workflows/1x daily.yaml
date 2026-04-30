@@ -52,7 +52,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
           cache: npm
@@ -73,7 +73,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
           cache: npm
@@ -93,7 +93,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
           cache: npm
@@ -114,7 +114,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
           cache: npm
@@ -136,7 +136,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
           cache: npm
@@ -157,7 +157,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
           cache: npm
@@ -177,7 +177,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
           cache: npm
@@ -198,7 +198,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
           cache: npm
@@ -220,7 +220,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
           cache: npm
@@ -241,7 +241,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set Node Version
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20.x
           cache: npm
