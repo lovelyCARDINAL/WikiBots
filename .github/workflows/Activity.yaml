@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Set Node Version
         uses: actions/setup-node@v5
         with:
@@ -48,7 +48,7 @@ jobs:
       github.event.inputs.task == 'group-member'
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Set Node Version
         uses: actions/setup-node@v5
         with:
