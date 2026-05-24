@@ -10,6 +10,14 @@ const api = new MediaWikiApi({
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
+
+	await api.get({
+		action: 'query',
+		meta: 'siteinfo',
+	}, {
+		retry: 5,
+		noCache: true,
+	}).then(({ data }) => console.log(JSON.stringify(data)));
 	
 	await api.login(
 		config.zh.bot.name,
