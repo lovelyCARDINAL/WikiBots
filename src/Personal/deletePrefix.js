@@ -7,13 +7,13 @@ const site = env.SITE;
 const apfilterredir = env.FILTERREDIR;
 const api = new MediaWikiApi({
 		baseURL: config[site].api,
-		fexiosConfig: {
+		fexiosConfigs: {
 			headers: { 'user-agent': config.useragent },
 		},
 	}),
 	main = new MediaWikiApi({
 		baseURL: config.zh.api,
-		fexiosConfig: {
+		fexiosConfigs: {
 			headers: { 'user-agent': config.useragent },
 		},
 	});

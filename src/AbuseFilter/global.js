@@ -9,7 +9,7 @@ const SITE_LIST = ['en', 'ja', 'lb'];
 
 const zhapi = new MediaWikiApi({
 	baseURL: config.zh.api,
-	fexiosConfig: {
+	fexiosConfigs: {
 		headers: { 'user-agent': config.useragent },
 	},
 });

@@ -5,13 +5,13 @@ import config from '../utils/config.js';
 const site = env.SITE;
 const api = new MediaWikiApi({
 		baseURL: config[site].api,
-		fexiosConfig: {
+		fexiosConfigs: {
 			headers: { 'user-agent': config.useragent },
 		},
 	}),
 	main = new MediaWikiApi({
 		baseURL: config.zh.api,
-		fexiosConfig: {
+		fexiosConfigs: {
 			headers: { 'user-agent': config.useragent },
 		},
 	});

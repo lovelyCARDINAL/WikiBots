@@ -4,13 +4,13 @@ import { getTimeData, editTimeData } from '../utils/lastTime.js';
 
 const zhapi = new MediaWikiApi({
 		baseURL: config.zh.api,
-		fexiosConfig: {
+		fexiosConfigs: {
 			headers: { 'user-agent': config.useragent },
 		},
 	}),
 	cmapi = new MediaWikiApi({
 		baseURL: config.cm.api,
-		fexiosConfig: {
+		fexiosConfigs: {
 			headers: { 'user-agent': config.useragent },
 		},
 	});

@@ -6,13 +6,13 @@ Parser.config = 'moegirl';
 
 const zhapi = new MediaWikiApi({
 		baseURL: config.zh.api,
-		fexiosConfig: {
+		fexiosConfigs: {
 			headers: { 'user-agent': config.useragent },
 		},
 	}),
 	cmapi = new MediaWikiApi({
 		baseURL: config.cm.api,
-		fexiosConfig: {
+		fexiosConfigs: {
 			headers: { 'user-agent': config.useragent },
 		},
 	});

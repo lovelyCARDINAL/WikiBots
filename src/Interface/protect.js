@@ -43,7 +43,7 @@ async function protect(site, title, protections) {
 	await Promise.all(SITE_LIST.map(async(site) => {
 		api[site] = new MediaWikiApi({
 			baseURL: config[site].api,
-			fexiosConfig: {
+			fexiosConfigs: {
 				headers: { 'user-agent': config.useragent },
 			},
 		});

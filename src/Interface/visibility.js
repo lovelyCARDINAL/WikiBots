@@ -27,7 +27,7 @@ const PAGE_LIST = [
 	await Promise.all(SITE_LIST.map(async (site) => {
 		const api = new MediaWikiApi({
 			baseURL: config[site].api,
-			fexiosConfig: {
+			fexiosConfigs: {
 				headers: { 'user-agent': config.useragent },
 			},
 		});

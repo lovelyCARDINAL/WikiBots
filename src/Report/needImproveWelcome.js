@@ -10,7 +10,7 @@ Parser.redirects = new Map(parserConfig.redirects);
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,
-	fexiosConfig: {
+	fexiosConfigs: {
 		headers: { 'user-agent': config.useragent },
 	},
 });

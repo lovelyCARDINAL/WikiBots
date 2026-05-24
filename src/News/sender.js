@@ -6,7 +6,7 @@ import config from '../utils/config.js';
 const type = env.TYPE;
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,
-	fexiosConfig: {
+	fexiosConfigs: {
 		headers: { 'user-agent': config.useragent },
 	},
 });

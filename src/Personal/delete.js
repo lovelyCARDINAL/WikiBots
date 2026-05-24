@@ -8,7 +8,7 @@ Parser.config = 'moegirl';
 const site = env.SITE;
 const api = new MediaWikiApi({
 	baseURL: config[site].api,
-	fexiosConfig: {
+	fexiosConfigs: {
 		headers: { 'user-agent': config.useragent },
 	},
 });

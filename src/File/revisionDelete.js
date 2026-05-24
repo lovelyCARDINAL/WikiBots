@@ -5,7 +5,7 @@ import splitAndJoin from '../utils/splitAndJoin.js';
 
 const api = new MediaWikiApi({
 	baseURL: config.cm.api,
-	fexiosConfig: {
+	fexiosConfigs: {
 		headers: { 'user-agent': config.useragent },
 	},
 });

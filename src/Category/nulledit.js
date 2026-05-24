@@ -7,7 +7,7 @@ const SITE_LIST = ['zh', 'cm'];
 	console.log(`Start time: ${new Date().toISOString()}`);
 	const zhapi = new MediaWikiApi({
 		baseURL: config.zh.api,
-		fexiosConfig: {
+		fexiosConfigs: {
 			headers: { 'user-agent': config.useragent },
 		},
 	});
