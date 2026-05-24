@@ -53,7 +53,7 @@ jobs:
       - name: Run Script
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: node src/Personal/test.js
+        run: npx tsx src/Personal/test.js
 
   zh-deletion:
     if: |
