@@ -11,7 +11,7 @@ const api = new MediaWikiApi({
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
-	await api.get({
+	await api.post({
 		action: 'query',
 		meta: 'siteinfo',
 	}, {
