@@ -1,12 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 
-const api = new MediaWikiApi({
-	baseURL: config.zh.api,
-	fexiosConfig: {
-		headers: { 'user-agent': 'hs4mbots/1.0.0' },
-	},
-});
+const api = new MediaWikiApi('https://zh.moegirl.org.cn/api.php');
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
