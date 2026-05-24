@@ -4,7 +4,7 @@ import config from '../utils/config.js';
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,
 	fexiosConfig: {
-		headers: { 'user-agent': 'hs4mbots/2026.05.25' },
+		headers: { 'user-agent': 'hs4mbots/1.0.0' },
 	},
 });
 
@@ -14,8 +14,6 @@ const api = new MediaWikiApi({
 	await api.login(
 		config.zh.bot.name,
 		config.zh.bot.password,
-		undefined,
-		{ retry: 25, noCache: true },
 	).then(console.log);
 
 	await api.postWithToken('csrf', {
@@ -27,7 +25,7 @@ const api = new MediaWikiApi({
 		minor: true,
 		tags: 'Bot',
 	}, {
-		retry: 50,
+		retry: 5,
 		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 })();
