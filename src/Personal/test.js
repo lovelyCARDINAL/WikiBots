@@ -10,18 +10,12 @@ const api = new MediaWikiApi({
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
-
-	await api.post({
-		action: 'query',
-		meta: 'siteinfo',
-	}, {
-		retry: 5,
-		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
 	
 	await api.login(
 		config.zh.bot.name,
 		config.zh.bot.password,
+		undefined,
+		{ retry: 5, noCache: true },
 	).then(console.log);
 
 	await api.postWithToken('csrf', {
@@ -34,6 +28,6 @@ const api = new MediaWikiApi({
 		tags: 'Bot',
 	}, {
 		retry: 5,
-		noCache: true,
+		noCache: true
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 })();
