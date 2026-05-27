@@ -28,6 +28,6 @@ const api = new MediaWikiApi({
 		tags: 'Bot',
 	}, {
 		retry: 5,
-		noCache: true
+		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 })();
