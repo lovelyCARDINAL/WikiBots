@@ -10,7 +10,7 @@ const api = new MediaWikiApi({
 });
 
 const PAGE_MAP = {
-	'Help:沙盒': {
+	'Draft:沙盒': {
 		content: '<noinclude><!-- 请勿删除此行 -->{{沙盒顶部}}<!-- 请勿删除此行 --></noinclude>\n== 请在这行文字底下开始测试 ==',
 		summary: '沙盒清理作业。若想保留较长时间，可在[[Special:MyPage/Sandbox|个人沙盒]]进行测试，或查阅页面历史并再次编辑本页。',
 	},
@@ -18,7 +18,7 @@ const PAGE_MAP = {
 		content: '<noinclude><!-- 请勿删除此行 -->{{帮助导航}}{{沙盒顶部}} __EXPECTUNUSEDTEMPLATE__ <!-- 请勿删除此行 --></noinclude>',
 		summary: '沙盒清理作业。若想保留较长时间，可在[[Special:MyPage/Sandbox|个人沙盒]]进行测试，或查阅页面历史并再次编辑本页。',
 	},
-	'Help:沙盒/styles.css': {
+	'Draft:沙盒/styles.css': {
 		content: '._addText { content: "<!-- 请勿删除此行 -->{{沙盒顶部}}<!-- 请勿删除此行 -->" }',
 		summary: '沙盒清理作业。如有需要请查阅页面历史并再次编辑本页。',
 	},
