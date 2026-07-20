@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
@@ -45,7 +45,7 @@ jobs:
       github.event.inputs.task == 'global'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
