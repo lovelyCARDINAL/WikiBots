@@ -8,6 +8,7 @@ const api = {};
 const SUMMARY = {
 	Abusefilter: '同步滥用过滤器消息',
 	Titleblacklist: '同步标题黑名单警告消息',
+	Gadget: '同步小工具界面消息',
 };
 
 (async () => {
