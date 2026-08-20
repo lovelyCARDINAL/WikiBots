@@ -6,6 +6,7 @@ name: "[daily] 1x"
 # 1
 # # Clean/invisibleCharacter.js
 # # Personal/watch.js
+# # Clean/draftDelete.js
 # 4
 # # Clean/sandbox.js
 # # Clean/brokenRedirectDelete.js
@@ -37,6 +38,7 @@ on:
           - check-activities
           - url-unquote
           - song-counter
+          - draft-deletion
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -63,6 +65,7 @@ jobs:
           SITE: 'cm'
           CM_BOT: ${{ secrets.CM_BOT }}
         run: node src/Clean/invisibleCharacter.js
+  
   watch:
     needs: [invisible-character]
     if: |
@@ -252,3 +255,23 @@ jobs:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
         run: node src/Report/songCounter.js
+
+  draft-deletion:
+    if: |
+      github.event.schedule == '35 17 * * *' || 
+      github.event.inputs.task == 'draft-deletion'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set Node Version
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20.x
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
+        run: node src/Clean/draftDelete.js
