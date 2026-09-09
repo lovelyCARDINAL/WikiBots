@@ -1,8 +1,8 @@
 import js from '@eslint/js';
 import json from '@eslint/json';
 import markdown from '@eslint/markdown';
-import importPlugin from 'eslint-plugin-import';
-import yml from 'eslint-plugin-yml';
+import importPlugin from 'eslint-plugin-import-x';
+import { configs } from 'eslint-plugin-yml';
 import globals from 'globals';
 
 export default [
@@ -23,7 +23,7 @@ export default [
 			},
 		},
 		plugins: {
-			'import': importPlugin,
+			'import-x': importPlugin,
 		},
 		rules: {
 			...js.configs.recommended.rules,
@@ -95,12 +95,12 @@ export default [
 				{ blankLine: 'always', prev: 'import', next: '*' },
 				{ blankLine: 'never', prev: 'import', next: 'import' },
 			],
-			'import/first': 'warn',
-			'import/no-unresolved': [
+			'import-x/first': 'warn',
+			'import-x/no-unresolved': [
 				'error',
 				{ ignore: ['^@octokit/core$'] }, // ignore this package
 			],
-			'import/order': [
+			'import-x/order': [
 				'warn',
 				{
 					groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
@@ -129,15 +129,15 @@ export default [
 		files: ['**/*.{yml,yaml}'],
 		ignores: ['data/*.yaml'],
 		languageOptions: {
-			...yml.configs['flat/standard'][1].languageOptions,
+			...configs['flat/standard'][1].languageOptions,
 		},
 		plugins: {
-			...yml.configs['flat/standard'][0].plugins,
+			...configs['flat/standard'][0].plugins,
 		},
 		rules: {
-			...yml.configs['flat/standard'][1].rules,
-			...yml.configs['flat/standard'][2].rules,
-			...yml.configs['flat/prettier'][2].rules,
+			...configs['flat/standard'][1].rules,
+			...configs['flat/standard'][2].rules,
+			...configs['flat/prettier'][2].rules,
 			'yml/no-empty-mapping-value': 'off',
 		},
 	},
