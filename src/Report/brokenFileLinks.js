@@ -20,8 +20,14 @@ const DETAIL_CONCURRENCY = 2;
 const GCM_LIMIT = 100;
 /** 应用层重试次数（覆盖 BODY_TRANSFORM_ERROR 这类 fexios 内部不重试的错误） */
 const MAX_RETRIES = 8;
-/** 分页最大轮数，防止 continue 异常导致死循环 */
-const MAX_PAGES = 200;
+/** 分页最大轮数，防止 continue 异常导致死循环（5400 页 / 100 ≈ 54 轮，留足余量） */
+const MAX_ROUNDS = 2000;
+
+/** 目标分类与命名空间 */
+const CATEGORY = 'Category:含有受损文件链接的页面';
+const NAMESPACES = '0|4|10|12';
+/** 标题过滤（沙盒、格式说明页不计入报告） */
+const TITLE_FILTER = /sandbox|沙盒|页面格式/i;
 /**
  * 文件状态缓存有效期（毫秒）。
  * 0 = 每轮都重新查询（推荐，避免报告长期显示过期状态）；
@@ -102,8 +108,8 @@ async function safePost(api, params, { requireQuery = true, retries = MAX_RETRIE
 			const data = res?.data;
 			if (data?.error) {
 				// maxlag / ratelimited 这类值得重试；其它 API error 直接抛
-				const { code, info } = data.error;
-				const err = new Error(`API error [${code}] ${info ?? ''}`);
+				const { code } = data.error;
+				const err = new Error(`API error [${code}] ${data.error.info ?? ''}`);
 				if (code === 'maxlag' || code === 'ratelimited' || code === 'internal_api_error') {
 					lastError = err;
 				} else {
@@ -194,7 +200,8 @@ async function getDetails(title) {
 			}
 		}
 		if (!data?.continue?.lecontinue) {break;}
-		({ lecontinue } = data.continue);
+		const { 'continue': { lecontinue: nextLecontinue } = {} } = data;
+		lecontinue = nextLecontinue;
 	}
 	return '未知';
 }
@@ -230,51 +237,77 @@ async function resolveMissingFiles(titles, imgData, cache) {
 async function collect(zhapi_, imgData, cache) {
 	const pageData = {};
 	const queried = new Set(); // 跨分页轮次去重，避免同一文件被反复查询
-	const eol = Symbol('eol');
-	let imcontinue;
+	let cont = {}; // 整个 continue 对象原样回传（含 gcmcontinue / imcontinue / continue 顺序标记）
+	let lastToken = '';
 	let round = 0;
+	let seenPages = 0;
 
-	while (imcontinue !== eol) {
-		if (++round > MAX_PAGES) {
-			console.warn(`WARN: 分页超过 ${MAX_PAGES} 轮，提前终止`);
+	for (;;) {
+		if (++round > MAX_ROUNDS) {
+			console.warn(`WARN: 分页超过 ${MAX_ROUNDS} 轮，提前终止`);
 			break;
 		}
+
 		const { data } = await safePost(zhapi_, {
 			prop: 'images',
 			generator: 'categorymembers',
 			imlimit: 'max',
-			gcmtitle: 'Category:含有受损文件链接的页面',
-			gcmnamespace: '0|4|10|12',
+			gcmtitle: CATEGORY,
+			gcmnamespace: NAMESPACES,
 			gcmlimit: String(GCM_LIMIT),
 			gcmsort: 'timestamp',
 			gcmdir: 'older',
-			...imcontinue && { imcontinue },
+			...cont,
 		}, { label: `categorymembers#${round}` });
 
-		imcontinue = data.continue?.imcontinue ?? eol;
+		// 先取续读令牌，再处理本批数据：即使本批被全部过滤掉，也不能中断翻页
+		const nextCont = data.continue ?? null;
 
 		const pages = Object.values(data.query?.pages ?? {});
+		seenPages += pages.length;
 		const pagelist = pages.filter(
-			(page) => page.title && page.images && !/sandbox|沙盒|页面格式/i.test(page.title),
+			(page) => page.title && page.images && !TITLE_FILTER.test(page.title),
 		);
-		if (!pagelist.length) {continue;}
 
-		// 去重后分批查询，避免同一文件被重复请求
-		const imageTitles = [...new Set(pagelist.flatMap(({ images }) => images.map(({ title }) => title)))].filter((title) => !queried.has(title));
-		const groups = splitAndJoin(imageTitles, BATCH_SIZE);
-		console.log(`第 ${round} 批：${pagelist.length} 个页面 / ${imageTitles.length} 个待查文件 / ${groups.length} 组`);
+		if (pagelist.length) {
+			const imageTitles = [...new Set(pagelist.flatMap(({ images }) => images.map(({ title }) => title)))]
+				.filter((title) => !queried.has(title));
+			const groups = splitAndJoin(imageTitles, BATCH_SIZE);
+			console.log(
+				`第 ${round} 轮：本批 ${pages.length} 页（有效 ${pagelist.length}）`
+        + ` / 待查文件 ${imageTitles.length} / ${groups.length} 组`
+        + ` / 累计 ${seenPages} 页`,
+			);
 
-		await mapLimit(groups, BATCH_CONCURRENCY, (titles) => resolveMissingFiles(titles, imgData, cache));
-		imageTitles.forEach((title) => queried.add(title));
+			await mapLimit(groups, BATCH_CONCURRENCY, (titles) => resolveMissingFiles(titles, imgData, cache));
+			imageTitles.forEach((title) => queried.add(title));
 
-		for (const { pageid, title, ns, images } of pagelist) {
-			pageData[pageid] ||= { title, ns, images: {} };
-			for (const { title: imageTitle } of images) {
-				if (imgData[imageTitle]) {pageData[pageid].images[imageTitle] = imgData[imageTitle];}
+			for (const { pageid, title, ns, images } of pagelist) {
+				pageData[pageid] ||= { title, ns, images: {} };
+				for (const { title: imageTitle } of images) {
+					if (imgData[imageTitle]) {pageData[pageid].images[imageTitle] = imgData[imageTitle];}
+				}
 			}
+		} else {
+			console.log(`第 ${round} 轮：本批 ${pages.length} 页全部被过滤，继续翻页`);
 		}
+
+		if (!nextCont) {
+			console.log(`分页结束，共 ${round} 轮 / 遍历 ${seenPages} 个页面`);
+			break;
+		}
+
+		// 令牌未变化 = 服务端没往前推进，避免死循环
+		const token = JSON.stringify(nextCont);
+		if (token === lastToken) {
+			console.warn(`WARN: continue 令牌未变化，终止翻页：${token}`);
+			break;
+		}
+		lastToken = token;
+		cont = nextCont;
 	}
 
+	console.log(`汇总：${Object.keys(pageData).length} 个页面含受损文件，共 ${Object.keys(imgData).length} 个受损文件`);
 	return pageData;
 }
 
@@ -417,7 +450,7 @@ async function editReport(text) {
 	}
 
 	try {
-		console.log(await pushData(payload, cache) ? '数据提交 SUCCESS!' : '数据提交 SKIP');
+		console.log(await pushData(payload) ? '数据提交 SUCCESS!' : '数据提交 SKIP');
 	} catch (error) {
 		console.error('ERROR: 数据提交失败:', error.message);
 		process.exitCode = 1;
