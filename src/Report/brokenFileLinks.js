@@ -309,7 +309,7 @@ function buildText(pageData) {
 }
 
 /** 提交数据文件到 GitHub；文件不存在时自动创建，sha 冲突时自动重试 */
-async function pushData(imgData, cache) {
+async function pushData(imgData) {
 	if (!env.GITHUB_TOKEN) {
 		console.warn('WARN: 未设置 GITHUB_TOKEN，跳过数据提交');
 		return false;
