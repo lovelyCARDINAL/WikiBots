@@ -25,16 +25,15 @@ const MAX_ROUNDS = 2000;
 
 /** 目标分类与命名空间 */
 const CATEGORY = 'Category:含有受损文件链接的页面';
-const NAMESPACES = '0|4|10|12';
+const NAMESPACES = '0|4|10|12|114|116';
 /** 标题过滤（沙盒、格式说明页不计入报告） */
 const TITLE_FILTER = /sandbox|沙盒|页面格式/i;
 /**
  * 文件状态缓存有效期（毫秒）。
  * 0 = 每轮都重新查询（推荐，避免报告长期显示过期状态）；
  * 只有查询失败时才回退到缓存值。
- * 若想省流量可设为 24 * 60 * 60 * 1000。
  */
-const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+const CACHE_TTL = 30 * 24 * 60 * 60 * 1000;
 
 /** 报告索引页 pageid（沿用原页面，避免站内既有链接失效） */
 const REPORT_PAGEID = '555599';
