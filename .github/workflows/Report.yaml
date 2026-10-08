@@ -77,8 +77,10 @@ jobs:
   broken-file-links:
     needs: short-pages
     if: |
-      github.event.schedule == '55 21 * * 1' && needs.short-pages.result == 'success' ||
-      github.event.inputs.task == 'broken-file-links'
+      !cancelled() && (
+        (github.event_name == 'schedule' && needs.short-pages.result == 'success') 
+        || github.event.inputs.task == 'broken-file-links'
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
