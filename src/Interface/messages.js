@@ -9,6 +9,7 @@ const SUMMARY = {
 	Abusefilter: '同步滥用过滤器消息',
 	Titleblacklist: '同步标题黑名单警告消息',
 	Gadget: '同步小工具界面消息',
+	Widget: '同步微件页面',
 };
 
 (async () => {
@@ -43,11 +44,19 @@ const SUMMARY = {
 		const suffixes = ['', '/zh-hans', '/zh-cn', '/zh-hant', '/zh-tw', '/zh-hk'];
 
 		return Object.entries(setData)
-			.flatMap(([key, value]) => value.title
-				.flatMap((title) => suffixes
+			.flatMap(([key, value]) => {
+				// Widget 命名空间不需要拼接 /zh-hans 等语言后缀，且 title 应包含或自动补全 Widget: 前缀
+				if (key === 'Widget') {
+					return value.title.map((title) => [
+						title.startsWith('Widget:') ? title : `Widget:${title}`,
+						key,
+						value.site,
+					]);
+				}
+				return value.title.flatMap((title) => suffixes
 					.map((suffix) => [`MediaWiki:${title}${suffix}`, key, value.site]),
-				),
-			);
+				);
+			});
 	})();
 
 	const time = moment().subtract(16, 'days');
