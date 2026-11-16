@@ -1,15 +1,13 @@
-import process from 'process';
 import config from './config.js';
 
 /**
- * @param {import('../src').MediaWikiApi} api
+ * @param {import('wiki-saikou').MediaWikiApi} api
  * @param {string} username
  * @param {string} [password=config.password]
  */
-// eslint-disable-next-line require-await
 async function clientLogin(api, username, password = config.password) {
-	return api
-		.postWithToken(
+	try {
+		const { data } = await api.postWithToken(
 			'login',
 			{
 				action: 'clientlogin',
@@ -22,18 +20,16 @@ async function clientLogin(api, username, password = config.password) {
 				retry: 15,
 				noCache: true,
 			},
-		)
-		.then(({ data }) => {
-			if (data.clientlogin.status === 'PASS') {
-				console.log('登录成功', data);
-				return data;
-			}
-			throw new Error(data.clientlogin.message);
-		})
-		.catch((err) => {
-			console.error('登录异常', err);
-			process.exit(1);
-		});
+		);
+		if (data.clientlogin?.status === 'PASS') {
+			console.log('登录成功', data.clientlogin.username);
+			return data;
+		}
+		throw new Error(data.clientlogin?.message || 'clientlogin failed');
+	} catch (err) {
+		console.error('登录异常', err instanceof Error ? err.message : String(err));
+		throw err;
+	}
 }
 
 export default clientLogin;
