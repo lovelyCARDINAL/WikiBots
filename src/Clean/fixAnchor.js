@@ -10,11 +10,13 @@ import {
 } from '../utils/anchor.js';
 import mapLimit from '../utils/concurrency.js';
 import { createAndLogin } from '../utils/createApi.js';
+import { getTimeData, editTimeData } from '../utils/lastTime.js';
 import paginate from '../utils/paginate.js';
 
 Parser.config = 'moegirl';
 
-const LOOKBACK_MS = 30 * 60 * 60 * 1000;
+const TIME_KEY = 'fix-anchor';
+const MAX_LOOKBACK_MS = 30 * 24 * 60 * 60 * 1000;
 const TARGET_NAMESPACES = '0|4|10|12|14';
 const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:机娘星海酱|all)))\}\}/;
 
@@ -362,8 +364,13 @@ async function cleanupResolvedBrokenAnchors(api) {
 
 	const api = await createAndLogin('zh', 'bot');
 
+	const timeData = await getTimeData();
 	const nowMs = Date.now();
-	const sinceIso = new Date(nowMs - LOOKBACK_MS).toISOString();
+	const minSinceMs = nowMs - MAX_LOOKBACK_MS;
+	const lastMs = timeData[TIME_KEY] ? Date.parse(timeData[TIME_KEY]) : NaN;
+	const sinceIso = new Date(
+		Number.isFinite(lastMs) ? Math.max(lastMs, minSinceMs) : minSinceMs,
+	).toISOString();
 	const nowIso = new Date(nowMs - 2 * 60 * 1000).toISOString();
 
 	const seen = new Set();
@@ -401,6 +408,8 @@ async function cleanupResolvedBrokenAnchors(api) {
 	});
 
 	await cleanupResolvedBrokenAnchors(api);
+
+	await editTimeData(timeData, TIME_KEY, nowIso);
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
