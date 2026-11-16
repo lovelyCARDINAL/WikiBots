@@ -20,7 +20,7 @@ Parser.config = 'moegirl';
 const TIME_KEY = 'fix-anchor';
 const MAX_LOOKBACK_MS = 30 * 24 * 60 * 60 * 1000;
 const TARGET_NAMESPACES = '0|4|10|12|14';
-const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:机娘星海酱|all)))\}\}/;
+const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-adminbot|机娘星海酱|all)))\}\}/;
 
 /**
  * Fetch target page's normalized title set (including redirects to it).
@@ -151,6 +151,54 @@ function pageHasLinkTo(content, targetTitle, targetAnchor) {
 }
 
 /**
+ * Persist updated talk-page wikitext, or delete the talk page if removing
+ * `{{Broken anchors}}` leaves it empty.
+ *
+ * @param {import('wiki-saikou').MediaWikiApi} api
+ * @param {string} talkTitle
+ * @param {{ content: string, addedCount: number, removedCount: number, templateRemoved: boolean }} talkResult
+ * @param {boolean} [nocreate=false]
+ */
+async function saveOrDeleteTalkPage(api, talkTitle, talkResult, nocreate = false) {
+	if (talkResult.templateRemoved && !talkResult.content.trim()) {
+		await api.postWithToken('csrf', {
+			action: 'delete',
+			title: talkTitle,
+			reason: '机器人：失效锚点已全部修复，移除{{Broken anchors}}后讨论页为空',
+			tags: 'Bot',
+			watchlist: 'nochange',
+		}, {
+			retry: 25,
+			noCache: true,
+		}).then(({ data: delRes }) => console.log(JSON.stringify(delRes)));
+		return;
+	}
+
+	const summary = talkResult.templateRemoved
+		? '机器人：失效锚点已全部修复，移除{{Broken anchors}}提醒'
+		: `机器人：更新{{Broken anchors}}提醒（新增${talkResult.addedCount}处，移除${talkResult.removedCount}处）`;
+
+	const editParams = {
+		action: 'edit',
+		title: talkTitle,
+		text: talkResult.content,
+		summary,
+		bot: true,
+		minor: true,
+		tags: 'Bot',
+		watchlist: 'nochange',
+	};
+	if (nocreate) {
+		editParams.nocreate = true;
+	}
+
+	await api.postWithToken('csrf', editParams, {
+		retry: 25,
+		noCache: true,
+	}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
+}
+
+/**
  * Fix broken anchor links on candidate pages and manage `{{Broken anchors}}` on talk pages.
  *
  * @param {import('wiki-saikou').MediaWikiApi} api
@@ -231,23 +279,7 @@ async function processTargetPage(api, targetTitle, { renameMap, brokenAnchors, f
 			return;
 		}
 
-		const talkSummary = talkResult.templateRemoved
-			? '机器人：失效锚点已全部修复，移除{{Broken anchors}}提醒'
-			: `机器人：更新{{Broken anchors}}提醒（新增${talkResult.addedCount}处，移除${talkResult.removedCount}处）`;
-
-		await api.postWithToken('csrf', {
-			action: 'edit',
-			title: talkTitle,
-			text: talkResult.content,
-			summary: talkSummary,
-			bot: true,
-			minor: true,
-			tags: 'Bot',
-			watchlist: 'nochange',
-		}, {
-			retry: 25,
-			noCache: true,
-		}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
+		await saveOrDeleteTalkPage(api, talkTitle, talkResult, false);
 	});
 }
 
@@ -340,31 +372,14 @@ async function cleanupResolvedBrokenAnchors(api) {
 			return;
 		}
 
-		const talkSummary = talkResult.templateRemoved
-			? '机器人：失效锚点已全部修复，移除{{Broken anchors}}提醒'
-			: `机器人：清理已修复的{{Broken anchors}}提醒（移除${talkResult.removedCount}处）`;
-
-		await api.postWithToken('csrf', {
-			action: 'edit',
-			title: talkTitle,
-			text: talkResult.content,
-			summary: talkSummary,
-			bot: true,
-			minor: true,
-			nocreate: true,
-			tags: 'Bot',
-			watchlist: 'nochange',
-		}, {
-			retry: 25,
-			noCache: true,
-		}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
+		await saveOrDeleteTalkPage(api, talkTitle, talkResult, true);
 	});
 }
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
-	const api = await createAndLogin('zh', 'bot');
+	const api = await createAndLogin('zh', 'abot');
 	const botConfig = await loadFixAnchorConfig(api);
 	const ignoredPages = new Set(botConfig.ignorePages.map((t) => Parser.normalizeTitle(t).title));
 

@@ -13,7 +13,7 @@ Parser.config = 'moegirl';
 
 const BACKLINK_NAMESPACES = '0|4|10|12|14';
 const ARCHIVE_DISCOVERY_NAMESPACES = '4|12';
-const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:机娘星海酱|all)))\}\}/;
+const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-adminbot|机娘星海酱|all)))\}\}/;
 
 /**
  * Fetch normalized title set (page itself + redirects pointing to it).
@@ -224,7 +224,7 @@ async function processArchiveBoard(api, boardTitle) {
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
-	const api = await createAndLogin('zh', 'bot');
+	const api = await createAndLogin('zh', 'abot');
 	const botConfig = await loadFixAnchorConfig(api);
 	const boards = await collectArchiveBoards(api, botConfig);
 
