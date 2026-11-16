@@ -20,7 +20,7 @@ Parser.config = 'moegirl';
 const TIME_KEY = 'fix-anchor';
 const MAX_LOOKBACK_MS = 30 * 24 * 60 * 60 * 1000;
 const TARGET_NAMESPACES = '0|4|10|12|14';
-const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-adminbot|机娘星海酱|all)))\}\}/;
+const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-adminbot|all)))\}\}/;
 
 /**
  * Fetch target page's normalized title set (including redirects to it).
@@ -159,13 +159,15 @@ function pageHasLinkTo(content, targetTitle, targetAnchor) {
  * @param {{ content: string, addedCount: number, removedCount: number, templateRemoved: boolean }} talkResult
  * @param {boolean} [nocreate=false]
  */
-async function saveOrDeleteTalkPage(api, talkTitle, talkResult, nocreate = false) {
-	if (talkResult.templateRemoved && !talkResult.content.trim()) {
+async function saveOrDeleteTalkPage(api, talkTitle, talkResult, nocreate = false, botConfig = {}) {
+	const tags = botConfig.tags || 'Bot';
+	const shouldDeleteBlank = (botConfig.actionForBlankTalkPage || 'DELETE').toUpperCase() === 'DELETE';
+	if (talkResult.templateRemoved && !talkResult.content.trim() && shouldDeleteBlank) {
 		await api.postWithToken('csrf', {
 			action: 'delete',
 			title: talkTitle,
-			reason: '机器人：失效锚点已全部修复，移除{{Broken anchors}}后讨论页为空',
-			tags: 'Bot',
+			reason: '失效锚点已全部修复，移除{{Broken anchors}}后讨论页为空',
+			tags,
 			watchlist: 'nochange',
 		}, {
 			retry: 25,
@@ -175,8 +177,8 @@ async function saveOrDeleteTalkPage(api, talkTitle, talkResult, nocreate = false
 	}
 
 	const summary = talkResult.templateRemoved
-		? '机器人：失效锚点已全部修复，移除{{Broken anchors}}提醒'
-		: `机器人：更新{{Broken anchors}}提醒（新增${talkResult.addedCount}处，移除${talkResult.removedCount}处）`;
+		? '失效锚点已全部修复，移除{{Broken anchors}}提醒'
+		: `更新{{Broken anchors}}提醒（新增${talkResult.addedCount}处，移除${talkResult.removedCount}处）`;
 
 	const editParams = {
 		action: 'edit',
@@ -185,7 +187,7 @@ async function saveOrDeleteTalkPage(api, talkTitle, talkResult, nocreate = false
 		summary,
 		bot: true,
 		minor: true,
-		tags: 'Bot',
+		tags,
 		watchlist: 'nochange',
 	};
 	if (nocreate) {
@@ -205,7 +207,8 @@ async function saveOrDeleteTalkPage(api, talkTitle, talkResult, nocreate = false
  * @param {string} targetTitle
  * @param {{ renameMap: Map<string, string>, brokenAnchors: Set<string>, finalAnchors: Set<string> }} state
  */
-async function processTargetPage(api, targetTitle, { renameMap, brokenAnchors, finalAnchors }) {
+async function processTargetPage(api, targetTitle, { renameMap, brokenAnchors, finalAnchors }, botConfig) {
+	const tags = botConfig.tags || 'Bot';
 	const targetTitles = await getTargetTitleSet(api, targetTitle);
 	const backlinks = await getBacklinks(api, targetTitles);
 	const candidates = Array.from(new Set([targetTitle, ...backlinks]));
@@ -231,7 +234,7 @@ async function processTargetPage(api, targetTitle, { renameMap, brokenAnchors, f
 		const latestContent = result.changed ? result.content : content;
 
 		if (result.changed) {
-			const summary = `机器人：修复指向[[${targetTitle}]]的失效章节锚点（${result.replacements.length}处）`;
+			const summary = `修复指向[[${targetTitle}]]的失效章节锚点（${result.replacements.length}处）`;
 			await api.postWithToken('csrf', {
 				action: 'edit',
 				title: pageTitle,
@@ -240,7 +243,7 @@ async function processTargetPage(api, targetTitle, { renameMap, brokenAnchors, f
 				bot: true,
 				minor: true,
 				nocreate: true,
-				tags: 'Bot',
+				tags,
 				watchlist: 'nochange',
 			}, {
 				retry: 25,
@@ -251,6 +254,9 @@ async function processTargetPage(api, targetTitle, { renameMap, brokenAnchors, f
 		const remainingBroken = findBrokenAnchorLinks(latestContent, targetTitles, brokenAnchors, isSelf);
 		const parsedPageTitle = Parser.normalizeTitle(pageTitle);
 		if (parsedPageTitle.isTalkPage() || !remainingBroken.length && !result.changed) {
+			return;
+		}
+		if (remainingBroken.length > 0 && !botConfig.addNoteToTalkPage) {
 			return;
 		}
 
@@ -268,6 +274,7 @@ async function processTargetPage(api, targetTitle, { renameMap, brokenAnchors, f
 
 		const talkResult = updateBrokenAnchorsTalkPage(talkContent, {
 			addLinks: remainingBroken,
+			removeTemplate: botConfig.removeTemplateWhenReminding,
 			isStillBroken: (linkTitle, linkAnchor) => {
 				if (!targetTitles.has(linkTitle)) {
 					return true;
@@ -279,7 +286,7 @@ async function processTargetPage(api, targetTitle, { renameMap, brokenAnchors, f
 			return;
 		}
 
-		await saveOrDeleteTalkPage(api, talkTitle, talkResult, false);
+		await saveOrDeleteTalkPage(api, talkTitle, talkResult, false, botConfig);
 	});
 }
 
@@ -289,7 +296,7 @@ async function processTargetPage(api, targetTitle, { renameMap, brokenAnchors, f
  *
  * @param {import('wiki-saikou').MediaWikiApi} api
  */
-async function cleanupResolvedBrokenAnchors(api) {
+async function cleanupResolvedBrokenAnchors(api, botConfig) {
 	const talkPages = [];
 	for await (const data of paginate(api, {
 		list: 'embeddedin',
@@ -372,7 +379,7 @@ async function cleanupResolvedBrokenAnchors(api) {
 			return;
 		}
 
-		await saveOrDeleteTalkPage(api, talkTitle, talkResult, true);
+		await saveOrDeleteTalkPage(api, talkTitle, talkResult, true, botConfig);
 	});
 }
 
@@ -424,14 +431,14 @@ async function cleanupResolvedBrokenAnchors(api) {
 				renames: Object.fromEntries(state.renameMap),
 				removed: [...state.brokenAnchors],
 			});
-			await processTargetPage(api, targetTitle, state);
+			await processTargetPage(api, targetTitle, state, botConfig);
 		} catch (err) {
 			console.error(`Error processing [[${targetTitle}]]:`, err?.message || err);
 		}
 	});
 
 	console.log('Sweeping Template:Broken anchors...');
-	await cleanupResolvedBrokenAnchors(api);
+	await cleanupResolvedBrokenAnchors(api, botConfig);
 
 	console.log(`Updating data/time.yaml (${TIME_KEY} = ${nowIso})...`);
 	await editTimeData(timeData, TIME_KEY, nowIso);

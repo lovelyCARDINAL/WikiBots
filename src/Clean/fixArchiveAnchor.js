@@ -13,7 +13,7 @@ Parser.config = 'moegirl';
 
 const BACKLINK_NAMESPACES = '0|4|10|12|14';
 const ARCHIVE_DISCOVERY_NAMESPACES = '4|12';
-const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-adminbot|机娘星海酱|all)))\}\}/;
+const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-adminbot|all)))\}\}/;
 
 /**
  * Fetch normalized title set (page itself + redirects pointing to it).
@@ -157,7 +157,7 @@ async function buildArchiveMap(api, boardTitle) {
  * @param {import('wiki-saikou').MediaWikiApi} api
  * @param {string} boardTitle
  */
-async function processArchiveBoard(api, boardTitle) {
+async function processArchiveBoard(api, boardTitle, tags = 'Bot') {
 	const archiveMap = await buildArchiveMap(api, boardTitle);
 	if (!archiveMap.size) {
 		return;
@@ -203,7 +203,7 @@ async function processArchiveBoard(api, boardTitle) {
 			return;
 		}
 
-		const summary = `机器人：修复指向[[${boardTitle}]]已存档章节的链接（${result.replacements.length}处）`;
+		const summary = `修复指向[[${boardTitle}]]已存档章节的链接（${result.replacements.length}处）`;
 		await api.postWithToken('csrf', {
 			action: 'edit',
 			title: pageTitle,
@@ -212,7 +212,7 @@ async function processArchiveBoard(api, boardTitle) {
 			bot: true,
 			minor: true,
 			nocreate: true,
-			tags: 'Bot',
+			tags,
 			watchlist: 'nochange',
 		}, {
 			retry: 25,
@@ -232,7 +232,7 @@ async function processArchiveBoard(api, boardTitle) {
 
 	await mapLimit(boards, 2, async (boardTitle) => {
 		try {
-			await processArchiveBoard(api, boardTitle);
+			await processArchiveBoard(api, boardTitle, botConfig.tags);
 		} catch (err) {
 			console.error(`Error processing archive board [[${boardTitle}]]:`, err?.message || err);
 		}

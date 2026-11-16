@@ -323,17 +323,37 @@ function findBrokenAnchorLinks(content, normalizedTargetTitles, brokenAnchors, i
  * Update or remove `{{Broken anchors|links=...}}` on a talk page using wikiparser-node.
  * - Prunes entries for which `isStillBroken(title, anchor)` returns `false`.
  * - Appends new `addLinks` (each like `[[Page#Anchor]]`) not already listed.
+ * - Removes `removeTemplate` (e.g. `Template:即将删除`) when adding/reminding broken anchors.
  * - Removes the entire `{{Broken anchors}}` template if `links` becomes empty.
  *
  * @param {string} talkContent
  * @param {object} options
  * @param {string[]} [options.addLinks=[]]
  * @param {(title: string, anchor: string) => boolean} [options.isStillBroken]
+ * @param {string} [options.removeTemplate]
  * @returns {{ changed: boolean, content: string, addedCount: number, removedCount: number, templateRemoved: boolean }}
  */
-function updateBrokenAnchorsTalkPage(talkContent, { addLinks = [], isStillBroken = () => true }) {
+function updateBrokenAnchorsTalkPage(talkContent, { addLinks = [], isStillBroken = () => true, removeTemplate = '' }) {
 	const BROKEN_ANCHORS_RE = /^Template:Broken[ _]anchors$/i;
 	const root = Parser.parse(talkContent);
+
+	let removedNoticeTpl = false;
+	if (addLinks.length > 0 && removeTemplate) {
+		const targetRemoveName = Parser.normalizeTitle(removeTemplate).title;
+		for (const tpl of root.querySelectorAll('template')) {
+			if (Parser.normalizeTitle(tpl.name).title === targetRemoveName) {
+				const prev = tpl.previousSibling;
+				const next = tpl.nextSibling;
+				const atLineStart = !prev || prev.type === 'text' && /\n$/.test(prev.data);
+				if (atLineStart && next?.type === 'text' && next.data.startsWith('\n')) {
+					next.replaceData(next.data.slice(1));
+				}
+				tpl.remove();
+				removedNoticeTpl = true;
+			}
+		}
+	}
+
 	const template = root.querySelectorAll('template').find((t) => BROKEN_ANCHORS_RE.test(t.name));
 
 	let addedCount = 0;
@@ -344,8 +364,9 @@ function updateBrokenAnchorsTalkPage(talkContent, { addLinks = [], isStillBroken
 		if (!addLinks.length) {
 			return { changed: false, content: talkContent, addedCount: 0, removedCount: 0, templateRemoved: false };
 		}
+		const cleanedTalk = root.toString();
 		const block = `{{Broken anchors\n|links=\n${addLinks.map((l) => `* ${l}`).join('\n')}\n}}`;
-		const newContent = talkContent.trim() ? `${block}\n${talkContent}` : block;
+		const newContent = cleanedTalk.trim() ? `${block}\n${cleanedTalk}` : block;
 		return {
 			changed: true,
 			content: newContent,
@@ -409,7 +430,7 @@ function updateBrokenAnchorsTalkPage(talkContent, { addLinks = [], isStillBroken
 
 	const newContent = root.toString();
 	return {
-		changed: addedCount > 0 || removedCount > 0 || templateRemoved,
+		changed: addedCount > 0 || removedCount > 0 || templateRemoved || removedNoticeTpl,
 		content: newContent,
 		addedCount,
 		removedCount,
@@ -418,9 +439,21 @@ function updateBrokenAnchorsTalkPage(talkContent, { addLinks = [], isStillBroken
 }
 
 const DEFAULT_ANCHOR_CONFIG = {
-	archiveTemplates: ['Archives', 'Archive box', '存档'],
+	archiveTemplates: [
+		'ArchiveBox',
+		'Archives',
+		'Auto-archive',
+		'档案馆',
+		'提问求助区页顶/档案馆',
+		'讨论版页顶/旧版/档案馆',
+		'用户存档页顶',
+	],
 	archivePages: [],
 	ignorePages: [],
+	addNoteToTalkPage: true,
+	actionForBlankTalkPage: 'DELETE',
+	removeTemplateWhenReminding: 'Template:即将删除',
+	tags: 'Bot',
 };
 
 /**
@@ -428,7 +461,7 @@ const DEFAULT_ANCHOR_CONFIG = {
  * falling back to safe defaults if the page is missing or invalid.
  *
  * @param {import('wiki-saikou').MediaWikiApi} api
- * @returns {Promise<{ archiveTemplates: string[], archivePages: string[], ignorePages: string[] }>}
+ * @returns {Promise<typeof DEFAULT_ANCHOR_CONFIG>}
  */
 async function loadFixAnchorConfig(api) {
 	try {
@@ -447,6 +480,10 @@ async function loadFixAnchorConfig(api) {
 			archiveTemplates: Array.isArray(parsed.archiveTemplates) ? parsed.archiveTemplates : DEFAULT_ANCHOR_CONFIG.archiveTemplates,
 			archivePages: Array.isArray(parsed.archivePages) ? parsed.archivePages : DEFAULT_ANCHOR_CONFIG.archivePages,
 			ignorePages: Array.isArray(parsed.ignorePages) ? parsed.ignorePages : DEFAULT_ANCHOR_CONFIG.ignorePages,
+			addNoteToTalkPage: typeof parsed.addNoteToTalkPage === 'boolean' ? parsed.addNoteToTalkPage : DEFAULT_ANCHOR_CONFIG.addNoteToTalkPage,
+			actionForBlankTalkPage: typeof parsed.actionForBlankTalkPage === 'string' ? parsed.actionForBlankTalkPage : DEFAULT_ANCHOR_CONFIG.actionForBlankTalkPage,
+			removeTemplateWhenReminding: typeof parsed.removeTemplateWhenReminding === 'string' ? parsed.removeTemplateWhenReminding : DEFAULT_ANCHOR_CONFIG.removeTemplateWhenReminding,
+			tags: typeof parsed.tags === 'string' ? parsed.tags : DEFAULT_ANCHOR_CONFIG.tags,
 		};
 	} catch (err) {
 		console.warn('Failed to load User:星海子/BotConfig/fixArchiveAnchor.json, using defaults:', err?.message || err);
