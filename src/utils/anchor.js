@@ -424,7 +424,7 @@ const DEFAULT_ANCHOR_CONFIG = {
 };
 
 /**
- * Load external JSON configuration from `User:星海子/BotConfig/fixAnchor.json`,
+ * Load external JSON configuration from `User:星海子/BotConfig/fixArchiveAnchor.json`,
  * falling back to safe defaults if the page is missing or invalid.
  *
  * @param {import('wiki-saikou').MediaWikiApi} api
@@ -434,7 +434,7 @@ async function loadFixAnchorConfig(api) {
 	try {
 		const { data } = await api.post({
 			prop: 'revisions',
-			titles: 'User:星海子/BotConfig/fixAnchor.json',
+			titles: 'User:星海子/BotConfig/fixArchiveAnchor.json',
 			rvprop: 'content',
 		}, { retry: 15 });
 		const page = Object.values(data?.query?.pages || {})[0];
@@ -449,7 +449,7 @@ async function loadFixAnchorConfig(api) {
 			ignorePages: Array.isArray(parsed.ignorePages) ? parsed.ignorePages : DEFAULT_ANCHOR_CONFIG.ignorePages,
 		};
 	} catch (err) {
-		console.warn('Failed to load User:星海子/BotConfig/fixAnchor.json, using defaults:', err?.message || err);
+		console.warn('Failed to load User:星海子/BotConfig/fixArchiveAnchor.json, using defaults:', err?.message || err);
 		return { ...DEFAULT_ANCHOR_CONFIG };
 	}
 }
