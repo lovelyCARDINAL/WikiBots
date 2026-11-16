@@ -1,10 +1,13 @@
 import { env, argv } from 'process';
 import Parser from 'wikiparser-node';
 import {
+	normalizeAnchor,
 	extractAnchors,
-	detectSectionRenames,
+	detectSectionChanges,
 	buildRenameMap,
 	rewriteAnchorLinks,
+	findBrokenAnchorLinks,
+	updateBrokenAnchorsTalkPage,
 } from '../utils/anchor.js';
 import mapLimit from '../utils/concurrency.js';
 import config from '../utils/config.js';
@@ -19,12 +22,13 @@ const TARGET_NAMESPACES = '0|10|14';
 const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:机娘星海酱|all)))\}\}/;
 
 /**
- * Parse CLI arguments (`--dry-run`, `--check-page=...`, `--only-modify-pages=...`, `--limit=...`).
+ * Parse CLI arguments (`--dry-run`, `--self-test`, `--check-page=...`, `--only-modify-pages=...`, `--limit=...`).
  *
- * @returns {{ dryRun: boolean, checkPage: string | null, onlyModifyPages: Set<string> | null, limit: number }}
+ * @returns {{ dryRun: boolean, selfTest: boolean, checkPage: string | null, onlyModifyPages: Set<string> | null, limit: number }}
  */
 function parseArgs() {
 	const dryRun = argv.includes('--dry-run') || ['1', 'true'].includes(String(env.DRY_RUN).toLowerCase());
+	const selfTest = argv.includes('--self-test') || ['1', 'true'].includes(String(env.SELF_TEST).toLowerCase());
 	const getOpt = (prefix) => {
 		const found = argv.find((a) => a.startsWith(prefix));
 		return found ? found.slice(prefix.length) : null;
@@ -36,7 +40,7 @@ function parseArgs() {
 		: null;
 	const limitRaw = Number.parseInt(getOpt('--limit=') || '100', 10);
 	const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : 100;
-	return { dryRun, checkPage, onlyModifyPages, limit };
+	return { dryRun, selfTest, checkPage, onlyModifyPages, limit };
 }
 
 /**
@@ -93,14 +97,15 @@ async function getBacklinks(api, targetTitles) {
 }
 
 /**
- * Compute unambiguous section anchor rename map from recent revisions of `title`.
+ * Compute unambiguous section anchor rename map and unresolved removed anchors
+ * from recent revisions of `title`.
  *
  * @param {import('wiki-saikou').MediaWikiApi} api
  * @param {string} title
  * @param {string} sinceIso
- * @returns {Promise<Map<string, string>>}
+ * @returns {Promise<{ renameMap: Map<string, string>, brokenAnchors: Set<string>, finalAnchors: Set<string> }>}
  */
-async function computePageRenameMap(api, title, sinceIso) {
+async function computePageAnchorState(api, title, sinceIso) {
 	const { data } = await api.post({
 		prop: 'revisions',
 		titles: title,
@@ -112,44 +117,69 @@ async function computePageRenameMap(api, title, sinceIso) {
 	const page = Object.values(data?.query?.pages || {})[0];
 	const revs = (page?.revisions || []).filter((r) => typeof r.content === 'string');
 	if (revs.length < 2) {
-		return new Map();
+		return { renameMap: new Map(), brokenAnchors: new Set(), finalAnchors: new Set() };
 	}
 
-	// Chronological order: oldest -> newest
 	const chronological = [...revs].reverse();
 	const sinceMs = Date.parse(sinceIso);
 	const firstInWindowIdx = chronological.findIndex((r) => Date.parse(r.timestamp) >= sinceMs);
 	const startIdx = firstInWindowIdx > 0 ? firstInWindowIdx - 1 : 0;
 	const relevant = chronological.slice(startIdx);
 	if (relevant.length < 2) {
-		return new Map();
+		return { renameMap: new Map(), brokenAnchors: new Set(), finalAnchors: new Set() };
 	}
 
 	const anchorSnapshots = relevant.map((r) => extractAnchors(r.content));
 	const stepRenames = [];
+	const removedCandidates = new Set();
 	for (let i = 1; i < anchorSnapshots.length; i++) {
-		const step = detectSectionRenames(anchorSnapshots[i - 1], anchorSnapshots[i]);
-		if (step.size) {
-			stepRenames.push(step);
+		const { renames, removed } = detectSectionChanges(anchorSnapshots[i - 1], anchorSnapshots[i]);
+		if (renames.size) {
+			stepRenames.push(renames);
 		}
-	}
-	if (!stepRenames.length) {
-		return new Map();
+		for (const item of removed) {
+			removedCandidates.add(item);
+		}
 	}
 
 	const finalAnchors = anchorSnapshots[anchorSnapshots.length - 1].all;
-	return buildRenameMap(stepRenames, finalAnchors);
+	const renameMap = buildRenameMap(stepRenames, finalAnchors);
+	const brokenAnchors = new Set(
+		[...removedCandidates].filter((a) => !finalAnchors.has(a) && !renameMap.has(a)),
+	);
+	return { renameMap, brokenAnchors, finalAnchors };
 }
 
 /**
- * Fix broken anchor links on candidate pages for a single target page.
+ * Check if `content` still contains any link pointing to `targetTitle#targetAnchor`.
+ *
+ * @param {string} content
+ * @param {string} targetTitle
+ * @param {string} targetAnchor
+ * @returns {boolean}
+ */
+function pageHasLinkTo(content, targetTitle, targetAnchor) {
+	const root = Parser.parse(content);
+	const normTarget = Parser.normalizeTitle(targetTitle).title;
+	const normAnchor = normalizeAnchor(targetAnchor);
+	return root.querySelectorAll('link').some((link) => {
+		if (!link.name || !link.fragment) {
+			return false;
+		}
+		return Parser.normalizeTitle(link.name).title === normTarget
+			&& normalizeAnchor(link.fragment) === normAnchor;
+	});
+}
+
+/**
+ * Fix broken anchor links on candidate pages and manage `{{Broken anchors}}` on talk pages.
  *
  * @param {import('wiki-saikou').MediaWikiApi} api
  * @param {string} targetTitle
- * @param {Map<string, string>} renameMap
+ * @param {{ renameMap: Map<string, string>, brokenAnchors: Set<string>, finalAnchors: Set<string> }} state
  * @param {{ dryRun: boolean, onlyModifyPages: Set<string> | null }} opts
  */
-async function processTargetPage(api, targetTitle, renameMap, { dryRun, onlyModifyPages }) {
+async function processTargetPage(api, targetTitle, { renameMap, brokenAnchors, finalAnchors }, { dryRun, onlyModifyPages }) {
 	const targetTitles = await getTargetTitleSet(api, targetTitle);
 	const backlinks = await getBacklinks(api, targetTitles);
 	const candidates = Array.from(new Set([targetTitle, ...backlinks]));
@@ -176,27 +206,80 @@ async function processTargetPage(api, targetTitle, renameMap, { dryRun, onlyModi
 
 		const isSelf = Parser.normalizeTitle(pageTitle).title === normalizedTarget;
 		const result = rewriteAnchorLinks(content, targetTitles, renameMap, isSelf);
-		if (!result.changed) {
+		const latestContent = result.changed ? result.content : content;
+
+		if (result.changed) {
+			const summary = `机器人：修复指向[[${targetTitle}]]的失效章节锚点（${result.replacements.length}处）`;
+			if (dryRun) {
+				console.log(`[DRY-RUN] Would edit [[${pageTitle}]] (${summary}):`);
+				for (const r of result.replacements) {
+					console.log(`  - ${r.from} => ${r.to}`);
+				}
+			} else {
+				await api.postWithToken('csrf', {
+					action: 'edit',
+					title: pageTitle,
+					text: latestContent,
+					summary,
+					bot: true,
+					minor: true,
+					nocreate: true,
+					tags: 'Bot',
+					watchlist: 'nochange',
+				}, {
+					retry: 25,
+					noCache: true,
+				}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
+			}
+		}
+
+		const remainingBroken = findBrokenAnchorLinks(latestContent, targetTitles, brokenAnchors, isSelf);
+		const parsedPageTitle = Parser.normalizeTitle(pageTitle);
+		if (parsedPageTitle.isTalkPage() || !remainingBroken.length && !result.changed) {
 			return;
 		}
 
-		const summary = `机器人：修复指向[[${targetTitle}]]的失效章节锚点（${result.replacements.length}处）`;
+		const talkTitle = parsedPageTitle.toTalkPage().title;
+		const { data: talkData } = await api.post({
+			prop: 'revisions',
+			titles: talkTitle,
+			rvprop: 'content',
+		}, { retry: 15 });
+		const talkPage = Object.values(talkData?.query?.pages || {})[0];
+		const talkContent = talkPage?.revisions?.[0]?.content || '';
+		if (!talkContent && !remainingBroken.length) {
+			return;
+		}
+
+		const talkResult = updateBrokenAnchorsTalkPage(talkContent, {
+			addLinks: remainingBroken,
+			isStillBroken: (linkTitle, linkAnchor) => {
+				if (!targetTitles.has(linkTitle)) {
+					return true;
+				}
+				return !finalAnchors.has(linkAnchor) && pageHasLinkTo(latestContent, linkTitle, linkAnchor);
+			},
+		});
+		if (!talkResult.changed) {
+			return;
+		}
+
+		const talkSummary = talkResult.templateRemoved
+			? '机器人：失效锚点已全部修复，移除{{Broken anchors}}提醒'
+			: `机器人：更新{{Broken anchors}}提醒（新增${talkResult.addedCount}处，移除${talkResult.removedCount}处）`;
 		if (dryRun) {
-			console.log(`[DRY-RUN] Would edit [[${pageTitle}]] (${summary}):`);
-			for (const r of result.replacements) {
-				console.log(`  - ${r.from} => ${r.to}`);
-			}
+			console.log(`[DRY-RUN] Would update talk page [[${talkTitle}]] (${talkSummary}):`);
+			console.log(talkResult.content);
 			return;
 		}
 
 		await api.postWithToken('csrf', {
 			action: 'edit',
-			title: pageTitle,
-			text: result.content,
-			summary,
+			title: talkTitle,
+			text: talkResult.content,
+			summary: talkSummary,
 			bot: true,
 			minor: true,
-			nocreate: true,
 			tags: 'Bot',
 			watchlist: 'nochange',
 		}, {
@@ -206,8 +289,62 @@ async function processTargetPage(api, targetTitle, renameMap, { dryRun, onlyModi
 	});
 }
 
+/**
+ * Run deterministic in-memory self-tests for all 3 core behaviors:
+ * 1) Auto-fixing 1-to-1 renamed section anchors
+ * 2) Adding {{Broken anchors}} notice on talk page for unfixable/removed anchors
+ * 3) Auto-pruning & removing {{Broken anchors}} once fixed
+ */
+function runSelfTest() {
+	console.log('=== Running fixAnchor self-test ===');
+	const rev1 = '== 简介 ==\n== 外部链接 ==\n== 已删除章节 ==\n';
+	const rev2 = '== 简介 ==\n== 注释和外部链接 ==\n== 已删除章节 ==\n';
+	const rev3 = '== 简介 ==\n== 注释和外部链接 ==\n';
+
+	const step1 = detectSectionChanges(extractAnchors(rev1), extractAnchors(rev2));
+	const step2 = detectSectionChanges(extractAnchors(rev2), extractAnchors(rev3));
+	const finalAnchors = extractAnchors(rev3).all;
+	const renameMap = buildRenameMap([step1.renames, step2.renames], finalAnchors);
+	const brokenSet = new Set(step2.removed.filter((a) => !finalAnchors.has(a) && !renameMap.has(a)));
+	console.log('1) Detected changes:', { renames: Object.fromEntries(renameMap), removed: [...brokenSet] });
+
+	const targetTitles = new Set(['测试条目']);
+	const linkingPage = '参考[[测试条目#外部链接|外部链接]]，以及[[测试条目#已删除章节]]。';
+	const rewriteRes = rewriteAnchorLinks(linkingPage, targetTitles, renameMap, false);
+	console.log('2) Auto-fixed linking page:', rewriteRes.replacements, '=>', rewriteRes.content);
+
+	const remainingBroken = findBrokenAnchorLinks(rewriteRes.content, targetTitles, brokenSet, false);
+	const talkStep1 = updateBrokenAnchorsTalkPage('现有讨论内容。\n', {
+		addLinks: remainingBroken,
+		isStillBroken: () => true,
+	});
+	console.log(`3) Talk page after adding {{Broken anchors}}:\n${talkStep1.content}`);
+
+	const fixedLinkingPage = rewriteRes.content.replace('[[测试条目#已删除章节]]', '[[测试条目#简介]]');
+	const talkStep2 = updateBrokenAnchorsTalkPage(talkStep1.content, {
+		addLinks: [],
+		isStillBroken: (t, a) => pageHasLinkTo(fixedLinkingPage, t, a),
+	});
+	console.log(`4) Talk page after broken link fixed (templateRemoved=${talkStep2.templateRemoved}):\n${talkStep2.content}`);
+
+	if (
+		rewriteRes.content !== '参考[[测试条目#注释和外部链接|外部链接]]，以及[[测试条目#已删除章节]]。'
+		|| !talkStep1.content.includes('{{Broken anchors')
+		|| !talkStep1.content.includes('* [[测试条目#已删除章节]]')
+		|| !talkStep2.templateRemoved
+		|| talkStep2.content.trim() !== '现有讨论内容。'
+	) {
+		throw new Error('Self-test assertion failed!');
+	}
+	console.log('=== Self-test PASSED ===');
+}
+
 (async () => {
-	const { dryRun, checkPage, onlyModifyPages, limit } = parseArgs();
+	const { dryRun, selfTest, checkPage, onlyModifyPages, limit } = parseArgs();
+	if (selfTest) {
+		runSelfTest();
+		return;
+	}
 	console.log(`Start time: ${new Date().toISOString()} (dryRun=${dryRun})`);
 
 	const api = dryRun && !config.zh.bot.password
@@ -251,12 +388,15 @@ async function processTargetPage(api, targetTitle, renameMap, { dryRun, onlyModi
 	console.log(`Checking ${targetPages.length} page(s) since ${sinceIso}...`);
 
 	await mapLimit(targetPages, 3, async (targetTitle) => {
-		const renameMap = await computePageRenameMap(api, targetTitle, sinceIso);
-		if (!renameMap.size) {
+		const state = await computePageAnchorState(api, targetTitle, sinceIso);
+		if (!state.renameMap.size && !state.brokenAnchors.size) {
 			return;
 		}
-		console.log(`Detected anchor rename(s) on [[${targetTitle}]]:`, Object.fromEntries(renameMap));
-		await processTargetPage(api, targetTitle, renameMap, { dryRun, onlyModifyPages });
+		console.log(`Detected anchor changes on [[${targetTitle}]]:`, {
+			renames: Object.fromEntries(state.renameMap),
+			removed: [...state.brokenAnchors],
+		});
+		await processTargetPage(api, targetTitle, state, { dryRun, onlyModifyPages });
 	});
 
 	if (!dryRun && !checkPage && timeData) {

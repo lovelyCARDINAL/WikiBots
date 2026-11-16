@@ -8,6 +8,11 @@ on:
         type: boolean
         required: true
         default: true
+      self_test:
+        description: "Run offline self-test for fix, talk-page notice, and auto-removal"
+        type: boolean
+        required: false
+        default: false
       check_page:
         description: "Optional single page title to check"
         type: string
@@ -40,6 +45,7 @@ jobs:
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
           DRY_RUN: ${{ github.event.inputs.dry_run }}
+          SELF_TEST: ${{ github.event.inputs.self_test }}
         run: |
           ARGS="--limit=${{ github.event.inputs.limit }}"
           if [ -n "${{ github.event.inputs.check_page }}" ]; then

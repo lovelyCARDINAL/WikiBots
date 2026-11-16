@@ -87,23 +87,35 @@ function extractAnchors(wikitext) {
 }
 
 /**
- * Compare two revisions of a page and return unambiguous 1-to-1 section renames.
- * If multiple sections are added/removed simultaneously, returns an empty map to avoid
- * false positives (matching cewbot's conservative rename detection).
+ * Compare two revisions of a page and return:
+ * - `renames`: unambiguous 1-to-1 section renames
+ * - `removed`: heading anchors removed without an unambiguous 1-to-1 replacement
  *
  * @param {{ headings: string[], all: Set<string> }} oldAnchors
  * @param {{ headings: string[], all: Set<string> }} newAnchors
- * @returns {Map<string, string>} normalizedOldAnchor -> newHeadingAnchor
+ * @returns {{ renames: Map<string, string>, removed: string[] }}
  */
-function detectSectionRenames(oldAnchors, newAnchors) {
+function detectSectionChanges(oldAnchors, newAnchors) {
 	const removed = oldAnchors.headings.filter((h) => !newAnchors.all.has(h));
 	const added = newAnchors.headings.filter((h) => !oldAnchors.all.has(h));
 	const renames = new Map();
 
 	if (removed.length === 1 && added.length === 1) {
 		renames.set(removed[0], added[0]);
+		return { renames, removed: [] };
 	}
-	return renames;
+	return { renames, removed };
+}
+
+/**
+ * Backward-compatible wrapper returning only the unambiguous 1-to-1 rename map.
+ *
+ * @param {{ headings: string[], all: Set<string> }} oldAnchors
+ * @param {{ headings: string[], all: Set<string> }} newAnchors
+ * @returns {Map<string, string>}
+ */
+function detectSectionRenames(oldAnchors, newAnchors) {
+	return detectSectionChanges(oldAnchors, newAnchors).renames;
 }
 
 /**
@@ -188,10 +200,148 @@ function rewriteAnchorLinks(content, normalizedTargetTitles, renameMap, isTarget
 	};
 }
 
+/**
+ * Find links in `content` that point to `normalizedTargetTitles` with a fragment
+ * in `brokenAnchors`.
+ *
+ * @param {string} content
+ * @param {Set<string>} normalizedTargetTitles
+ * @param {Set<string>} brokenAnchors
+ * @param {boolean} [isTargetPage=false]
+ * @returns {string[]} normalized `[[Title#Anchor]]` strings
+ */
+function findBrokenAnchorLinks(content, normalizedTargetTitles, brokenAnchors, isTargetPage = false) {
+	if (!brokenAnchors.size) {
+		return [];
+	}
+	const root = Parser.parse(content);
+	const found = new Set();
+	const primaryTitle = [...normalizedTargetTitles][0] || '';
+
+	for (const link of root.querySelectorAll('link')) {
+		if (!link.fragment) {
+			continue;
+		}
+		const normFragment = normalizeAnchor(link.fragment);
+		if (!brokenAnchors.has(normFragment)) {
+			continue;
+		}
+		const isSelfSection = !link.name && isTargetPage;
+		const normalizedLinkName = link.name ? Parser.normalizeTitle(link.name).title : '';
+		if (!isSelfSection && !normalizedTargetTitles.has(normalizedLinkName)) {
+			continue;
+		}
+		const titlePart = link.name ? normalizedLinkName : primaryTitle;
+		found.add(`[[${titlePart}#${normFragment}]]`);
+	}
+	return [...found];
+}
+
+/**
+ * Update or remove `{{Broken anchors|links=...}}` on a talk page using wikiparser-node.
+ * - Prunes entries for which `isStillBroken(title, anchor)` returns `false`.
+ * - Appends new `addLinks` (each like `[[Page#Anchor]]`) not already listed.
+ * - Removes the entire `{{Broken anchors}}` template if `links` becomes empty.
+ *
+ * @param {string} talkContent
+ * @param {object} options
+ * @param {string[]} [options.addLinks=[]]
+ * @param {(title: string, anchor: string) => boolean} [options.isStillBroken]
+ * @returns {{ changed: boolean, content: string, addedCount: number, removedCount: number, templateRemoved: boolean }}
+ */
+function updateBrokenAnchorsTalkPage(talkContent, { addLinks = [], isStillBroken = () => true }) {
+	const BROKEN_ANCHORS_RE = /^Template:Broken[ _]anchors$/i;
+	const root = Parser.parse(talkContent);
+	const template = root.querySelectorAll('template').find((t) => BROKEN_ANCHORS_RE.test(t.name));
+
+	let addedCount = 0;
+	let removedCount = 0;
+	let templateRemoved = false;
+
+	if (!template) {
+		if (!addLinks.length) {
+			return { changed: false, content: talkContent, addedCount: 0, removedCount: 0, templateRemoved: false };
+		}
+		const block = `{{Broken anchors\n|links=\n${addLinks.map((l) => `* ${l}`).join('\n')}\n}}`;
+		const newContent = talkContent.trim() ? `${block}\n${talkContent}` : block;
+		return {
+			changed: true,
+			content: newContent,
+			addedCount: addLinks.length,
+			removedCount: 0,
+			templateRemoved: false,
+		};
+	}
+
+	const rawLinks = template.getValue('links') || '';
+	const existingLines = rawLinks
+		.split(/\r?\n/)
+		.map((l) => l.trim())
+		.filter(Boolean);
+
+	const keptLines = [];
+	const existingNormalized = new Set();
+
+	for (const line of existingLines) {
+		const parsedLine = Parser.parse(line);
+		const link = parsedLine.querySelector('link');
+		if (!link || !link.name || !link.fragment) {
+			keptLines.push(line);
+			continue;
+		}
+		const normTitle = Parser.normalizeTitle(link.name).title;
+		const normFragment = normalizeAnchor(link.fragment);
+		if (!isStillBroken(normTitle, normFragment)) {
+			removedCount++;
+			continue;
+		}
+		existingNormalized.add(`[[${normTitle}#${normFragment}]]`);
+		keptLines.push(line);
+	}
+
+	for (const newLink of addLinks) {
+		const parsedNew = Parser.parse(newLink);
+		const link = parsedNew.querySelector('link');
+		const key = link?.name && link?.fragment
+			? `[[${Parser.normalizeTitle(link.name).title}#${normalizeAnchor(link.fragment)}]]`
+			: newLink;
+		if (!existingNormalized.has(key)) {
+			existingNormalized.add(key);
+			keptLines.push(`* ${newLink}`);
+			addedCount++;
+		}
+	}
+
+	if (keptLines.length === 0) {
+		const prev = template.previousSibling;
+		const next = template.nextSibling;
+		const atLineStart = !prev || prev.type === 'text' && /\n$/.test(prev.data);
+		if (atLineStart && next?.type === 'text' && next.data.startsWith('\n')) {
+			next.replaceData(next.data.slice(1));
+		}
+		template.remove();
+		templateRemoved = true;
+	} else if (addedCount > 0 || removedCount > 0) {
+		template.setValue('links', `\n${keptLines.join('\n')}\n`);
+	}
+
+	const newContent = root.toString();
+	return {
+		changed: addedCount > 0 || removedCount > 0 || templateRemoved,
+		content: newContent,
+		addedCount,
+		removedCount,
+		templateRemoved,
+	};
+}
+
 export {
 	normalizeAnchor,
 	extractAnchors,
+	detectSectionChanges,
 	detectSectionRenames,
 	buildRenameMap,
 	rewriteAnchorLinks,
+	findBrokenAnchorLinks,
+	updateBrokenAnchorsTalkPage,
 };
