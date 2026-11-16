@@ -3,6 +3,7 @@ import { MediaWikiApi } from 'wiki-saikou';
 import clientLogin from '../utils/clientLogin.js';
 import config from '../utils/config.js';
 import { getTimeData, editTimeData } from '../utils/lastTime.js';
+import paginate from '../utils/paginate.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
 const zhapi = new MediaWikiApi({
@@ -20,23 +21,18 @@ const zhapi = new MediaWikiApi({
 
 const queryLogs = async (api, leaction, leend, lestart = undefined) => {
 	const result = [];
-	const eol = Symbol();
-	let lecontinue = undefined;
-	while (lecontinue !== eol) {
-		const { data } = await api.post({
-			list: 'logevents',
-			leprop: leaction === 'avatar/delete' ? 'ids|comment' : 'title',
-			leaction,
-			lestart,
-			leend,
-			lelimit: 'max',
-			...leaction === 'avatar/delete' && { leuser: '星海-adminbot' },
-			lecontinue,
-		}, {
-			retry: 15,
-		});
-		lecontinue = data.continue ? data.continue.lecontinue : eol;
-		result.push(...data.query.logevents);
+	for await (const data of paginate(api, {
+		list: 'logevents',
+		leprop: leaction === 'avatar/delete' ? 'ids|comment' : 'title',
+		leaction,
+		lestart,
+		leend,
+		lelimit: 'max',
+		...leaction === 'avatar/delete' && { leuser: '星海-adminbot' },
+	})) {
+		if (data?.query?.logevents) {
+			result.push(...data.query.logevents);
+		}
 	}
 	return leaction === 'avatar/delete'
 		? [...new Set(result.filter(({ comment, suppressed }) => !suppressed && comment === '被隐藏的用户').map(({ logid }) => logid))]
@@ -109,20 +105,15 @@ const hideAbuseLog = async (afluser) => {
 	while (retry < 30) {
 		const ids = await (async () => {
 			const result = [];
-			const eol = Symbol();
-			let aflstart = undefined;
-			while (aflstart !== eol) {
-				const { data } = await zhapi.post({
-					list: 'abuselog',
-					afluser,
-					afllimit: 'max',
-					aflprop: 'ids|hidden',
-					aflstart,
-				}, {
-					retry: 15,
-				});
-				aflstart = data.continue ? data.continue.aflstart : eol;
-				result.push(...data.query.abuselog);
+			for await (const data of paginate(zhapi, {
+				list: 'abuselog',
+				afluser,
+				afllimit: 'max',
+				aflprop: 'ids|hidden',
+			})) {
+				if (data?.query?.abuselog) {
+					result.push(...data.query.abuselog);
+				}
 			}
 			return result.filter(({ hidden }) => !hidden).map(({ id }) => id);
 		})();
@@ -195,20 +186,15 @@ const deleteAvatar = async (username) => {
 	const idlist = await Promise.all([
 		Promise.all(userlist.map(async (user) => {
 			const result = [];
-			const eol = Symbol();
-			let lecontinue = undefined;
-			while (lecontinue !== eol) {
-				const { data } = await cmapi.post({
-					list: 'logevents',
-					leprop: 'ids',
-					leuser: user.replace('User:', ''),
-					lelimit: 'max',
-					lecontinue,
-				}, {
-					retry: 15,
-				});
-				lecontinue = data.continue ? data.continue.lecontinue : eol;
-				result.push(...data.query.logevents);
+			for await (const data of paginate(cmapi, {
+				list: 'logevents',
+				leprop: 'ids',
+				leuser: user.replace('User:', ''),
+				lelimit: 'max',
+			})) {
+				if (data?.query?.logevents) {
+					result.push(...data.query.logevents);
+				}
 			}
 			return result
 				.filter(({ suppressed }) => !suppressed)
