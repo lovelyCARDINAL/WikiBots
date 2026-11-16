@@ -157,7 +157,7 @@ async function buildArchiveMap(api, boardTitle) {
  * @param {import('wiki-saikou').MediaWikiApi} api
  * @param {string} boardTitle
  */
-async function processArchiveBoard(api, boardTitle, tags = 'Bot') {
+async function processArchiveBoard(api, boardTitle) {
 	const archiveMap = await buildArchiveMap(api, boardTitle);
 	if (!archiveMap.size) {
 		return;
@@ -212,7 +212,7 @@ async function processArchiveBoard(api, boardTitle, tags = 'Bot') {
 			bot: true,
 			minor: true,
 			nocreate: true,
-			tags,
+			tags: 'Bot',
 			watchlist: 'nochange',
 		}, {
 			retry: 25,
@@ -232,7 +232,7 @@ async function processArchiveBoard(api, boardTitle, tags = 'Bot') {
 
 	await mapLimit(boards, 2, async (boardTitle) => {
 		try {
-			await processArchiveBoard(api, boardTitle, botConfig.tags);
+			await processArchiveBoard(api, boardTitle);
 		} catch (err) {
 			console.error(`Error processing archive board [[${boardTitle}]]:`, err?.message || err);
 		}

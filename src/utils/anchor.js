@@ -450,10 +450,6 @@ const DEFAULT_ANCHOR_CONFIG = {
 	],
 	archivePages: [],
 	ignorePages: [],
-	addNoteToTalkPage: true,
-	actionForBlankTalkPage: 'DELETE',
-	removeTemplateWhenReminding: 'Template:即将删除',
-	tags: 'Bot',
 };
 
 /**
@@ -461,7 +457,7 @@ const DEFAULT_ANCHOR_CONFIG = {
  * falling back to safe defaults if the page is missing or invalid.
  *
  * @param {import('wiki-saikou').MediaWikiApi} api
- * @returns {Promise<typeof DEFAULT_ANCHOR_CONFIG>}
+ * @returns {Promise<{ archiveTemplates: string[], archivePages: string[], ignorePages: string[] }>}
  */
 async function loadFixAnchorConfig(api) {
 	try {
@@ -480,10 +476,6 @@ async function loadFixAnchorConfig(api) {
 			archiveTemplates: Array.isArray(parsed.archiveTemplates) ? parsed.archiveTemplates : DEFAULT_ANCHOR_CONFIG.archiveTemplates,
 			archivePages: Array.isArray(parsed.archivePages) ? parsed.archivePages : DEFAULT_ANCHOR_CONFIG.archivePages,
 			ignorePages: Array.isArray(parsed.ignorePages) ? parsed.ignorePages : DEFAULT_ANCHOR_CONFIG.ignorePages,
-			addNoteToTalkPage: typeof parsed.addNoteToTalkPage === 'boolean' ? parsed.addNoteToTalkPage : DEFAULT_ANCHOR_CONFIG.addNoteToTalkPage,
-			actionForBlankTalkPage: typeof parsed.actionForBlankTalkPage === 'string' ? parsed.actionForBlankTalkPage : DEFAULT_ANCHOR_CONFIG.actionForBlankTalkPage,
-			removeTemplateWhenReminding: typeof parsed.removeTemplateWhenReminding === 'string' ? parsed.removeTemplateWhenReminding : DEFAULT_ANCHOR_CONFIG.removeTemplateWhenReminding,
-			tags: typeof parsed.tags === 'string' ? parsed.tags : DEFAULT_ANCHOR_CONFIG.tags,
 		};
 	} catch (err) {
 		console.warn('Failed to load User:星海子/BotConfig/fixArchiveAnchor.json, using defaults:', err?.message || err);
