@@ -41,6 +41,7 @@ on:
           - song-counter
           - draft-deletion
           - fix-anchor
+          - fix-archive-anchor
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -307,3 +308,26 @@ jobs:
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
         run: npm start src/Clean/fixAnchor.js
+
+  fix-archive-anchor:
+    needs: fix-anchor
+    if: |
+      !cancelled() && (
+        (github.event.schedule == '35 19 * * *' && needs.fix-anchor.result == 'success') ||
+        github.event.inputs.task == 'fix-archive-anchor'
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set Node Version
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          ZH_BOT: ${{ secrets.ZH_BOT }}
+        run: npm start src/Clean/fixArchiveAnchor.js
