@@ -1,46 +1,29 @@
 import { env } from 'process';
-import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
-import config from '../utils/config.js';
+import mapLimit from '../utils/concurrency.js';
+import { createAndLogin } from '../utils/createApi.js';
+import paginate from '../utils/paginate.js';
 
 Parser.config = 'moegirl';
 
 const site = env.SITE;
-const api = new MediaWikiApi({
-	baseURL: config[site].api,
-	fexiosConfigs: {
-		headers: { 'user-agent': config.useragent },
-	},
-});
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
-	
-	await api.login(
-		config[site].abot.name,
-		config[site].abot.password,
-		undefined,
-		{ retry: 25, noCache: true },
-	).then(console.log);
+
+	const api = await createAndLogin(site, 'abot');
 
 	const pagelist = await (async () => {
 		const result = [];
-		const eol = Symbol();
-		let gcmcontinue = undefined;
-		while (gcmcontinue !== eol) {
-			const { data } = await api.post({
-				rvprop: 'user|content',
-				prop: 'revisions',
-				generator: 'categorymembers',
-				gcmtitle: 'Category:即将删除的页面',
-				gcmprop: 'ids|title',
-				gcmtype: 'page|subcat|file',
-				gcmlimit: 'max',
-				gcmcontinue,
-			}, {
-				retry: 15,
-			});
-			gcmcontinue = data.continue ? data.continue.gcmcontinue : eol;
+		for await (const data of paginate(api, {
+			rvprop: 'user|content',
+			prop: 'revisions',
+			generator: 'categorymembers',
+			gcmtitle: 'Category:即将删除的页面',
+			gcmprop: 'ids|title',
+			gcmtype: 'page|subcat|file',
+			gcmlimit: 'max',
+		})) {
 			if (data?.query?.pages) {
 				result.push(...Object.values(data.query.pages));
 			}
@@ -60,8 +43,9 @@ const api = new MediaWikiApi({
 		retry: 15,
 	});
 	const userlist = allusers.map(({ name }) => name);
-		
-	await Promise.all(pagelist.map(async ({ pageid, revisions: [{ user: lastEditUser, content }] }) => {
+
+	await mapLimit(pagelist, 5, async ({ pageid, revisions }) => {
+		const { user: lastEditUser, content } = revisions?.[0] || {};
 		if (!content || !userlist.includes(lastEditUser)) {
 			return;
 		}
@@ -89,7 +73,7 @@ const api = new MediaWikiApi({
 			retry: 50,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
-	}));
+	});
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
