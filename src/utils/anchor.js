@@ -46,11 +46,11 @@ function extractAnchors(wikitext) {
 	const seenHeadingCount = new Map();
 
 	for (const heading of root.querySelectorAll('heading')) {
-		const rawText = heading.innerText?.trim();
-		if (!rawText) {
+		const rawId = heading.id?.trim();
+		if (!rawId) {
 			continue;
 		}
-		const base = normalizeAnchor(rawText);
+		const base = normalizeAnchor(rawId);
 		if (!base) {
 			continue;
 		}
