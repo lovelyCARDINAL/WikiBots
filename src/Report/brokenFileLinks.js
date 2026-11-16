@@ -2,6 +2,7 @@ import { Buffer } from 'buffer';
 import { env } from 'process';
 import { Octokit } from '@octokit/core';
 import { MediaWikiApi } from 'wiki-saikou';
+import mapLimit from '../utils/concurrency.js';
 import config from '../utils/config.js';
 import readData from '../utils/readData.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
@@ -99,27 +100,6 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
  * ======================================================================== */
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/**
- * 带指数退避的并发闸门。
- * @template T, R
- * @param {T[]} items
- * @param {number} limit
- * @param {(item: T, index: number) => Promise<R>} fn
- * @returns {Promise<R[]>}
- */
-async function mapLimit(items, limit, fn) {
-	const results = new Array(items.length);
-	let cursor = 0;
-	const worker = async () => {
-		while (cursor < items.length) {
-			const index = cursor++;
-			results[index] = await fn(items[index], index);
-		}
-	};
-	await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker));
-	return results;
-}
 
 /**
  * 统一的 POST 封装：

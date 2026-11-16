@@ -1,4 +1,5 @@
 import { MediaWikiApi } from 'wiki-saikou';
+import mapLimit from '../utils/concurrency.js';
 import config from '../utils/config.js';
 
 const api = new MediaWikiApi({
@@ -50,7 +51,7 @@ const NS_REASON_MAP = {
 		console.log('No pages to delete.');
 	}
 
-	await Promise.all(pages.map(async ({ pageid, ns, params }) => {
+	await mapLimit(pages, 5, async ({ pageid, ns, params }) => {
 		const [targetns, reason] = NS_REASON_MAP[ns] || [ [ns], '自动删除移动讨论页面残留重定向'];
 		if (!targetns.includes(params.target_ns)) {
 			return;
@@ -78,7 +79,7 @@ const NS_REASON_MAP = {
 				noCache: true,
 			}).then(({ data }) => console.log(JSON.stringify(data)));
 		}
-	}));
+	});
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();
