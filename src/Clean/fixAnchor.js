@@ -18,7 +18,7 @@ import paginate from '../utils/paginate.js';
 Parser.config = 'moegirl';
 
 const TIME_KEY = 'fix-anchor';
-const TARGET_NAMESPACES = '0|10|14';
+const TARGET_NAMESPACES = '0|4|10|12|14';
 const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:机娘星海酱|all)))\}\}/;
 
 /**
@@ -290,6 +290,125 @@ async function processTargetPage(api, targetTitle, { renameMap, brokenAnchors, f
 }
 
 /**
+ * Sweep talk pages currently transcluding `Template:Broken anchors` and prune/remove
+ * entries whose links no longer exist on the subject page or whose target anchors now exist.
+ *
+ * @param {import('wiki-saikou').MediaWikiApi} api
+ * @param {{ dryRun: boolean, onlyModifyPages: Set<string> | null }} opts
+ */
+async function cleanupResolvedBrokenAnchors(api, { dryRun, onlyModifyPages }) {
+	const talkPages = [];
+	for await (const data of paginate(api, {
+		list: 'embeddedin',
+		eititle: 'Template:Broken anchors',
+		eilimit: 'max',
+	})) {
+		for (const item of data?.query?.embeddedin || []) {
+			if (item.title && Parser.normalizeTitle(item.title).isTalkPage()) {
+				talkPages.push(item.title);
+			}
+		}
+	}
+
+	if (!talkPages.length) {
+		return;
+	}
+
+	const anchorCache = new Map();
+	const getTargetAnchors = async (targetTitle) => {
+		const norm = Parser.normalizeTitle(targetTitle).title;
+		if (anchorCache.has(norm)) {
+			return anchorCache.get(norm);
+		}
+		const { data } = await api.post({
+			prop: 'revisions',
+			titles: norm,
+			rvprop: 'content',
+			redirects: true,
+		}, { retry: 15 });
+		const page = Object.values(data?.query?.pages || {})[0];
+		const content = page?.revisions?.[0]?.content;
+		const anchors = content ? extractAnchors(content).all : new Set();
+		anchorCache.set(norm, anchors);
+		return anchors;
+	};
+
+	await mapLimit(talkPages, 3, async (talkTitle) => {
+		const subjectTitle = Parser.normalizeTitle(talkTitle).toSubjectPage().title;
+		if (onlyModifyPages && !onlyModifyPages.has(subjectTitle)) {
+			return;
+		}
+
+		const [{ data: talkData }, { data: subjectData }] = await Promise.all([
+			api.post({ prop: 'revisions', titles: talkTitle, rvprop: 'content' }, { retry: 15 }),
+			api.post({ prop: 'revisions', titles: subjectTitle, rvprop: 'content' }, { retry: 15 }),
+		]);
+
+		const talkContent = Object.values(talkData?.query?.pages || {})[0]?.revisions?.[0]?.content;
+		const subjectContent = Object.values(subjectData?.query?.pages || {})[0]?.revisions?.[0]?.content;
+		if (!talkContent || !subjectContent) {
+			return;
+		}
+
+		const root = Parser.parse(talkContent);
+		const tpl = root.querySelectorAll('template').find((t) => /^Template:Broken[ _]anchors$/i.test(t.name));
+		if (!tpl) {
+			return;
+		}
+
+		const rawLinks = tpl.getValue('links') || '';
+		const targetTitlesToFetch = new Set();
+		for (const line of rawLinks.split(/\r?\n/)) {
+			const link = Parser.parse(line).querySelector('link');
+			if (link?.name) {
+				targetTitlesToFetch.add(Parser.normalizeTitle(link.name).title);
+			}
+		}
+		for (const t of targetTitlesToFetch) {
+			await getTargetAnchors(t);
+		}
+
+		const talkResult = updateBrokenAnchorsTalkPage(talkContent, {
+			addLinks: [],
+			isStillBroken: (linkTitle, linkAnchor) => {
+				if (!pageHasLinkTo(subjectContent, linkTitle, linkAnchor)) {
+					return false;
+				}
+				const targetAnchors = anchorCache.get(linkTitle);
+				return !targetAnchors?.has(linkAnchor);
+			},
+		});
+		if (!talkResult.changed) {
+			return;
+		}
+
+		const talkSummary = talkResult.templateRemoved
+			? '机器人：失效锚点已全部修复，移除{{Broken anchors}}提醒'
+			: `机器人：清理已修复的{{Broken anchors}}提醒（移除${talkResult.removedCount}处）`;
+		if (dryRun) {
+			console.log(`[DRY-RUN] Would clean talk page [[${talkTitle}]] (${talkSummary}):`);
+			console.log(talkResult.content);
+			return;
+		}
+
+		await api.postWithToken('csrf', {
+			action: 'edit',
+			title: talkTitle,
+			text: talkResult.content,
+			summary: talkSummary,
+			bot: true,
+			minor: true,
+			nocreate: true,
+			tags: 'Bot',
+			watchlist: 'nochange',
+		}, {
+			retry: 25,
+			noCache: true,
+		}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
+	});
+}
+
+/**
  * Run deterministic in-memory self-tests for all 3 core behaviors:
  * 1) Auto-fixing 1-to-1 renamed section anchors
  * 2) Adding {{Broken anchors}} notice on talk page for unfixable/removed anchors
@@ -398,6 +517,10 @@ function runSelfTest() {
 		});
 		await processTargetPage(api, targetTitle, state, { dryRun, onlyModifyPages });
 	});
+
+	if (!checkPage) {
+		await cleanupResolvedBrokenAnchors(api, { dryRun, onlyModifyPages });
+	}
 
 	if (!dryRun && !checkPage && timeData) {
 		await editTimeData(timeData, TIME_KEY, nowIso);
