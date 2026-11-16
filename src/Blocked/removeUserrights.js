@@ -11,6 +11,8 @@ import { createAndLogin } from '../utils/createApi.js';
 		augroup: 'manually-confirmed|extendedconfirmed',
 		auprop: 'blockinfo',
 		aulimit: 'max',
+	}, {
+		retry: 15,
 	});
 
 	const time = moment().subtract(1, 'week');
