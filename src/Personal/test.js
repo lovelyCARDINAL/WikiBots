@@ -2,14 +2,14 @@ import tls from 'node:tls';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 
-const useTlsCompat = process.env.TLS_COMPAT === '1';
+const mode = process.env.TLS_MODE || 'curve_only';
 
-if (useTlsCompat) {
-	// 去掉 OpenSSL 3.5 默认的 X25519MLKEM768，模拟 OpenSSL 3.0 曲线列表
+if (mode === 'curve_only') {
+	// 只去掉 OpenSSL 3.5 默认的 X25519MLKEM768，不降级 SECLEVEL
 	tls.DEFAULT_ECDH_CURVE = 'X25519:P-256:P-384:P-521';
 }
 
-const envLabel = `Node ${process.version} | OpenSSL ${process.versions.openssl} | compat=${useTlsCompat}`;
+const envLabel = `Node ${process.version} | OpenSSL ${process.versions.openssl} | mode=${mode}`;
 console.log(`Start time: ${new Date().toISOString()}`);
 console.log(`Env: ${envLabel}`);
 console.log(`ECDH Curve: ${tls.DEFAULT_ECDH_CURVE}`);
@@ -38,7 +38,7 @@ const api = new MediaWikiApi({
 				action: 'edit',
 				title: 'User:星海子/test/001',
 				text: `${new Date().toISOString()} (${envLabel})`,
-				summary: `Github Actions Test (${process.version}, compat=${useTlsCompat})`,
+				summary: `Github Actions Test (${process.version}, ${mode})`,
 				bot: true,
 				minor: true,
 				tags: 'Bot',
