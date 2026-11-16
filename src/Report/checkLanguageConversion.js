@@ -8,6 +8,7 @@ import {
 	extractVocabularies,
 	parseLuaCGroup,
 	parseWikitextCGroup,
+	parseSystemConversionTable,
 	processNoteTAArticle,
 	updateInvalidCGroupTalkPage,
 } from '../utils/conversion.js';
@@ -231,13 +232,14 @@ ${reportWikitext}
 		fetchSystemConversionPages(api),
 	]);
 
+	const IGNORED_GROUPS = new Set(['core', 'sandbox']);
 	const groupPageMap = new Map();
 	const registerCandidate = (page) => {
 		if (deprecated.has(page.title)) {
 			return;
 		}
 		const groupName = getGroupNameFromTitle(page.title);
-		if (!groupName || groupName === 'core') {
+		if (!groupName || IGNORED_GROUPS.has(groupName.toLowerCase())) {
 			return;
 		}
 		const existing = groupPageMap.get(groupName);
@@ -284,8 +286,12 @@ ${reportWikitext}
 				continue;
 			}
 
-			const parsed = meta.ns === 828 ? parseLuaCGroup(content) : parseWikitextCGroup(content);
-			const vocabularies = extractVocabularies(parsed.rules);
+			const parsed = meta.ns === 828
+				? parseLuaCGroup(content)
+				: meta.ns === 8
+					? parseSystemConversionTable(content)
+					: parseWikitextCGroup(content);
+			const vocabularies = meta.ns === 8 ? parsed.vocabularies : extractVocabularies(parsed.rules);
 			conversionOfPage[title] = { ...parsed, vocabularies };
 			if (meta.ns !== 8) {
 				rawGroupData[groupName] = { ...parsed, pageTitle: title };

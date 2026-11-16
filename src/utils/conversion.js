@@ -207,6 +207,76 @@ function parseWikitextCGroup(wikitext) {
 }
 
 /**
+ * Extract all individual vocabulary terms from an array of normalized conversion rules.
+ *
+ * @param {string[]} rules
+ * @returns {string[]}
+ */
+function extractVocabularies(rules) {
+	const words = new Set();
+	for (const rule of rules) {
+		const norm = normalizeConversionRule(rule);
+		if (!norm) {
+			continue;
+		}
+		for (const word of Object.values(norm.map)) {
+			if (word) {
+				words.add(word);
+			}
+		}
+	}
+	return [...words].sort();
+}
+
+/**
+ * Parse a `MediaWiki:Conversiontable/*` system conversion page.
+ * Supports `* from => to ;` bullet rules as well as `-{...}-` blocks.
+ *
+ * @param {string} wikitext
+ * @returns {{ rules: string[], vocabularies: string[], transclusions: string[], redirectTo: string | null }}
+ */
+function parseSystemConversionTable(wikitext) {
+	if (!wikitext) {
+		return { rules: [], vocabularies: [], transclusions: [], redirectTo: null };
+	}
+	const base = parseWikitextCGroup(wikitext);
+	if (base.redirectTo) {
+		return { ...base, vocabularies: [] };
+	}
+
+	const vocab = new Set(extractVocabularies(base.rules));
+	const stripped = wikitext.replace(/<!--[\s\S]*?-->/g, '');
+	for (const line of stripped.split(/\r?\n/)) {
+		const trimmed = line.trim();
+		if (!trimmed.startsWith('*')) {
+			continue;
+		}
+		const body = trimmed.replace(/^\*+\s*/, '');
+		for (const segment of body.split(';')) {
+			const arrowIdx = segment.indexOf('=>');
+			if (arrowIdx === -1) {
+				continue;
+			}
+			const from = segment.slice(0, arrowIdx).trim();
+			const to = segment.slice(arrowIdx + 2).trim();
+			if (from) {
+				vocab.add(from);
+			}
+			if (to) {
+				vocab.add(to);
+			}
+		}
+	}
+
+	return {
+		rules: base.rules,
+		vocabularies: [...vocab].sort(),
+		transclusions: base.transclusions,
+		redirectTo: null,
+	};
+}
+
+/**
  * Clean up an article's `{{NoteTA}}` templates and redundant `-{A|...}-`/`-{H|...}-`
  * conversion blocks against registered CGroups.
  *
@@ -405,28 +475,6 @@ function updateInvalidCGroupTalkPage(talkContent, unregisteredGroups) {
 	return { changed: true, content: root.toString(), removed: false };
 }
 
-/**
- * Extract all individual vocabulary terms from an array of normalized conversion rules.
- *
- * @param {string[]} rules
- * @returns {string[]}
- */
-function extractVocabularies(rules) {
-	const words = new Set();
-	for (const rule of rules) {
-		const norm = normalizeConversionRule(rule);
-		if (!norm) {
-			continue;
-		}
-		for (const word of Object.values(norm.map)) {
-			if (word) {
-				words.add(word);
-			}
-		}
-	}
-	return [...words].sort();
-}
-
 export {
 	normalizeGroupName,
 	getGroupNameFromTitle,
@@ -434,6 +482,7 @@ export {
 	extractVocabularies,
 	parseLuaCGroup,
 	parseWikitextCGroup,
+	parseSystemConversionTable,
 	processNoteTAArticle,
 	updateInvalidCGroupTalkPage,
 };
