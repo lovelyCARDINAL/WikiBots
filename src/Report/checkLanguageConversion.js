@@ -22,6 +22,7 @@ const DUPLICATED_REPORT_PAGE = '萌娘百科:字词转换处理报告/重复字�
 const UNREGISTERED_TEMPLATE = 'Template:Invalid CGroup';
 const TAGS = 'Bot';
 const MAX_VOCAB_LIST = 500;
+const TOUCHED_LOOKBACK_MS = 14 * 24 * 60 * 60 * 1000;
 const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-interfacebot|all)))\}\}/;
 
 /**
@@ -406,9 +407,31 @@ ${reportWikitext}
 			}
 		}
 	}
-	console.log(`Checking ${noteTAPages.length} NoteTA article(s) in batches of 50...`);
+	console.log(`Found ${noteTAPages.length} NoteTA article(s), filtering by touched >= 14 days...`);
 
-	const titleBatches = splitAndJoin(noteTAPages, 50);
+	const cutoffMs = Date.now() - TOUCHED_LOOKBACK_MS;
+	const activeNoteTAPages = [];
+	const infoBatches = splitAndJoin(noteTAPages, 500);
+	await mapLimit(infoBatches, 3, async (titlesBatch) => {
+		const { data } = await api.post({
+			prop: 'info',
+			titles: titlesBatch,
+		}, { retry: 15 });
+		for (const page of Object.values(data?.query?.pages || {})) {
+			if (!page?.title || page.missing) {
+				continue;
+			}
+			const talkTitle = Parser.normalizeTitle(page.title).toTalkPage().title;
+			const touchedMs = page.touched ? Date.parse(page.touched) : 0;
+			if (touchedMs >= cutoffMs || invalidTalkPages.has(talkTitle)) {
+				activeNoteTAPages.push(page.title);
+			}
+		}
+	});
+
+	console.log(`Checking ${activeNoteTAPages.length} recently touched NoteTA article(s) in batches of 200...`);
+
+	const titleBatches = splitAndJoin(activeNoteTAPages, 200);
 	await mapLimit(titleBatches, 3, async (titlesBatch) => {
 		try {
 			const { data } = await api.post({
