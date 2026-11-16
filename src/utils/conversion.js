@@ -405,10 +405,33 @@ function updateInvalidCGroupTalkPage(talkContent, unregisteredGroups) {
 	return { changed: true, content: root.toString(), removed: false };
 }
 
+/**
+ * Extract all individual vocabulary terms from an array of normalized conversion rules.
+ *
+ * @param {string[]} rules
+ * @returns {string[]}
+ */
+function extractVocabularies(rules) {
+	const words = new Set();
+	for (const rule of rules) {
+		const norm = normalizeConversionRule(rule);
+		if (!norm) {
+			continue;
+		}
+		for (const word of Object.values(norm.map)) {
+			if (word) {
+				words.add(word);
+			}
+		}
+	}
+	return [...words].sort();
+}
+
 export {
 	normalizeGroupName,
 	getGroupNameFromTitle,
 	normalizeConversionRule,
+	extractVocabularies,
 	parseLuaCGroup,
 	parseWikitextCGroup,
 	processNoteTAArticle,

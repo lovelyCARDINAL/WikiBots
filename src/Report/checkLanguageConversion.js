@@ -5,6 +5,7 @@ import mapLimit from '../utils/concurrency.js';
 import {
 	normalizeGroupName,
 	getGroupNameFromTitle,
+	extractVocabularies,
 	parseLuaCGroup,
 	parseWikitextCGroup,
 	processNoteTAArticle,
@@ -221,11 +222,12 @@ async function buildConversionAliases(api, groupNames) {
  */
 async function updateReport(api, title, reportWikitext, introduction, summary) {
 	const text = `__NOCONTENTCONVERT__
-${introduction}
-* 本页面会定期更新，毋须手动修正。
-* 生成时间：<onlyinclude>~~~~~</onlyinclude>
+* 本页面为[[U:星海-interfacebot|机器人]]生成的${introduction}
+* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}
 
+-{
 ${reportWikitext}
+}-
 
 [[Category:萌娘百科数据报告]]`;
 
@@ -284,7 +286,7 @@ ${reportWikitext}
 	// 2. Fetch and parse all conversion pages
 	const conversionOfPage = Object.create(null);
 	const rawGroupData = Object.create(null);
-	const ruleOwners = new Map();
+	const vocabOwners = new Map();
 
 	await mapLimit(allConversionPages, 5, async ({ title, ns }) => {
 		const { data } = await api.post({
@@ -296,21 +298,22 @@ ${reportWikitext}
 		const groupName = getGroupNameFromTitle(title);
 
 		if (!content) {
-			conversionOfPage[title] = { rules: [], transclusions: [], redirectTo: null, error: '无法读取页面内容' };
+			conversionOfPage[title] = { rules: [], vocabularies: [], transclusions: [], redirectTo: null, error: '无法读取页面内容' };
 			return;
 		}
 
 		const parsed = ns === 828 ? parseLuaCGroup(content) : parseWikitextCGroup(content);
-		conversionOfPage[title] = parsed;
+		const vocabularies = extractVocabularies(parsed.rules);
+		conversionOfPage[title] = { ...parsed, vocabularies };
 		if (ns !== 8) {
 			rawGroupData[groupName] = { ...parsed, pageTitle: title };
 		}
 
-		for (const rule of parsed.rules) {
-			let owners = ruleOwners.get(rule);
+		for (const vocab of vocabularies) {
+			let owners = vocabOwners.get(vocab);
 			if (!owners) {
 				owners = new Set();
-				ruleOwners.set(rule, owners);
+				vocabOwners.set(vocab, owners);
 			}
 			owners.add(title);
 		}
@@ -362,7 +365,7 @@ ${reportWikitext}
 	const listRows = Object.entries(conversionOfPage)
 		.sort(([a], [b]) => a.localeCompare(b))
 		.map(([title, info]) => {
-			const count = info.rules.length;
+			const count = info.vocabularies.length;
 			const statusPrefix = info.error
 				? `<span style="color:red">'''${info.error}'''</span>`
 				: info.redirectTo
@@ -372,25 +375,25 @@ ${reportWikitext}
 						: '';
 			const detail = count > MAX_VOCAB_LIST
 				? '<span style="color:#F61">\'\'\'字词过多，割爱\'\'\'</span>'
-				: info.rules.join(' ');
-			return `|-\n| [[${title}]] || ${count || ''} || data-sort-value="${count}"|${statusPrefix}${detail}`;
+				: info.vocabularies.join('; ');
+			return `|-\n| [[${title}]] || ${count || !info.error && !info.redirectTo ? count : ''} || data-sort-value="${count}"|${statusPrefix}${detail}`;
 		});
-	const overLimitCount = Object.values(conversionOfPage).filter((i) => i.rules.length > MAX_VOCAB_LIST).length;
+	const overLimitCount = Object.values(conversionOfPage).filter((i) => i.vocabularies.length > MAX_VOCAB_LIST).length;
 	const listTable = `{| class="wikitable sortable"\n|-\n! 公共转换组页面 !! # !! 定义的词汇\n${listRows.join('\n')}\n|}`;
 	await updateReport(
 		api,
 		CONVERSION_LIST_PAGE,
 		listTable,
-		`总计 ${listRows.length} 个公共转换组页面。${overLimitCount > 0 ? `其中 ${overLimitCount} 个公共转换组字词过多，割爱。` : ''}`,
+		`公共转换组各页面包含字词：总计 ${listRows.length} 个公共转换组页面。${overLimitCount > 0 ? `其中 ${overLimitCount} 个公共转换组字词过多，割爱。` : ''}`,
 		`${listRows.length}个公共转换组页面`,
 	);
 
 	// 5. Write report 2: duplicated_report_page
 	const dupRows = [];
-	for (const [rule, owners] of ruleOwners) {
+	for (const [vocab, owners] of vocabOwners) {
 		if (owners.size > 1) {
 			const pagesList = [...owners].sort().map((p) => `[[${p}]]`);
-			dupRows.push([rule, `|-\n| ${rule} || data-sort-value="${pagesList.length}"|${pagesList.length}: ${pagesList.join(', ')}`]);
+			dupRows.push([vocab, `|-\n| ${vocab} || data-sort-value="${pagesList.length}"|${pagesList.length}: ${pagesList.join(', ')}`]);
 		}
 	}
 	dupRows.sort(([a], [b]) => a.localeCompare(b));
