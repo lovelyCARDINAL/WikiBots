@@ -2,7 +2,7 @@ import Parser from 'wikiparser-node';
 
 Parser.config = 'moegirl';
 
-const LANG_CODE_RE = /^(?:zh|zh-(?:hans|hant|cn|tw|hk|mo|sg|my))$/i;
+const LANG_CODE_RE = /^(?:zh|zh-(?:hans|hant|cn|tw|hk))$/i;
 
 /**
  * Normalize a CGroup name for fuzzy/alias matching.
@@ -208,12 +208,14 @@ function processNoteTAArticle(content, { groupRules, groupAlias }) {
 	const unregisteredGroups = new Set();
 	const activeGroupRules = new Set();
 	const seenNoteTARules = new Set();
+	let lastNoteTAToken = null;
 	let changed = false;
 
 	for (const tpl of root.querySelectorAll('template')) {
 		if (!NOTE_TA_RE.test(tpl.name)) {
 			continue;
 		}
+		lastNoteTAToken = tpl;
 		for (const arg of tpl.getAllArgs()) {
 			const paramName = String(arg.name || '').trim();
 			const rawVal = (arg.value || '').trim();
@@ -260,6 +262,7 @@ function processNoteTAArticle(content, { groupRules, groupAlias }) {
 			}
 			if (activeGroupRules.has(norm.normalized) || seenNoteTARules.has(norm.normalized)) {
 				tpl.removeArg?.(paramName);
+				tpl.removeArg?.(`d${paramName}`);
 				if (tpl.hasArg?.(paramName)) {
 					tpl.setValue(paramName, '');
 				}
@@ -269,12 +272,36 @@ function processNoteTAArticle(content, { groupRules, groupAlias }) {
 				seenNoteTARules.add(norm.normalized);
 			}
 		}
+
+		if (!tpl.getAllArgs().length) {
+			tpl.remove();
+			if (lastNoteTAToken === tpl) {
+				lastNoteTAToken = null;
+			}
+			changed = true;
+		}
 	}
 
-	// Remove -{A|...}- / -{H|...}- converters whose rule is already covered by {{NoteTA}} or its groups
+	// Collect rules explicitly disabled via -{-|...}- so we never hoist them into {{NoteTA}}
+	const deletedRules = new Set();
 	for (const conv of root.querySelectorAll('converter')) {
-		const hasGlobalFlag = conv.flags?.has('A') || conv.flags?.has('H');
-		if (!hasGlobalFlag) {
+		if (conv.flags?.has('-')) {
+			const rawRules = conv.childNodes
+				.filter((n) => n.type === 'converter-rule')
+				.map((n) => n.toString())
+				.join(';');
+			const norm = normalizeConversionRule(rawRules);
+			if (norm) {
+				deletedRules.add(norm.normalized);
+			}
+		}
+	}
+
+	// Move -{H|...}- / -{A|...}- into {{NoteTA}} or remove when already covered
+	for (const conv of root.querySelectorAll('converter')) {
+		const isH = conv.flags?.has('H');
+		const isA = conv.flags?.has('A');
+		if (!isH && !isA || conv.flags?.has('-')) {
 			continue;
 		}
 		const rawRules = conv.childNodes
@@ -282,8 +309,31 @@ function processNoteTAArticle(content, { groupRules, groupAlias }) {
 			.map((n) => n.toString())
 			.join(';');
 		const norm = normalizeConversionRule(rawRules);
-		if (norm && (activeGroupRules.has(norm.normalized) || seenNoteTARules.has(norm.normalized))) {
+		if (!norm || deletedRules.has(norm.normalized)) {
+			continue;
+		}
+
+		const alreadyCovered = activeGroupRules.has(norm.normalized) || seenNoteTARules.has(norm.normalized);
+		if (!alreadyCovered && lastNoteTAToken) {
+			let nextIdx = 1;
+			while (lastNoteTAToken.hasArg?.(String(nextIdx))) {
+				nextIdx++;
+			}
+			if (nextIdx <= 30) {
+				lastNoteTAToken.setValue(String(nextIdx), norm.normalized.replace(/;$/, ''));
+				seenNoteTARules.add(norm.normalized);
+				summaryParts.push('将全文转换规则移入NoteTA');
+				changed = true;
+			}
+		}
+
+		if (isH && (alreadyCovered || seenNoteTARules.has(norm.normalized))) {
 			conv.remove();
+			summaryParts.push(alreadyCovered ? '移除与NoteTA重复的全文转换' : '将H转换移入NoteTA');
+			changed = true;
+		} else if (isA && (alreadyCovered || seenNoteTARules.has(norm.normalized))) {
+			// Strip A| flag so inline display stays intact without duplicating global registration
+			conv.replaceWith(`-{${norm.normalized}}-`);
 			summaryParts.push('移除与NoteTA重复的全文转换');
 			changed = true;
 		}
@@ -336,7 +386,7 @@ function updateInvalidCGroupTalkPage(talkContent, unregisteredGroups) {
 		return { changed: false, content: talkContent, removed: false };
 	}
 
-	existing.replaceBy(`{{Invalid CGroup|${groupArgs}}}`);
+	existing.replaceWith(`{{Invalid CGroup|${groupArgs}}}`);
 	return { changed: true, content: root.toString(), removed: false };
 }
 
