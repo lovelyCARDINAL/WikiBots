@@ -69,6 +69,19 @@ function normalizeConversionRule(rawRule) {
 }
 
 /**
+ * Strip Lua block (`--[[...]]`) and line (`--...`) comments while preserving string literals.
+ *
+ * @param {string} source
+ * @returns {string}
+ */
+function stripLuaComments(source) {
+	return source.replace(
+		/(['"])(?:\\.|(?!\1)[^\\\r\n])*\1|--\[(=*)\[[\s\S]*?\]\2\]|--[^\r\n]*/g,
+		(match, quote) => quote ? match : '',
+	);
+}
+
+/**
  * Parse a `Module:CGroup/...` Lua module source to extract conversion items,
  * included group names, and redirect targets.
  *
@@ -80,13 +93,15 @@ function parseLuaCGroup(luaSource) {
 		return { rules: [], transclusions: [], redirectTo: null, error: 'Empty module' };
 	}
 
-	const redirectMatch = luaSource.match(/return\s+require\s*\(\s*['"](Module:CGroup\/[^'"]+)['"]\s*\)/);
+	const cleaned = stripLuaComments(luaSource);
+
+	const redirectMatch = cleaned.match(/return\s+require\s*\(\s*['"](Module:CGroup\/[^'"]+)['"]\s*\)/);
 	if (redirectMatch) {
 		return { rules: [], transclusions: [], redirectTo: redirectMatch[1], error: null };
 	}
 
 	const transclusions = [];
-	for (const m of luaSource.matchAll(/import\s*\(\s*['"](?:Module:CGroup\/)?([^'"]+)['"]\s*\)/g)) {
+	for (const m of cleaned.matchAll(/import\s*\(\s*['"](?:Module:CGroup\/)?([^'"]+)['"]\s*\)/g)) {
 		if (m[1]) {
 			transclusions.push(m[1].trim());
 		}
@@ -94,7 +109,7 @@ function parseLuaCGroup(luaSource) {
 
 	const rules = [];
 	const itemRe = /\{\s*type\s*=\s*['"]item['"]\s*,([\s\S]*?)\}/g;
-	for (const match of luaSource.matchAll(itemRe)) {
+	for (const match of cleaned.matchAll(itemRe)) {
 		const body = match[1];
 		const ruleMatch = body.match(/\brule\s*=\s*(['"])([\s\S]*?)\1/);
 		if (ruleMatch?.[2]) {
@@ -120,9 +135,9 @@ function parseLuaCGroup(luaSource) {
 		}
 	}
 
-	// Fallback: also catch shorthand Item('original', 'rule') calls
-	const shortItemRe = /\bItem\s*\(\s*(['"])[^'"]*\1\s*,\s*(['"])([\s\S]*?)\2\s*\)/g;
-	for (const match of luaSource.matchAll(shortItemRe)) {
+	// Fallback: also catch shorthand Item(nil|'original'|false, 'rule') calls
+	const shortItemRe = /\bItem\s*\(\s*(?:nil|false|(['"])(?:\\.|(?!\1)[^\\])*\1)\s*,\s*(['"])([\s\S]*?)\2\s*\)/g;
+	for (const match of cleaned.matchAll(shortItemRe)) {
 		const norm = normalizeConversionRule(match[3]);
 		if (norm) {
 			rules.push(norm.normalized);

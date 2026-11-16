@@ -1,4 +1,5 @@
 import process from 'process';
+import { load as loadHtml } from 'cheerio';
 import Parser from 'wikiparser-node';
 import mapLimit from '../utils/concurrency.js';
 import {
@@ -11,6 +12,7 @@ import {
 } from '../utils/conversion.js';
 import { createAndLogin } from '../utils/createApi.js';
 import paginate from '../utils/paginate.js';
+import splitAndJoin from '../utils/splitAndJoin.js';
 
 Parser.config = 'moegirl';
 
@@ -157,9 +159,10 @@ async function buildConversionAliases(api, groupNames) {
 				if (typeof html !== 'string') {
 					continue;
 				}
-				for (const match of html.matchAll(/data-idx="(\d+)">([^<]+)<\/div>/g)) {
-					const idx = Number.parseInt(match[1], 10);
-					const converted = match[2]?.trim();
+				const $ = loadHtml(html);
+				$('[data-idx]').each((_, el) => {
+					const idx = Number.parseInt($(el).attr('data-idx') || '', 10);
+					const converted = $(el).text().trim();
 					const canonical = chunk[idx];
 					if (canonical && converted) {
 						if (!(converted in aliases)) {
@@ -170,7 +173,7 @@ async function buildConversionAliases(api, groupNames) {
 							aliases[norm] = canonical;
 						}
 					}
-				}
+				});
 			} catch (err) {
 				console.warn(`Failed to generate aliases for variant ${variant}:`, err?.message || err);
 			}
@@ -286,27 +289,47 @@ ${reportWikitext}
 		}
 	});
 
-	// 3. Resolve transclusions and redirects among CGroups
+	// 3. Resolve multi-hop redirects and transclusions among CGroups
 	const groupRules = Object.create(null);
-	for (const [groupName, info] of Object.entries(rawGroupData)) {
-		if (info.redirectTo) {
-			const targetGroup = getGroupNameFromTitle(info.redirectTo);
-			if (rawGroupData[targetGroup]) {
-				groupRules[groupName] = [...rawGroupData[targetGroup].rules];
-				continue;
+	const redirectAliases = Object.create(null);
+	const resolveGroupTarget = (groupName) => {
+		let curr = groupName;
+		const seen = new Set();
+		for (let hop = 0; hop < 5 && rawGroupData[curr]?.redirectTo; hop++) {
+			if (seen.has(curr)) {
+				break;
 			}
+			seen.add(curr);
+			curr = getGroupNameFromTitle(rawGroupData[curr].redirectTo);
+		}
+		return curr;
+	};
+
+	for (const groupName of Object.keys(rawGroupData)) {
+		const canonical = resolveGroupTarget(groupName);
+		const info = rawGroupData[canonical] || rawGroupData[groupName];
+		if (canonical !== groupName && canonical in rawGroupData) {
+			redirectAliases[groupName] = canonical;
 		}
 		const merged = new Set(info.rules);
 		for (const inc of info.transclusions) {
-			for (const r of rawGroupData[inc]?.rules || []) {
+			const incCanonical = resolveGroupTarget(inc);
+			for (const r of rawGroupData[incCanonical]?.rules || []) {
 				merged.add(r);
 			}
 		}
 		groupRules[groupName] = [...merged];
 	}
 
-	// Build alias table (normalized group name + simplified/traditional variants)
+	// Build alias table (normalized group name + simplified/traditional variants + redirects)
 	const groupAlias = await buildConversionAliases(api, Object.keys(groupRules));
+	for (const [oldGroup, targetGroup] of Object.entries(redirectAliases)) {
+		groupAlias[oldGroup] = targetGroup;
+		const normOld = normalizeGroupName(oldGroup);
+		if (normOld) {
+			groupAlias[normOld] = targetGroup;
+		}
+	}
 
 	// 4. Write report 1: conversion_list_page
 	const listRows = Object.entries(conversionOfPage)
@@ -383,75 +406,81 @@ ${reportWikitext}
 			}
 		}
 	}
-	console.log(`Checking ${noteTAPages.length} NoteTA article(s)...`);
+	console.log(`Checking ${noteTAPages.length} NoteTA article(s) in batches of 50...`);
 
-	await mapLimit(noteTAPages, 5, async (pageTitle) => {
+	const titleBatches = splitAndJoin(noteTAPages, 50);
+	await mapLimit(titleBatches, 3, async (titlesBatch) => {
 		try {
 			const { data } = await api.post({
 				prop: 'revisions',
-				titles: pageTitle,
+				titles: titlesBatch,
 				rvprop: 'content',
 			}, { retry: 15 });
-			const content = Object.values(data?.query?.pages || {})[0]?.revisions?.[0]?.content;
-			if (!content || NOBOTS_REGEX.test(content.replace(/\s+/g, ''))) {
-				return;
-			}
+			const pages = Object.values(data?.query?.pages || {});
 
-			const result = processNoteTAArticle(content, { groupRules, groupAlias });
-			if (result.changed) {
+			await mapLimit(pages, 5, async (page) => {
+				const pageTitle = page.title;
+				const content = page?.revisions?.[0]?.content;
+				if (!pageTitle || !content || NOBOTS_REGEX.test(content.replace(/\s+/g, ''))) {
+					return;
+				}
+
+				const result = processNoteTAArticle(content, { groupRules, groupAlias });
+				if (result.changed) {
+					await api.postWithToken('csrf', {
+						action: 'edit',
+						title: pageTitle,
+						text: result.content,
+						summary: result.summaryParts.join('；'),
+						bot: true,
+						minor: true,
+						nocreate: true,
+						tags: TAGS,
+						watchlist: 'nochange',
+					}, {
+						retry: 25,
+						noCache: true,
+					}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
+				}
+
+				const talkTitle = Parser.normalizeTitle(pageTitle).toTalkPage().title;
+				if (!result.unregisteredGroups.length && !invalidTalkPages.has(talkTitle)) {
+					return;
+				}
+
+				const { data: talkData } = await api.post({
+					prop: 'revisions',
+					titles: talkTitle,
+					rvprop: 'content',
+				}, { retry: 15 });
+				const talkContent = Object.values(talkData?.query?.pages || {})[0]?.revisions?.[0]?.content || '';
+				if (!talkContent && !result.unregisteredGroups.length) {
+					return;
+				}
+
+				const talkRes = updateInvalidCGroupTalkPage(talkContent, result.unregisteredGroups);
+				if (!talkRes.changed) {
+					return;
+				}
+
 				await api.postWithToken('csrf', {
 					action: 'edit',
-					title: pageTitle,
-					text: result.content,
-					summary: result.summaryParts.join('；'),
+					title: talkTitle,
+					text: talkRes.content,
+					summary: talkRes.removed
+						? `移除${UNREGISTERED_TEMPLATE}`
+						: `标记未登记的公共转换组：${result.unregisteredGroups.join('、')}`,
 					bot: true,
 					minor: true,
-					nocreate: true,
 					tags: TAGS,
 					watchlist: 'nochange',
 				}, {
 					retry: 25,
 					noCache: true,
 				}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
-			}
-
-			const talkTitle = Parser.normalizeTitle(pageTitle).toTalkPage().title;
-			if (!result.unregisteredGroups.length && !invalidTalkPages.has(talkTitle)) {
-				return;
-			}
-
-			const { data: talkData } = await api.post({
-				prop: 'revisions',
-				titles: talkTitle,
-				rvprop: 'content',
-			}, { retry: 15 });
-			const talkContent = Object.values(talkData?.query?.pages || {})[0]?.revisions?.[0]?.content || '';
-			if (!talkContent && !result.unregisteredGroups.length) {
-				return;
-			}
-
-			const talkRes = updateInvalidCGroupTalkPage(talkContent, result.unregisteredGroups);
-			if (!talkRes.changed) {
-				return;
-			}
-
-			await api.postWithToken('csrf', {
-				action: 'edit',
-				title: talkTitle,
-				text: talkRes.content,
-				summary: talkRes.removed
-					? `移除${UNREGISTERED_TEMPLATE}`
-					: `标记未登记的公共转换组：${result.unregisteredGroups.join('、')}`,
-				bot: true,
-				minor: true,
-				tags: TAGS,
-				watchlist: 'nochange',
-			}, {
-				retry: 25,
-				noCache: true,
-			}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
+			});
 		} catch (err) {
-			console.error(`Error processing [[${pageTitle}]]:`, err?.message || err);
+			console.error('Error processing NoteTA batch:', err?.message || err);
 		}
 	});
 
