@@ -33,7 +33,7 @@ function findImageSrc(data) {
 
 async function getMainpageJson(part) {
 	const url = `https://storage.moegirl.org.cn/homeland/data/${part}.json`;
-	const response = await axios.get(url);
+	const response = await axios.get(url, { timeout: 15000 });
 	return findImageSrc(response.data);
 }
 
@@ -46,7 +46,12 @@ function findImageName(imgSrc) {
 	const match = imgSrc.match(regex);
 	console.log(`Finding image name from src: ${imgSrc}`);
 	if (match) {
-		result.image_name = decodeURIComponent(match[1] || match[2]);
+		const rawName = match[1] || match[2];
+		try {
+			result.image_name = decodeURIComponent(rawName);
+		} catch {
+			result.image_name = rawName;
+		}
 		return result;
 	}
 	result.bad_image_info = `* 非法图片：<code><nowiki>${imgSrc}</nowiki></code>\n`;
