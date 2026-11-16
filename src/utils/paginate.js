@@ -14,7 +14,7 @@ async function* paginate(api, params, options = { retry: 15 }) {
 			...cont,
 		}, options);
 		yield data;
-		cont = data.continue ?? null;
+		cont = data?.continue ?? null;
 	}
 }
 

@@ -1,8 +1,7 @@
 import Parser from 'wikiparser-node';
 import { createAndLogin } from '../utils/createApi.js';
-import paginate from '../utils/paginate.js';
 import readData from '../utils/readData.js';
-import { parseOverrideCategories, buildImproveReport, publishReport } from '../utils/report.js';
+import { parseOverrideCategories, collectPages, buildImproveReport, publishReport } from '../utils/report.js';
 
 Parser.config = 'moegirl';
 
@@ -13,26 +12,18 @@ Parser.config = 'moegirl';
 
 	const overrideCategory = parseOverrideCategories(await readData('overrideCategory.json'));
 
-	const pages = await (async () => {
-		const result = [];
-		for await (const data of paginate(api, {
-			prop: 'revisions|categories',
-			generator: 'categorymembers',
-			rvprop: 'content|timestamp|size',
-			rvsection: '0',
-			clshow: '!hidden',
-			cllimit: 'max',
-			gcmtitle: 'Category:急需改进',
-			gcmnamespace: '0',
-			gcmtype: 'page',
-			gcmlimit: 'max',
-		})) {
-			if (data.query?.pages) {
-				result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
-			}
-		}
-		return result;
-	})();
+	const pages = await collectPages(api, {
+		prop: 'revisions|categories',
+		generator: 'categorymembers',
+		rvprop: 'content|timestamp|size',
+		rvsection: '0',
+		clshow: '!hidden',
+		cllimit: 'max',
+		gcmtitle: 'Category:急需改进',
+		gcmnamespace: '0',
+		gcmtype: 'page',
+		gcmlimit: 'max',
+	});
 
 	const text = buildImproveReport({
 		pages,

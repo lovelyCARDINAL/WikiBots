@@ -1,15 +1,49 @@
 import moment from 'moment';
 import Parser from 'wikiparser-node';
+import paginate from './paginate.js';
 
 /**
- * Load flattened override categories from data/overrideCategory.json.
+ * Load flattened override categories from raw JSON content of data/overrideCategory.json.
  *
- * @param {() => Promise<string>} readOverrideJson
- * @returns {Promise<string[]>}
+ * @param {string} raw
+ * @returns {string[]}
  */
 function parseOverrideCategories(raw) {
 	const data = JSON.parse(raw);
 	return [...data.page, ...data.temp, ...data.cat];
+}
+
+/**
+ * Collect and merge paginated generator pages by pageid/title so multi-batch
+ * `clcontinue` responses neither duplicate rows nor drop categories.
+ *
+ * @param {import('wiki-saikou').MediaWikiApi} api
+ * @param {Record<string, unknown>} params
+ * @returns {Promise<any[]>}
+ */
+async function collectPages(api, params) {
+	const pageMap = new Map();
+	for await (const data of paginate(api, params)) {
+		const pages = Object.values(data?.query?.pages || {});
+		for (const page of pages) {
+			const key = page.pageid ?? page.title;
+			const existing = pageMap.get(key);
+			if (!existing) {
+				pageMap.set(key, {
+					...page,
+					categories: page.categories ? [...page.categories] : undefined,
+				});
+			} else {
+				if (!existing.revisions && page.revisions) {
+					existing.revisions = page.revisions;
+				}
+				if (page.categories?.length) {
+					existing.categories = [...existing.categories || [], ...page.categories];
+				}
+			}
+		}
+	}
+	return [...pageMap.values()].filter((page) => page.revisions?.length);
 }
 
 /**
@@ -27,7 +61,12 @@ function buildImproveReport({ pages, overrideCategory, header, templateSelector,
 	let text = `${header}\n\n{| class="wikitable sortable" width=100%\n|-\n! 序号 || 条目名 || 改进方向 || style="width:30%"|部分所属分类 || style="min-width:50px"|代码长度 || style="min-width:80px"|最后版本\n`;
 	let count = 1;
 	for (const page of pages) {
-		const { title, revisions: [{ timestamp, content, size }], categories } = page;
+		const rev = page.revisions?.[0];
+		if (!rev) {
+			continue;
+		}
+		const { title, categories } = page;
+		const { timestamp, content = '', size } = rev;
 		const category = categories
 			?.map(({ title: catTitle }) => catTitle)
 			.filter((catTitle) => !overrideCategory.includes(catTitle))
@@ -75,6 +114,7 @@ async function publishReport(api, pageid, text) {
 
 export {
 	parseOverrideCategories,
+	collectPages,
 	buildImproveReport,
 	publishReport,
 };

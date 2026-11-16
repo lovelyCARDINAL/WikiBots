@@ -1,9 +1,8 @@
 import Parser from 'wikiparser-node';
 import { createAndLogin } from '../utils/createApi.js';
-import paginate from '../utils/paginate.js';
 import parserConfig from '../utils/parserConfig.js';
 import readData from '../utils/readData.js';
-import { parseOverrideCategories, buildImproveReport, publishReport } from '../utils/report.js';
+import { parseOverrideCategories, collectPages, buildImproveReport, publishReport } from '../utils/report.js';
 
 Parser.config = 'moegirl';
 Parser.redirects = new Map(parserConfig.redirects);
@@ -15,26 +14,18 @@ Parser.redirects = new Map(parserConfig.redirects);
 
 	const overrideCategory = parseOverrideCategories(await readData('overrideCategory.json'));
 
-	const pages = await (async () => {
-		const result = [];
-		for await (const data of paginate(api, {
-			prop: 'revisions|categories',
-			generator: 'embeddedin',
-			rvprop: 'content|timestamp|size',
-			rvsection: '0',
-			clshow: '!hidden',
-			cllimit: 'max',
-			geititle: 'Template:欢迎编辑/有填写改进方向',
-			geinamespace: '0',
-			geifilterredir: 'nonredirects',
-			geilimit: '500',
-		})) {
-			if (data.query?.pages) {
-				result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
-			}
-		}
-		return result;
-	})();
+	const pages = await collectPages(api, {
+		prop: 'revisions|categories',
+		generator: 'embeddedin',
+		rvprop: 'content|timestamp|size',
+		rvsection: '0',
+		clshow: '!hidden',
+		cllimit: 'max',
+		geititle: 'Template:欢迎编辑/有填写改进方向',
+		geinamespace: '0',
+		geifilterredir: 'nonredirects',
+		geilimit: '500',
+	});
 
 	const text = buildImproveReport({
 		pages,

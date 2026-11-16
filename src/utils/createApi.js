@@ -25,8 +25,11 @@ function createApi(site = 'zh') {
  * @returns {Promise<MediaWikiApi>}
  */
 async function createAndLogin(site, accountKey, retry = 25) {
+	const account = config[site]?.[accountKey];
+	if (!account?.name || !account?.password) {
+		throw new Error(`Missing credentials for ${String(site)}.${String(accountKey)}`);
+	}
 	const api = createApi(site);
-	const account = config[site][accountKey];
 	const res = await api.login(
 		account.name,
 		account.password,
