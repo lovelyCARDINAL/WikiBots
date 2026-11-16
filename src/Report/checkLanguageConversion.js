@@ -36,7 +36,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * @param {number} [attempts=3]
  * @returns {Promise<any>}
  */
-async function postWithBackoff(api, params, attempts = 3) {
+async function postWithBackoff(api, params, attempts = 5) {
 	let lastErr;
 	for (let i = 1; i <= attempts; i++) {
 		try {
@@ -44,7 +44,7 @@ async function postWithBackoff(api, params, attempts = 3) {
 		} catch (err) {
 			lastErr = err;
 			if (i < attempts) {
-				const delay = 1000 * 2 ** (i - 1);
+				const delay = Math.min(15000, 1000 * 2 ** (i - 1)) + Math.floor(Math.random() * 500);
 				await sleep(delay);
 			}
 		}
@@ -283,39 +283,50 @@ ${reportWikitext}
 	const allConversionPages = [...cgroupPages, ...sysPages];
 	console.log(`Discovered ${cgroupPages.length} CGroup pages and ${sysPages.length} system conversion pages.`);
 
-	// 2. Fetch and parse all conversion pages
+	// 2. Batch-fetch and parse all conversion pages
 	const conversionOfPage = Object.create(null);
 	const rawGroupData = Object.create(null);
 	const vocabOwners = new Map();
+	const pageMetaByTitle = new Map(
+		allConversionPages.map((p) => [Parser.normalizeTitle(p.title).title, p]),
+	);
 
-	await mapLimit(allConversionPages, 5, async ({ title, ns }) => {
-		const { data } = await api.post({
+	const convTitleBatches = splitAndJoin(allConversionPages.map((p) => p.title), 100);
+	await mapLimit(convTitleBatches, 2, async (titlesBatch) => {
+		const { data } = await postWithBackoff(api, {
 			prop: 'revisions',
-			titles: title,
+			titles: titlesBatch,
 			rvprop: 'content',
-		}, { retry: 15 });
-		const content = Object.values(data?.query?.pages || {})[0]?.revisions?.[0]?.content;
-		const groupName = getGroupNameFromTitle(title);
-
-		if (!content) {
-			conversionOfPage[title] = { rules: [], vocabularies: [], transclusions: [], redirectTo: null, error: '无法读取页面内容' };
-			return;
-		}
-
-		const parsed = ns === 828 ? parseLuaCGroup(content) : parseWikitextCGroup(content);
-		const vocabularies = extractVocabularies(parsed.rules);
-		conversionOfPage[title] = { ...parsed, vocabularies };
-		if (ns !== 8) {
-			rawGroupData[groupName] = { ...parsed, pageTitle: title };
-		}
-
-		for (const vocab of vocabularies) {
-			let owners = vocabOwners.get(vocab);
-			if (!owners) {
-				owners = new Set();
-				vocabOwners.set(vocab, owners);
+		});
+		for (const page of Object.values(data?.query?.pages || {})) {
+			const title = page?.title;
+			if (!title) {
+				continue;
 			}
-			owners.add(title);
+			const meta = pageMetaByTitle.get(Parser.normalizeTitle(title).title) || { ns: page.ns };
+			const content = page?.revisions?.[0]?.content;
+			const groupName = getGroupNameFromTitle(title);
+
+			if (!content) {
+				conversionOfPage[title] = { rules: [], vocabularies: [], transclusions: [], redirectTo: null, error: '无法读取页面内容' };
+				continue;
+			}
+
+			const parsed = meta.ns === 828 ? parseLuaCGroup(content) : parseWikitextCGroup(content);
+			const vocabularies = extractVocabularies(parsed.rules);
+			conversionOfPage[title] = { ...parsed, vocabularies };
+			if (meta.ns !== 8) {
+				rawGroupData[groupName] = { ...parsed, pageTitle: title };
+			}
+
+			for (const vocab of vocabularies) {
+				let owners = vocabOwners.get(vocab);
+				if (!owners) {
+					owners = new Set();
+					vocabOwners.set(vocab, owners);
+				}
+				owners.add(title);
+			}
 		}
 	});
 
@@ -504,11 +515,11 @@ ${reportWikitext}
 					return;
 				}
 
-				const { data: talkData } = await api.post({
+				const { data: talkData } = await postWithBackoff(api, {
 					prop: 'revisions',
 					titles: talkTitle,
 					rvprop: 'content',
-				}, { retry: 15 });
+				});
 				const talkContent = Object.values(talkData?.query?.pages || {})[0]?.revisions?.[0]?.content || '';
 				if (!talkContent && !result.unregisteredGroups.length) {
 					return;
@@ -542,6 +553,6 @@ ${reportWikitext}
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })().catch((err) => {
-	console.error(err);
+	console.error(err?.message || err);
 	process.exit(1);
 });
