@@ -2,6 +2,7 @@ import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import paginate from '../utils/paginate.js';
 import parserConfig from '../utils/parserConfig.js';
 import readData from '../utils/readData.js';
 
@@ -32,26 +33,21 @@ const api = new MediaWikiApi({
 
 	const pages = await (async () => {
 		const result = [];
-		const eol = Symbol();
-		let geicontinue = undefined;
-		while (geicontinue !== eol) {
-			const { data } = await api.post({
-				prop: 'revisions|categories',
-				generator: 'embeddedin',
-				rvprop: 'content|timestamp|size',
-				rvsection: '0',
-				clshow: '!hidden',
-				cllimit: 'max',
-				geititle: 'Template:欢迎编辑/有填写改进方向',
-				geinamespace: '0',
-				geifilterredir: 'nonredirects',
-				geilimit: '500',
-				geicontinue,
-			}, {
-				retry: 15,
-			});
-			geicontinue = data.continue ? data.continue.geicontinue : eol;
-			result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
+		for await (const data of paginate(api, {
+			prop: 'revisions|categories',
+			generator: 'embeddedin',
+			rvprop: 'content|timestamp|size',
+			rvsection: '0',
+			clshow: '!hidden',
+			cllimit: 'max',
+			geititle: 'Template:欢迎编辑/有填写改进方向',
+			geinamespace: '0',
+			geifilterredir: 'nonredirects',
+			geilimit: '500',
+		})) {
+			if (data.query?.pages) {
+				result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
+			}
 		}
 		return result;
 	})();

@@ -1,5 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import paginate from '../utils/paginate.js';
 
 const SITE_LIST = ['zh', 'cm'];
 
@@ -21,41 +22,31 @@ const SITE_LIST = ['zh', 'cm'];
 
 		const categorymembers = await (async () => {
 			const result = [];
-			const eol = Symbol();
-			let cmcontinue = undefined;
-			while (cmcontinue !== eol) {
-				const { data } = await api.post({
-					list: 'categorymembers',
-					cmtitle: 'Category:已重定向的分类',
-					cmprop: 'ids|title',
-					cmnamespace: '14',
-					cmlimit: 'max',
-					cmcontinue,
-				}, {
-					retry: 15,
-				});
-				cmcontinue = data.continue ? data.continue.cmcontinue : eol;
-				result.push(...Object.values(data.query.categorymembers));
+			for await (const data of paginate(api, {
+				list: 'categorymembers',
+				cmtitle: 'Category:已重定向的分类',
+				cmprop: 'ids|title',
+				cmnamespace: '14',
+				cmlimit: 'max',
+			})) {
+				if (data.query?.categorymembers) {
+					result.push(...Object.values(data.query.categorymembers));
+				}
 			}
 			return result;
 		})();
 
 		const allredirects = await (async () => {
 			const result = [];
-			const eol = Symbol();
-			let arcontinue = undefined;
-			while (arcontinue !== eol) {
-				const { data } = await api.post({
-					list: 'allredirects',
-					arprop: 'title|ids',
-					arnamespace: '14',
-					arlimit: 'max',
-					arcontinue,
-				}, {
-					retry: 15,
-				});
-				arcontinue = data.continue ? data.continue.arcontinue : eol;
-				result.push(...Object.values(data.query.allredirects));
+			for await (const data of paginate(api, {
+				list: 'allredirects',
+				arprop: 'title|ids',
+				arnamespace: '14',
+				arlimit: 'max',
+			})) {
+				if (data.query?.allredirects) {
+					result.push(...Object.values(data.query.allredirects));
+				}
 			}
 			return result;
 		})();
