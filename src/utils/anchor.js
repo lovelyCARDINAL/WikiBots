@@ -61,8 +61,8 @@ function extractAnchors(wikitext) {
 		all.add(finalAnchor);
 	}
 
-	// Explicit {{anchor|...}} / {{锚点|...}} / {{vanchor|...}} templates
-	const ANCHOR_TEMPLATE_RE = /^Template:(?:anchor|vanchor|锚点|錨點)$/i;
+	// Explicit {{anchor|...}} templates
+	const ANCHOR_TEMPLATE_RE = /^Template:anchor$/i;
 	for (const temp of root.querySelectorAll('template')) {
 		if (!ANCHOR_TEMPLATE_RE.test(temp.name)) {
 			continue;
