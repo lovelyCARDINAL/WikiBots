@@ -2,6 +2,7 @@ import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import paginate from '../utils/paginate.js';
 import parserConfig from '../utils/parserConfig.js';
 
 Parser.config = 'moegirl';
@@ -56,25 +57,22 @@ const SITE_LIST = ['zh', 'cm'];
 		// 获取已重定向分类
 		let pages = await (async () => {
 			const result = [];
-			const eol = Symbol();
-			let gcmcontinue = undefined;
-			while (gcmcontinue !== eol) {
-				const { data } = await api.post({
-					prop: 'categoryinfo|info|revisions',
-					generator: 'categorymembers',
-					cllimit: 'max',
-					inprop: 'varianttitles',
-					rvprop: 'timestamp|user',
-					gcmtitle: 'Category:已重定向的分类',
-					gcmprop: 'ids|title',
-					gcmtype: 'subcat',
-					gcmlimit: 'max',
-					gcmcontinue,
-				}, {
-					retry: 50,
-				});
-				gcmcontinue = data.continue ? data.continue.gcmcontinue : eol;
-				result.push(...Object.values(data.query.pages));
+			for await (const data of paginate(api, {
+				prop: 'categoryinfo|info|revisions',
+				generator: 'categorymembers',
+				cllimit: 'max',
+				inprop: 'varianttitles',
+				rvprop: 'timestamp|user',
+				gcmtitle: 'Category:已重定向的分类',
+				gcmprop: 'ids|title',
+				gcmtype: 'subcat',
+				gcmlimit: 'max',
+			}, {
+				retry: 50,
+			})) {
+				if (data.query?.pages) {
+					result.push(...Object.values(data.query.pages));
+				}
 			}
 			return result;
 		})();
@@ -121,20 +119,15 @@ const SITE_LIST = ['zh', 'cm'];
 			// 获取分类成员和内容
 			const members = await (async () => {
 				const result = [];
-				const eol = Symbol();
-				let gcmcontinue = undefined;
-				while (gcmcontinue !== eol) {
-					const { data } = await api.post({
-						prop: 'revisions',
-						generator: 'categorymembers',
-						rvprop: 'content',
-						gcmtitle: title,
-						gcmlimit: '500',
-						gcmcontinue,
-					}, {
-						retry: 50,
-					});
-					gcmcontinue = data.continue ? data.continue.gcmcontinue : eol;
+				for await (const data of paginate(api, {
+					prop: 'revisions',
+					generator: 'categorymembers',
+					rvprop: 'content',
+					gcmtitle: title,
+					gcmlimit: '500',
+				}, {
+					retry: 50,
+				})) {
 					if (data?.query?.pages) {
 						result.push(...Object.values(data.query.pages));
 					}

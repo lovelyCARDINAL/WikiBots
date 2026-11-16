@@ -1,5 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import paginate from '../utils/paginate.js';
 
 const zhapi = new MediaWikiApi({
 		baseURL: config.zh.api,
@@ -28,21 +29,16 @@ const MAP = {
 
 async function queryFiles(apprefix) {
 	const result = [];
-	const eol = Symbol();
-	let apcontinue = undefined;
-	while (apcontinue !== eol) {
-		const { data } = await cmapi.post({
-			list: 'allpages',
-			apprefix,
-			apnamespace: '6',
-			apfilterredir: 'nonredirects',
-			aplimit: 'max',
-			apcontinue,
-		}, {
-			retry: 15,
-		});
-		apcontinue = data.continue ? data.continue.apcontinue : eol;
-		result.push(...data.query.allpages.map((page) => [page.title, page.pageid]));
+	for await (const data of paginate(cmapi, {
+		list: 'allpages',
+		apprefix,
+		apnamespace: '6',
+		apfilterredir: 'nonredirects',
+		aplimit: 'max',
+	})) {
+		if (data.query?.allpages) {
+			result.push(...data.query.allpages.map((page) => [page.title, page.pageid]));
+		}
 	}
 	return result;
 }

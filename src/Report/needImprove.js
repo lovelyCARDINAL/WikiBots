@@ -2,6 +2,7 @@ import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import paginate from '../utils/paginate.js';
 import readData from '../utils/readData.js';
 
 Parser.config = 'moegirl';
@@ -30,26 +31,21 @@ const api = new MediaWikiApi({
 
 	const pages = await (async () => {
 		const result = [];
-		const eol = Symbol();
-		let rvcontinue = undefined;
-		while (rvcontinue !== eol) {
-			const { data } = await api.post({
-				prop: 'revisions|categories',
-				generator: 'categorymembers',
-				rvprop: 'content|timestamp|size',
-				rvsection: '0',
-				clshow: '!hidden',
-				cllimit: 'max',
-				gcmtitle: 'Category:急需改进',
-				gcmnamespace: '0',
-				gcmtype: 'page',
-				gcmlimit: 'max',
-				rvcontinue,
-			}, {
-				retry: 15,
-			});
-			rvcontinue = data.continue ? data.continue.rvcontinue : eol;
-			result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
+		for await (const data of paginate(api, {
+			prop: 'revisions|categories',
+			generator: 'categorymembers',
+			rvprop: 'content|timestamp|size',
+			rvsection: '0',
+			clshow: '!hidden',
+			cllimit: 'max',
+			gcmtitle: 'Category:急需改进',
+			gcmnamespace: '0',
+			gcmtype: 'page',
+			gcmlimit: 'max',
+		})) {
+			if (data.query?.pages) {
+				result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
+			}
 		}
 		return result;
 	})();

@@ -1,6 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import paginate from '../utils/paginate.js';
 
 Parser.config = 'moegirl';
 
@@ -22,24 +23,19 @@ const api = new MediaWikiApi({
 
 	const pages = await (async () => {
 		const result = [];
-		const eol = Symbol();
-		let geicontinue = undefined;
-		while (geicontinue !== eol) {
-			const { data } = await api.post({
-				prop: 'revisions',
-				generator: 'embeddedin',
-				rvprop: 'content',
-				rvsection: '0',
-				geititle: 'Template:标题替换',
-				geinamespace: '0',
-				geifilterredir: 'nonredirects',
-				geilimit: '500',
-				geicontinue,
-			}, {
-				retry: 15,
-			});
-			geicontinue = data.continue ? data.continue.geicontinue : eol;
-			result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
+		for await (const data of paginate(api, {
+			prop: 'revisions',
+			generator: 'embeddedin',
+			rvprop: 'content',
+			rvsection: '0',
+			geititle: 'Template:标题替换',
+			geinamespace: '0',
+			geifilterredir: 'nonredirects',
+			geilimit: '500',
+		})) {
+			if (data.query?.pages) {
+				result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
+			}
 		}
 		return result;
 	})();
