@@ -42,6 +42,8 @@ function sectionCount(parsed, setData, root, sub) {
 		prop: 'revisions',
 		titles: 'Module:VOCALOID_Song_Counter/data.json',
 		rvprop: 'content',
+	}, {
+		retry: 15,
 	});
 	const setData = JSON.parse(setPage);
 	const titles = Object.keys(setData).flatMap((page) => {
