@@ -25,6 +25,32 @@ const MAX_VOCAB_LIST = 500;
 const TOUCHED_LOOKBACK_MS = 14 * 24 * 60 * 60 * 1000;
 const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-interfacebot|all)))\}\}/;
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Execute `api.post` with exponential backoff on transient transport errors (e.g. `fetch failed`).
+ *
+ * @param {import('wiki-saikou').MediaWikiApi} api
+ * @param {Record<string, unknown>} params
+ * @param {number} [attempts=3]
+ * @returns {Promise<any>}
+ */
+async function postWithBackoff(api, params, attempts = 3) {
+	let lastErr;
+	for (let i = 1; i <= attempts; i++) {
+		try {
+			return await api.post(params, { retry: 15 });
+		} catch (err) {
+			lastErr = err;
+			if (i < attempts) {
+				const delay = 1000 * 2 ** (i - 1);
+				await sleep(delay);
+			}
+		}
+	}
+	throw lastErr;
+}
+
 /**
  * Traverse a category tree recursively to collect Module (828) and Template (10) pages,
  * tracking deprecated pages from subcategories whose title includes `已停用`.
@@ -413,19 +439,23 @@ ${reportWikitext}
 	const activeNoteTAPages = [];
 	const infoBatches = splitAndJoin(noteTAPages, 500);
 	await mapLimit(infoBatches, 3, async (titlesBatch) => {
-		const { data } = await api.post({
-			prop: 'info',
-			titles: titlesBatch,
-		}, { retry: 15 });
-		for (const page of Object.values(data?.query?.pages || {})) {
-			if (!page?.title || page.missing) {
-				continue;
+		try {
+			const { data } = await postWithBackoff(api, {
+				prop: 'info',
+				titles: titlesBatch,
+			});
+			for (const page of Object.values(data?.query?.pages || {})) {
+				if (!page?.title || page.missing) {
+					continue;
+				}
+				const talkTitle = Parser.normalizeTitle(page.title).toTalkPage().title;
+				const touchedMs = page.touched ? Date.parse(page.touched) : 0;
+				if (touchedMs >= cutoffMs || invalidTalkPages.has(talkTitle)) {
+					activeNoteTAPages.push(page.title);
+				}
 			}
-			const talkTitle = Parser.normalizeTitle(page.title).toTalkPage().title;
-			const touchedMs = page.touched ? Date.parse(page.touched) : 0;
-			if (touchedMs >= cutoffMs || invalidTalkPages.has(talkTitle)) {
-				activeNoteTAPages.push(page.title);
-			}
+		} catch (err) {
+			console.warn('Error fetching info batch:', err?.message || err);
 		}
 	});
 
@@ -434,11 +464,11 @@ ${reportWikitext}
 	const titleBatches = splitAndJoin(activeNoteTAPages, 200);
 	await mapLimit(titleBatches, 3, async (titlesBatch) => {
 		try {
-			const { data } = await api.post({
+			const { data } = await postWithBackoff(api, {
 				prop: 'revisions',
 				titles: titlesBatch,
 				rvprop: 'content',
-			}, { retry: 15 });
+			});
 			const pages = Object.values(data?.query?.pages || {});
 
 			await mapLimit(pages, 5, async (page) => {
