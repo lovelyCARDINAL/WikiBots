@@ -87,24 +87,96 @@ function extractAnchors(wikitext) {
 }
 
 /**
+ * Compute Levenshtein edit distance between two strings.
+ *
+ * @param {string} a
+ * @param {string} b
+ * @returns {number}
+ */
+function levenshtein(a, b) {
+	if (a === b) {
+		return 0;
+	}
+	if (!a.length) {
+		return b.length;
+	}
+	if (!b.length) {
+		return a.length;
+	}
+	let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+	for (let i = 1; i <= a.length; i++) {
+		const curr = [i];
+		for (let j = 1; j <= b.length; j++) {
+			const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+			curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+		}
+		prev = curr;
+	}
+	return prev[b.length];
+}
+
+/**
+ * Compute normalized similarity distance in [0, 1] (smaller = more similar).
+ * Grants a strong bonus when the shorter anchor is contained in the longer one.
+ *
+ * @param {string} from
+ * @param {string} to
+ * @returns {number}
+ */
+function anchorDistanceScore(from, to) {
+	const a = from.toLowerCase();
+	const b = to.toLowerCase();
+	const dist = levenshtein(a, b);
+	const maxLen = Math.max(a.length, b.length, 1);
+	const minLen = Math.min(a.length, b.length);
+	if (minLen >= 2 && (a.includes(b) || b.includes(a))) {
+		return Math.min(0.35, dist / (maxLen * 2));
+	}
+	return 2 * dist / (a.length + b.length || 1);
+}
+
+/**
  * Compare two revisions of a page and return:
- * - `renames`: unambiguous 1-to-1 section renames
- * - `removed`: heading anchors removed without an unambiguous 1-to-1 replacement
+ * - `renames`: similarity-verified section renames (supports 1-to-1 and multi-section edits)
+ * - `removed`: heading anchors removed without a confident match
  *
  * @param {{ headings: string[], all: Set<string> }} oldAnchors
  * @param {{ headings: string[], all: Set<string> }} newAnchors
  * @returns {{ renames: Map<string, string>, removed: string[] }}
  */
 function detectSectionChanges(oldAnchors, newAnchors) {
-	const removed = oldAnchors.headings.filter((h) => !newAnchors.all.has(h));
-	const added = newAnchors.headings.filter((h) => !oldAnchors.all.has(h));
+	const removedList = oldAnchors.headings.filter((h) => !newAnchors.all.has(h));
+	const addedList = newAnchors.headings.filter((h) => !oldAnchors.all.has(h));
 	const renames = new Map();
 
-	if (removed.length === 1 && added.length === 1) {
-		renames.set(removed[0], added[0]);
-		return { renames, removed: [] };
+	if (!removedList.length || !addedList.length) {
+		return { renames, removed: removedList };
 	}
-	return { renames, removed };
+
+	const SIMILARITY_THRESHOLD = 0.75;
+	const candidates = [];
+	for (const from of removedList) {
+		for (const to of addedList) {
+			const score = anchorDistanceScore(from, to);
+			if (score < SIMILARITY_THRESHOLD) {
+				candidates.push({ score, from, to });
+			}
+		}
+	}
+	candidates.sort((x, y) => x.score - y.score);
+
+	const usedFrom = new Set();
+	const usedTo = new Set();
+	for (const { from, to } of candidates) {
+		if (!usedFrom.has(from) && !usedTo.has(to)) {
+			usedFrom.add(from);
+			usedTo.add(to);
+			renames.set(from, to);
+		}
+	}
+
+	const remainingRemoved = removedList.filter((h) => !usedFrom.has(h));
+	return { renames, removed: remainingRemoved };
 }
 
 /**

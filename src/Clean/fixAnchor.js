@@ -1,3 +1,4 @@
+import process from 'process';
 import Parser from 'wikiparser-node';
 import {
 	normalizeAnchor,
@@ -396,20 +397,29 @@ async function cleanupResolvedBrokenAnchors(api) {
 	console.log(`Checking ${targetPages.length} page(s) since ${sinceIso}...`);
 
 	await mapLimit(targetPages, 3, async (targetTitle) => {
-		const state = await computePageAnchorState(api, targetTitle, sinceIso);
-		if (!state.renameMap.size && !state.brokenAnchors.size) {
-			return;
+		try {
+			const state = await computePageAnchorState(api, targetTitle, sinceIso);
+			if (!state.renameMap.size && !state.brokenAnchors.size) {
+				return;
+			}
+			console.log(`Detected anchor changes on [[${targetTitle}]]:`, {
+				renames: Object.fromEntries(state.renameMap),
+				removed: [...state.brokenAnchors],
+			});
+			await processTargetPage(api, targetTitle, state);
+		} catch (err) {
+			console.error(`Error processing [[${targetTitle}]]:`, err?.message || err);
 		}
-		console.log(`Detected anchor changes on [[${targetTitle}]]:`, {
-			renames: Object.fromEntries(state.renameMap),
-			removed: [...state.brokenAnchors],
-		});
-		await processTargetPage(api, targetTitle, state);
 	});
 
+	console.log('Sweeping Template:Broken anchors...');
 	await cleanupResolvedBrokenAnchors(api);
 
+	console.log(`Updating data/time.yaml (${TIME_KEY} = ${nowIso})...`);
 	await editTimeData(timeData, TIME_KEY, nowIso);
 
 	console.log(`End time: ${new Date().toISOString()}`);
-})();
+})().catch((err) => {
+	console.error(err);
+	process.exit(1);
+});
