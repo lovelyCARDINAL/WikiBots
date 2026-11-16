@@ -1,6 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import paginate from '../utils/paginate.js';
 
 Parser.config = 'moegirl';
 
@@ -24,23 +25,18 @@ const time = {
 
 async function queryContribs(api, ucuser) {
 	const result = [];
-	const eol = Symbol();
-	let uccontinue = undefined;
-	while (uccontinue !== eol) {
-		const { data } = await api.post({
-			list: 'usercontribs',
-			uclimit: 'max',
-			ucstart: time.start,
-			ucend: time.end,
-			ucnamespace: '0|10|14|12|4|6',
-			ucuser,
-			ucprop: '',
-			uccontinue,
-		}, {
-			retry: 15,
-		});
-		uccontinue = data.continue ? data.continue.uccontinue : eol;
-		result.push(...data.query.usercontribs);
+	for await (const data of paginate(api, {
+		list: 'usercontribs',
+		uclimit: 'max',
+		ucstart: time.start,
+		ucend: time.end,
+		ucnamespace: '0|10|14|12|4|6',
+		ucuser,
+		ucprop: '',
+	})) {
+		if (data?.query?.usercontribs) {
+			result.push(...data.query.usercontribs);
+		}
 	}
 	return result;
 }
