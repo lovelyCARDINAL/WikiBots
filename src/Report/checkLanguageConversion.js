@@ -95,6 +95,92 @@ async function fetchCGroupPrefix(api, ns) {
 }
 
 /**
+ * Fetch `MediaWiki:Conversiontable/*` (namespace 8) system conversion pages.
+ *
+ * @param {import('wiki-saikou').MediaWikiApi} api
+ * @returns {Promise<Array<{ title: string, ns: number }>>}
+ */
+async function fetchSystemConversionPages(api) {
+	const pages = [];
+	for await (const data of paginate(api, {
+		list: 'allpages',
+		apprefix: 'Conversiontable/',
+		apnamespace: '8',
+		aplimit: 'max',
+	})) {
+		for (const item of data?.query?.allpages || []) {
+			if (item.title) {
+				pages.push({ title: item.title, ns: 8 });
+			}
+		}
+	}
+	return pages;
+}
+
+/**
+ * Use MediaWiki `action=parse` across zh variants to build simplified/traditional
+ * alias mappings for all canonical CGroup names.
+ *
+ * @param {import('wiki-saikou').MediaWikiApi} api
+ * @param {string[]} groupNames
+ * @returns {Promise<Record<string, string>>}
+ */
+async function buildConversionAliases(api, groupNames) {
+	const aliases = Object.create(null);
+	for (const groupName of groupNames) {
+		const norm = normalizeGroupName(groupName);
+		if (norm && !(norm in aliases)) {
+			aliases[norm] = groupName;
+		}
+	}
+
+	if (!groupNames.length) {
+		return aliases;
+	}
+
+	const variants = ['zh-hans', 'zh-hant', 'zh-cn', 'zh-tw', 'zh-hk'];
+	const chunkSize = 100;
+	for (let i = 0; i < groupNames.length; i += chunkSize) {
+		const chunk = groupNames.slice(i, i + chunkSize);
+		const text = chunk.map((name, idx) => `<div data-idx="${idx}">${name}</div>`).join('\n');
+		for (const variant of variants) {
+			try {
+				const { data } = await api.post({
+					action: 'parse',
+					text,
+					contentmodel: 'wikitext',
+					prop: 'text',
+					uselang: variant,
+					variant,
+				}, { retry: 10 });
+				const html = data?.parse?.text?.['*'] || data?.parse?.text || '';
+				if (typeof html !== 'string') {
+					continue;
+				}
+				for (const match of html.matchAll(/data-idx="(\d+)">([^<]+)<\/div>/g)) {
+					const idx = Number.parseInt(match[1], 10);
+					const converted = match[2]?.trim();
+					const canonical = chunk[idx];
+					if (canonical && converted) {
+						if (!(converted in aliases)) {
+							aliases[converted] = canonical;
+						}
+						const norm = normalizeGroupName(converted);
+						if (norm && !(norm in aliases)) {
+							aliases[norm] = canonical;
+						}
+					}
+				}
+			} catch (err) {
+				console.warn(`Failed to generate aliases for variant ${variant}:`, err?.message || err);
+			}
+		}
+	}
+
+	return aliases;
+}
+
+/**
  * Publish a conversion report page with standard header and timestamp.
  *
  * @param {import('wiki-saikou').MediaWikiApi} api
@@ -133,11 +219,12 @@ ${reportWikitext}
 
 	const api = await createAndLogin('zh', 'ibot');
 
-	// 1. Collect CGroup pages (Module:CGroup/* + Template:CGroup/* + Category tree)
-	const [{ active, deprecated }, modPrefix, tplPrefix] = await Promise.all([
+	// 1. Collect CGroup pages (Module:CGroup/* + Template:CGroup/* + Category tree + MediaWiki:Conversiontable/*)
+	const [{ active, deprecated }, modPrefix, tplPrefix, sysPages] = await Promise.all([
 		collectCategoryTree(api, MAIN_CATEGORY),
 		fetchCGroupPrefix(api, 828),
 		fetchCGroupPrefix(api, 10),
+		fetchSystemConversionPages(api),
 	]);
 
 	const groupPageMap = new Map();
@@ -161,14 +248,15 @@ ${reportWikitext}
 	}
 
 	const cgroupPages = [...groupPageMap.values()];
-	console.log(`Discovered ${cgroupPages.length} CGroup pages.`);
+	const allConversionPages = [...cgroupPages, ...sysPages];
+	console.log(`Discovered ${cgroupPages.length} CGroup pages and ${sysPages.length} system conversion pages.`);
 
-	// 2. Fetch and parse all CGroup pages
+	// 2. Fetch and parse all conversion pages
 	const conversionOfPage = Object.create(null);
 	const rawGroupData = Object.create(null);
 	const ruleOwners = new Map();
 
-	await mapLimit(cgroupPages, 5, async ({ title, ns }) => {
+	await mapLimit(allConversionPages, 5, async ({ title, ns }) => {
 		const { data } = await api.post({
 			prop: 'revisions',
 			titles: title,
@@ -184,7 +272,9 @@ ${reportWikitext}
 
 		const parsed = ns === 828 ? parseLuaCGroup(content) : parseWikitextCGroup(content);
 		conversionOfPage[title] = parsed;
-		rawGroupData[groupName] = { ...parsed, pageTitle: title };
+		if (ns !== 8) {
+			rawGroupData[groupName] = { ...parsed, pageTitle: title };
+		}
 
 		for (const rule of parsed.rules) {
 			let owners = ruleOwners.get(rule);
@@ -215,14 +305,8 @@ ${reportWikitext}
 		groupRules[groupName] = [...merged];
 	}
 
-	// Build alias table (normalized group name + redirect titles)
-	const groupAlias = Object.create(null);
-	for (const groupName of Object.keys(groupRules)) {
-		const norm = normalizeGroupName(groupName);
-		if (norm && !(norm in groupAlias)) {
-			groupAlias[norm] = groupName;
-		}
-	}
+	// Build alias table (normalized group name + simplified/traditional variants)
+	const groupAlias = await buildConversionAliases(api, Object.keys(groupRules));
 
 	// 4. Write report 1: conversion_list_page
 	const listRows = Object.entries(conversionOfPage)
