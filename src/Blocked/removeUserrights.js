@@ -1,5 +1,6 @@
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
+import mapLimit from '../utils/concurrency.js';
 import config from '../utils/config.js';
 
 const api = new MediaWikiApi({
@@ -31,7 +32,7 @@ const api = new MediaWikiApi({
 		.map(({ userid }) => ![86212].includes(userid) && userid)
 		.filter(Boolean);
 
-	await Promise.all(userids.map(async (userid) => {
+	await mapLimit(userids, 5, async (userid) => {
 		await api.postWithToken('userrights', {
 			action: 'userrights',
 			userid,
@@ -42,7 +43,7 @@ const api = new MediaWikiApi({
 			retry: 50,
 			noCache: true,
 		}).then(({ data }) => console.log(JSON.stringify(data)));
-	}));
+	});
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

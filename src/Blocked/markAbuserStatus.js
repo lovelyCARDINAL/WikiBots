@@ -1,5 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
+import mapLimit from '../utils/concurrency.js';
 import config from '../utils/config.js';
 
 Parser.config = 'moegirl';
@@ -35,7 +36,7 @@ const api = new MediaWikiApi({
 	const linesWithTemplate = new Set(root.querySelectorAll('template#Template:No_abuselog').map((token) => token.getBoundingClientRect().top));
 	const time = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
 
-	await Promise.all(users.map(async (user) => {
+	await mapLimit(users, 5, async (user) => {
 		const rect = user.getBoundingClientRect();
 		const name = user.name.slice(5);
 		const endLine = rect.top + rect.height - 1;
@@ -54,7 +55,7 @@ const api = new MediaWikiApi({
 				user.after(' {{No abuselog}}');
 			}
 		}
-	}));
+	});
 
 	await api.postWithToken('csrf', {
 		action: 'edit',

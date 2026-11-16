@@ -1,4 +1,5 @@
 import { MediaWikiApi } from 'wiki-saikou';
+import mapLimit from '../utils/concurrency.js';
 import config from '../utils/config.js';
 
 const api = new MediaWikiApi({
@@ -26,7 +27,7 @@ const api = new MediaWikiApi({
 		retry: 15,
 	});
 	if (results.length) {
-		await Promise.all(results.map(async (item) => {
+		await mapLimit(results, 5, async (item) => {
 			if (item.ns === 2 || item.title % 2 === 1) {
 				await api.postWithToken('csrf', {
 					action: 'delete',
@@ -39,7 +40,7 @@ const api = new MediaWikiApi({
 					noCache: true,
 				}).then(({ data }) => console.log(JSON.stringify(data)));
 			}
-		}));
+		});
 	} else {
 		console.log('No broken redirect.');
 	}
