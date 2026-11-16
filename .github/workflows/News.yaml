@@ -40,14 +40,14 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/News/protect.js
+        run: npm start src/News/protect.js
 
   subscriber:
     runs-on: ubuntu-latest
@@ -60,14 +60,14 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: node src/News/subscriber.js
+        run: npm start src/News/subscriber.js
 
   sender:
     if: |
@@ -79,7 +79,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -87,4 +87,4 @@ jobs:
         env:
           TYPE: ${{ github.event.inputs.number }}
           ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: node src/News/sender.js
+        run: npm start src/News/sender.js

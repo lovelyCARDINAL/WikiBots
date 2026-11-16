@@ -6,7 +6,8 @@
     "node": ">= 20.*"
   },
   "scripts": {
-    "test": "node ./src/Personal/test.js",
+    "start": "node --tls-cipher-list=DEFAULT@SECLEVEL=1",
+    "test": "npm start ./src/Personal/test.js",
     "lint": "eslint src --exit-on-fatal-error --max-warnings 0",
     "format": "eslint src --fix"
   },

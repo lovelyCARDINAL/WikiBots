@@ -30,12 +30,12 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
-        run: node src/Blocked/markAbuserStatus.js
+        run: npm start src/Blocked/markAbuserStatus.js
 
   remove-userrights:
     runs-on: ubuntu-latest
@@ -48,9 +48,9 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
-        run: node src/Blocked/removeUserrights.js
+        run: npm start src/Blocked/removeUserrights.js

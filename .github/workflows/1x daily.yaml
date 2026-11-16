@@ -56,7 +56,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -64,7 +64,7 @@ jobs:
         env:
           SITE: 'cm'
           CM_BOT: ${{ secrets.CM_BOT }}
-        run: node src/Clean/invisibleCharacter.js
+        run: npm start src/Clean/invisibleCharacter.js
   
   watch:
     needs: [invisible-character]
@@ -78,14 +78,14 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
         env:
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
-        run: node src/Personal/watch.js
+        run: npm start src/Personal/watch.js
 
   purge:
     if: |
@@ -98,14 +98,14 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/Clean/purge.js
+        run: npm start src/Clean/purge.js
 
   mainpage-image-protection:
     needs: purge
@@ -119,7 +119,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -127,7 +127,7 @@ jobs:
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
           CM_ABOT: ${{ secrets.CM_ABOT }}
-        run: node src/File/mainpageImages.js
+        run: npm start src/File/mainpageImages.js
 
   fix-redirect-category:
     needs: mainpage-image-protection
@@ -141,7 +141,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -149,7 +149,7 @@ jobs:
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
           CM_BOT: ${{ secrets.CM_BOT }}
-        run: node src/Category/fixRedirect.js
+        run: npm start src/Category/fixRedirect.js
 
   clean-sandbox:
     if: |
@@ -162,14 +162,14 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/Clean/sandbox.js
+        run: npm start src/Clean/sandbox.js
 
   broken-redirect-deletion:
     if: |
@@ -182,14 +182,14 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/Clean/brokenRedirectDelete.js
+        run: npm start src/Clean/brokenRedirectDelete.js
 
   check-activities:
     needs: [clean-sandbox, broken-redirect-deletion]
@@ -203,7 +203,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -211,7 +211,7 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: node src/Activity/maintainer.js
+        run: npm start src/Activity/maintainer.js
 
   url-unquote:
     needs: song-counter
@@ -225,7 +225,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -233,7 +233,7 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: node src/Clean/urlUnquote.js
+        run: npm start src/Clean/urlUnquote.js
 
   song-counter:
     if: |
@@ -246,7 +246,7 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -254,7 +254,7 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: node src/Report/songCounter.js
+        run: npm start src/Report/songCounter.js
 
   draft-deletion:
     if: |
@@ -267,11 +267,11 @@ jobs:
       - name: Set Node Version
         uses: actions/setup-node@v7
         with:
-          node-version: 24.4.1
+          node-version: 26
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: node src/Clean/draftDelete.js
+        run: npm start src/Clean/draftDelete.js
