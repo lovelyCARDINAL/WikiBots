@@ -23,8 +23,10 @@ jobs:
   nulledit-in-category:
     needs: file-info
     if: |
-      github.event_name == 'schedule'  &&  needs.file-info.result == 'success' ||
-      github.event.inputs.task == 'nulledit-in-category'
+      !cancelled() && (
+        (github.event_name == 'schedule' && needs.file-info.result == 'success') ||
+        github.event.inputs.task == 'nulledit-in-category'
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

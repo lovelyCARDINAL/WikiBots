@@ -55,8 +55,10 @@ jobs:
   bad-file-name:
     needs: most-transcluded-pages
     if: |
-      github.event.schedule == '55 21 * * 0' && needs.most-transcluded-pages.result == 'success' || 
-      github.event.inputs.task == 'bad-file-name'
+      !cancelled() && (
+        (github.event.schedule == '55 21 * * 0' && needs.most-transcluded-pages.result == 'success') ||
+        github.event.inputs.task == 'bad-file-name'
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -161,8 +163,10 @@ jobs:
   need-improve-welcome:
     needs: need-improve
     if: |
-      github.event.schedule == '55 21 * * 2' && needs.need-improve.result == 'success' ||
-      github.event.inputs.task == 'need-improve-welcome'
+      !cancelled() && (
+        (github.event.schedule == '55 21 * * 2' && needs.need-improve.result == 'success') ||
+        github.event.inputs.task == 'need-improve-welcome'
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
