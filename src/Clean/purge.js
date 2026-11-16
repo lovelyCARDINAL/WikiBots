@@ -21,6 +21,8 @@ const api = new MediaWikiApi({
 		prop: 'revisions',
 		titles: 'User:星海子/BotConfig/purge.json',
 		rvprop: 'content',
+	}, {
+		retry: 15,
 	});
 	const setting = JSON.parse(content || '{}');
 
