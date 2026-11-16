@@ -8,6 +8,7 @@ import {
 	rewriteAnchorLinks,
 	findBrokenAnchorLinks,
 	updateBrokenAnchorsTalkPage,
+	loadFixAnchorConfig,
 } from '../utils/anchor.js';
 import mapLimit from '../utils/concurrency.js';
 import { createAndLogin } from '../utils/createApi.js';
@@ -364,6 +365,8 @@ async function cleanupResolvedBrokenAnchors(api) {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
 	const api = await createAndLogin('zh', 'bot');
+	const botConfig = await loadFixAnchorConfig(api);
+	const ignoredPages = new Set(botConfig.ignorePages.map((t) => Parser.normalizeTitle(t).title));
 
 	const timeData = await getTimeData();
 	const nowMs = Date.now();
@@ -387,7 +390,7 @@ async function cleanupResolvedBrokenAnchors(api) {
 		rclimit: 'max',
 	})) {
 		for (const rc of data?.query?.recentchanges || []) {
-			if (rc.title && !seen.has(rc.title)) {
+			if (rc.title && !seen.has(rc.title) && !ignoredPages.has(Parser.normalizeTitle(rc.title).title)) {
 				seen.add(rc.title);
 				targetPages.push(rc.title);
 			}

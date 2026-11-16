@@ -225,9 +225,13 @@ function buildRenameMap(stepRenames, finalAnchors) {
  * Rewrite broken section links on a page that point to any of targetTitles
  * (the target page itself and its redirects) using renameMap.
  *
+ * `renameMap` values may be:
+ * - `string`: same-page anchor rename (`newAnchor`)
+ * - `{ title: string, anchor: string }`: cross-page rename (e.g. moved to an archive subpage)
+ *
  * @param {string} content
  * @param {Set<string>} normalizedTargetTitles
- * @param {Map<string, string>} renameMap
+ * @param {Map<string, string | { title: string, anchor: string }>} renameMap
  * @param {boolean} [isTargetPage=false]
  * @returns {{ changed: boolean, content: string, replacements: Array<{ from: string, to: string }> }}
  */
@@ -245,8 +249,8 @@ function rewriteAnchorLinks(content, normalizedTargetTitles, renameMap, isTarget
 			continue;
 		}
 		const normFragment = normalizeAnchor(rawFragment);
-		const newAnchor = renameMap.get(normFragment);
-		if (!newAnchor) {
+		const mapping = renameMap.get(normFragment);
+		if (!mapping) {
 			continue;
 		}
 
@@ -256,7 +260,13 @@ function rewriteAnchorLinks(content, normalizedTargetTitles, renameMap, isTarget
 			continue;
 		}
 
-		const newTarget = link.name ? `${link.name}#${newAnchor}` : `#${newAnchor}`;
+		let newTarget;
+		if (typeof mapping === 'string') {
+			newTarget = link.name ? `${link.name}#${mapping}` : `#${mapping}`;
+		} else {
+			newTarget = `${mapping.title}#${mapping.anchor}`;
+		}
+
 		const before = link.toString();
 		link.setTarget(newTarget);
 		const after = link.toString();
@@ -407,6 +417,43 @@ function updateBrokenAnchorsTalkPage(talkContent, { addLinks = [], isStillBroken
 	};
 }
 
+const DEFAULT_ANCHOR_CONFIG = {
+	archiveTemplates: ['Archives', 'Archive box', '存档'],
+	archivePages: [],
+	ignorePages: [],
+};
+
+/**
+ * Load external JSON configuration from `User:星海子/BotConfig/fixAnchor.json`,
+ * falling back to safe defaults if the page is missing or invalid.
+ *
+ * @param {import('wiki-saikou').MediaWikiApi} api
+ * @returns {Promise<{ archiveTemplates: string[], archivePages: string[], ignorePages: string[] }>}
+ */
+async function loadFixAnchorConfig(api) {
+	try {
+		const { data } = await api.post({
+			prop: 'revisions',
+			titles: 'User:星海子/BotConfig/fixAnchor.json',
+			rvprop: 'content',
+		}, { retry: 15 });
+		const page = Object.values(data?.query?.pages || {})[0];
+		const raw = page?.revisions?.[0]?.content;
+		if (!raw) {
+			return { ...DEFAULT_ANCHOR_CONFIG };
+		}
+		const parsed = JSON.parse(raw);
+		return {
+			archiveTemplates: Array.isArray(parsed.archiveTemplates) ? parsed.archiveTemplates : DEFAULT_ANCHOR_CONFIG.archiveTemplates,
+			archivePages: Array.isArray(parsed.archivePages) ? parsed.archivePages : DEFAULT_ANCHOR_CONFIG.archivePages,
+			ignorePages: Array.isArray(parsed.ignorePages) ? parsed.ignorePages : DEFAULT_ANCHOR_CONFIG.ignorePages,
+		};
+	} catch (err) {
+		console.warn('Failed to load User:星海子/BotConfig/fixAnchor.json, using defaults:', err?.message || err);
+		return { ...DEFAULT_ANCHOR_CONFIG };
+	}
+}
+
 export {
 	normalizeAnchor,
 	extractAnchors,
@@ -416,4 +463,5 @@ export {
 	rewriteAnchorLinks,
 	findBrokenAnchorLinks,
 	updateBrokenAnchorsTalkPage,
+	loadFixAnchorConfig,
 };
