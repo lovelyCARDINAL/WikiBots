@@ -38,7 +38,7 @@ jobs:
         run: npm ci
       - name: Run Script
         env:
-          ZH_BOT: ${{ secrets.ZH_BOT }}
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: npm start src/Clean/fixAnchor.js
 
   fix-archive-anchor:
@@ -58,5 +58,5 @@ jobs:
         run: npm ci
       - name: Run Script
         env:
-          ZH_BOT: ${{ secrets.ZH_BOT }}
+          ZH_ABOT: ${{ secrets.ZH_ABOT }}
         run: npm start src/Clean/fixArchiveAnchor.js
