@@ -64,4 +64,4 @@ jobs:
           NODE_OPTIONS: ${{ matrix.node_opts }}
           MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
           ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: node scripts/test-edit.mjs
+        run: node src/Personal/test.js
