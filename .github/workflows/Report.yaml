@@ -5,6 +5,7 @@ on:
     - cron: "55 21 * * 0" # Monday 05:55 CST
     - cron: "55 21 * * 1" # Tuesday 05:55 CST
     - cron: "55 21 * * 2" # Wednesday 05:55 CST
+    - cron: "55 21 * * 6" # Sunday 05:55 CST
     - cron: "35 7 6,21 * *" # 6th & 21st of every month 15:35 CST
     - cron: "35 7 7,22 * *" # 7th & 22nd of every month 15:35 CST
     - cron: "35 7 23 * *" # 23th of every month 15:35 CST
@@ -20,6 +21,7 @@ on:
           - bad-display-title
           - bad-file-name
           - broken-file-links
+          - check-language-conversion
           - most-transcluded-pages
           - need-improve
           - need-improve-vtuber
@@ -222,3 +224,23 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
         run: npm start src/Report/tentativeTitle.js
+
+  check-language-conversion:
+    if: |
+      github.event.schedule == '55 21 * * 6' ||
+      github.event.inputs.task == 'check-language-conversion'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set Node Version
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Script
+        env:
+          ZH_IBOT: ${{ secrets.ZH_IBOT }}
+        run: npm start src/Report/checkLanguageConversion.js
