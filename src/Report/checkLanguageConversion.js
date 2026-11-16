@@ -13,6 +13,7 @@ import {
 } from '../utils/conversion.js';
 import { createAndLogin } from '../utils/createApi.js';
 import paginate from '../utils/paginate.js';
+import { postWithRetry, postWithTokenRetry } from '../utils/retry.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
 Parser.config = 'moegirl';
@@ -25,32 +26,6 @@ const TAGS = 'Bot';
 const MAX_VOCAB_LIST = 500;
 const TOUCHED_LOOKBACK_MS = 14 * 24 * 60 * 60 * 1000;
 const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-interfacebot|all)))\}\}/;
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/**
- * Execute `api.post` with exponential backoff on transient transport errors (e.g. `fetch failed`).
- *
- * @param {import('wiki-saikou').MediaWikiApi} api
- * @param {Record<string, unknown>} params
- * @param {number} [attempts=3]
- * @returns {Promise<any>}
- */
-async function postWithBackoff(api, params, attempts = 5) {
-	let lastErr;
-	for (let i = 1; i <= attempts; i++) {
-		try {
-			return await api.post(params, { retry: 15 });
-		} catch (err) {
-			lastErr = err;
-			if (i < attempts) {
-				const delay = Math.min(15000, 1000 * 2 ** (i - 1)) + Math.floor(Math.random() * 500);
-				await sleep(delay);
-			}
-		}
-	}
-	throw lastErr;
-}
 
 /**
  * Traverse a category tree recursively to collect Module (828) and Template (10) pages,
@@ -175,14 +150,14 @@ async function buildConversionAliases(api, groupNames) {
 		const text = chunk.map((name, idx) => `<div data-idx="${idx}">${name}</div>`).join('\n');
 		for (const variant of variants) {
 			try {
-				const { data } = await api.post({
+				const { data } = await postWithRetry(api, {
 					action: 'parse',
 					text,
 					contentmodel: 'wikitext',
 					prop: 'text',
 					uselang: variant,
 					variant,
-				}, { retry: 10 });
+				});
 				const html = data?.parse?.text?.['*'] || data?.parse?.text || '';
 				if (typeof html !== 'string') {
 					continue;
@@ -231,7 +206,7 @@ ${reportWikitext}
 
 [[Category:萌娘百科数据报告]]`;
 
-	await api.postWithToken('csrf', {
+	await postWithTokenRetry(api, 'csrf', {
 		action: 'edit',
 		title,
 		text,
@@ -240,9 +215,6 @@ ${reportWikitext}
 		nocreate: true,
 		tags: TAGS,
 		watchlist: 'nochange',
-	}, {
-		retry: 50,
-		noCache: true,
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 }
 
@@ -291,9 +263,9 @@ ${reportWikitext}
 		allConversionPages.map((p) => [Parser.normalizeTitle(p.title).title, p]),
 	);
 
-	const convTitleBatches = splitAndJoin(allConversionPages.map((p) => p.title), 100);
+	const convTitleBatches = splitAndJoin(allConversionPages.map((p) => p.title), 50);
 	await mapLimit(convTitleBatches, 2, async (titlesBatch) => {
-		const { data } = await postWithBackoff(api, {
+		const { data } = await postWithRetry(api, {
 			prop: 'revisions',
 			titles: titlesBatch,
 			rvprop: 'content',
@@ -454,7 +426,7 @@ ${reportWikitext}
 	const infoBatches = splitAndJoin(noteTAPages, 500);
 	await mapLimit(infoBatches, 3, async (titlesBatch) => {
 		try {
-			const { data } = await postWithBackoff(api, {
+			const { data } = await postWithRetry(api, {
 				prop: 'info',
 				titles: titlesBatch,
 			});
@@ -473,12 +445,12 @@ ${reportWikitext}
 		}
 	});
 
-	console.log(`Checking ${activeNoteTAPages.length} recently touched NoteTA article(s) in batches of 200...`);
+	console.log(`Checking ${activeNoteTAPages.length} recently touched NoteTA article(s) in batches of 100...`);
 
-	const titleBatches = splitAndJoin(activeNoteTAPages, 200);
-	await mapLimit(titleBatches, 3, async (titlesBatch) => {
+	const titleBatches = splitAndJoin(activeNoteTAPages, 100);
+	await mapLimit(titleBatches, 2, async (titlesBatch) => {
 		try {
-			const { data } = await postWithBackoff(api, {
+			const { data } = await postWithRetry(api, {
 				prop: 'revisions',
 				titles: titlesBatch,
 				rvprop: 'content',
@@ -494,7 +466,7 @@ ${reportWikitext}
 
 				const result = processNoteTAArticle(content, { groupRules, groupAlias });
 				if (result.changed) {
-					await api.postWithToken('csrf', {
+					await postWithTokenRetry(api, 'csrf', {
 						action: 'edit',
 						title: pageTitle,
 						text: result.content,
@@ -504,9 +476,6 @@ ${reportWikitext}
 						nocreate: true,
 						tags: TAGS,
 						watchlist: 'nochange',
-					}, {
-						retry: 25,
-						noCache: true,
 					}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
 				}
 
@@ -515,7 +484,7 @@ ${reportWikitext}
 					return;
 				}
 
-				const { data: talkData } = await postWithBackoff(api, {
+				const { data: talkData } = await postWithRetry(api, {
 					prop: 'revisions',
 					titles: talkTitle,
 					rvprop: 'content',
@@ -530,7 +499,7 @@ ${reportWikitext}
 					return;
 				}
 
-				await api.postWithToken('csrf', {
+				await postWithTokenRetry(api, 'csrf', {
 					action: 'edit',
 					title: talkTitle,
 					text: talkRes.content,
@@ -541,9 +510,6 @@ ${reportWikitext}
 					minor: true,
 					tags: TAGS,
 					watchlist: 'nochange',
-				}, {
-					retry: 25,
-					noCache: true,
 				}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
 			});
 		} catch (err) {

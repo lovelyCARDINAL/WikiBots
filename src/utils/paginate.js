@@ -1,37 +1,21 @@
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+import { postWithRetry } from './retry.js';
 
 /**
  * Paginate through a MediaWiki API query while preserving all `data.continue` tokens,
- * with exponential backoff on transient transport errors.
+ * with high-count exponential backoff on transient transport/gateway errors.
  *
  * @param {import('wiki-saikou').MediaWikiApi} api
  * @param {Record<string, unknown>} params
  * @param {Record<string, unknown>} [options]
  * @returns {AsyncGenerator<any>}
  */
-async function* paginate(api, params, options = { retry: 15 }) {
+async function* paginate(api, params, options = { retry: 25 }) {
 	let cont = {};
 	while (cont) {
-		let res;
-		let lastErr;
-		for (let attempt = 1; attempt <= 4; attempt++) {
-			try {
-				res = await api.post({
-					...params,
-					...cont,
-				}, options);
-				break;
-			} catch (err) {
-				lastErr = err;
-				if (attempt < 4) {
-					await sleep(1000 * 2 ** (attempt - 1));
-				}
-			}
-		}
-		if (!res) {
-			throw lastErr;
-		}
-		const { data } = res;
+		const { data } = await postWithRetry(api, {
+			...params,
+			...cont,
+		}, options, 25);
 		yield data;
 		cont = data?.continue ?? null;
 	}
