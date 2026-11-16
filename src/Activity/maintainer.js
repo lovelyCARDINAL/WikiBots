@@ -1,21 +1,13 @@
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import moment from 'moment';
-import { MediaWikiApi } from 'wiki-saikou';
-import config from '../utils/config.js';
+import mapLimit from '../utils/concurrency.js';
+import { createAndLogin } from '../utils/createApi.js';
+import paginate from '../utils/paginate.js';
 
-const zhapi = new MediaWikiApi({
-		baseURL: config.zh.api,
-		fexiosConfigs: {
-			headers: { 'user-agent': config.useragent },
-		},
-	}),
-	cmapi = new MediaWikiApi({
-		baseURL: config.cm.api,
-		fexiosConfigs: {
-			headers: { 'user-agent': config.useragent },
-		},
-	});
+const GHIA_HISTORY_URL = 'https://raw.githubusercontent.com/MoegirlPediaInterfaceAdmins/MoegirlPediaInterfaceCodes/master/src/global/zh/GHIAHistory.json';
+const FILTER_BOTS = new Set(['滥用过滤器', 'Abuse filter', '不正利用フィルター', 'Delete page script', '重定向修复器', '萌娘百科·注销管理员']);
+const NO_EDIT_HTML = '<i style="color:red">无相关编辑</i>';
 
 const now = moment().utc();
 const time = {
@@ -29,84 +21,162 @@ const time = {
 
 axiosRetry(axios, {
 	retries: 5,
-	retryDelay: (retryCount) => {
-		return retryCount * 1000;
-	},
+	retryDelay: (retryCount) => retryCount * 1000,
 });
 
-const timestampCST = (timestamp) => {
-	return `${moment(timestamp).utcOffset('+08:00').format('YYYY-MM-DD HH:mm:ss')} (CST)`;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const timestampCST = (timestamp) => `${moment(timestamp).utcOffset('+08:00').format('YYYY-MM-DD HH:mm:ss')} (CST)`;
+
+/**
+ * Safely compute the latest valid moment from an array of date inputs.
+ * Returns null when no valid dates are provided.
+ *
+ * @param {Array<string | number | moment.Moment | null | undefined>} dates
+ * @returns {moment.Moment | null}
+ */
+const maxMoment = (dates) => {
+	const valid = dates
+		.filter((d) => d !== null && d !== undefined && d !== false && d !== 0)
+		.map((d) => moment(d))
+		.filter((m) => m.isValid());
+	return valid.length ? moment.max(valid) : null;
 };
 
-const queryContribs = async (api, ucuser, ucnamespace, ucend) => {
-	const result = [];
-	const eol = Symbol();
-	let uccontinue = undefined;
-	while (uccontinue !== eol) {
-		const { data } = await api.post({
+/**
+ * Robust MediaWiki POST wrapper with exponential backoff on gateway/network glitches
+ * or missing `data.query`.
+ *
+ * @param {import('wiki-saikou').MediaWikiApi} api
+ * @param {Record<string, unknown>} params
+ * @param {number} [attempts=5]
+ * @returns {Promise<any>}
+ */
+const safePost = async (api, params, attempts = 5) => {
+	let lastErr;
+	for (let i = 1; i <= attempts; i++) {
+		try {
+			const res = await api.post(params, { retry: 10 });
+			if (res?.data?.query) {
+				return res;
+			}
+			throw new Error(`Missing query in API response: ${JSON.stringify(res?.data)?.slice(0, 200)}`);
+		} catch (err) {
+			lastErr = err;
+			if (i < attempts) {
+				const delay = Math.min(30000, 1000 * 2 ** (i - 1)) + Math.floor(Math.random() * 500);
+				console.warn(`API request failed (attempt ${i}/${attempts}), retrying in ${delay}ms:`, err?.message || err);
+				await sleep(delay);
+			}
+		}
+	}
+	throw lastErr;
+};
+
+/**
+ * Query usercontribs in chunks of users so large user lists don't trigger 503/504 timeouts,
+ * preserving full `data.continue` pagination.
+ *
+ * @param {import('wiki-saikou').MediaWikiApi} api
+ * @param {string[]} users
+ * @param {string} ucnamespace
+ * @param {string} ucend
+ * @returns {Promise<any[]>}
+ */
+const queryContribs = async (api, users, ucnamespace, ucend) => {
+	if (!users?.length) {
+		return [];
+	}
+	const chunkSize = 15;
+	const chunks = [];
+	for (let i = 0; i < users.length; i += chunkSize) {
+		chunks.push(users.slice(i, i + chunkSize));
+	}
+
+	const chunkResults = await mapLimit(chunks, 2, async (userChunk) => {
+		const result = [];
+		for await (const data of paginate(api, {
 			list: 'usercontribs',
 			uclimit: 'max',
 			ucstart: time[0],
 			ucend,
 			ucnamespace,
-			ucuser,
+			ucuser: userChunk,
 			ucprop: 'title|timestamp',
-			uccontinue,
-		}, {
-			retry: 15,
-		});
-		uccontinue = data.continue ? data.continue.uccontinue : eol;
-		result.push(...data.query.usercontribs);
-	}
-	return result;
+		}, { retry: 15 })) {
+			if (data?.query?.usercontribs) {
+				result.push(...data.query.usercontribs);
+			}
+		}
+		return result;
+	});
+	return chunkResults.flat();
 };
 
 const queryLatestContribs = async (api, ucuser, ucnamespace, ucend) => {
-	const { data: { query: { usercontribs } } } = await api.post({
-		list: 'usercontribs',
-		uclimit: '1',
-		ucstart: time[0],
-		ucend,
-		ucnamespace,
-		ucuser,
-		ucprop: 'timestamp',
-	}, {
-		retry: 15,
-	});
-	return usercontribs?.[0]?.timestamp;
+	try {
+		const { data } = await safePost(api, {
+			list: 'usercontribs',
+			uclimit: '1',
+			ucstart: time[0],
+			ucend,
+			ucnamespace,
+			ucuser,
+			ucprop: 'timestamp',
+		});
+		return data?.query?.usercontribs?.[0]?.timestamp;
+	} catch (err) {
+		console.warn(`queryLatestContribs failed for ${ucuser}:`, err?.message || err);
+		return undefined;
+	}
 };
 
-const queryLatestEvents = async (api, user, end) => {
-	const { data: { query: { usercontribs, logevents } } } = await api.post({
-		list: 'usercontribs|logevents',
-		uclimit: '1',
-		lelimit: '1',
-		ucstart: time[0],
-		lestart: time[0],
-		ucend: end,
-		leend: end,
-		ucnamespace: '*',
-		ucuser: user,
-		leuser: user,
-		ucprop: 'timestamp',
-		leprop: 'timestamp',
-		uctag: 'Bot',
-		letag: 'Bot',
-	}, {
-		retry: 15,
-	});
-	const contribsTimestamp = usercontribs.length
-		? timestampCST(usercontribs[0].timestamp)
-		: api === cmapi || ['AnnAngela-bbot', 'AnnAngela-cbot', '星海-oversightbot', '星海-userrightsbot', '萌百娘'].includes(user)
-			? '-'
-			: '<i style="color:red">无相关编辑</i>';
-	const logeventsTimestamp = logevents.length
-		? timestampCST(logevents[0].timestamp)
-		: '-';
-	return `|| ${contribsTimestamp} || ${logeventsTimestamp} `;
+const queryLatestEvents = async (api, user, end, isCm) => {
+	try {
+		const { data } = await safePost(api, {
+			list: 'usercontribs|logevents',
+			uclimit: '1',
+			lelimit: '1',
+			ucstart: time[0],
+			lestart: time[0],
+			ucend: end,
+			leend: end,
+			ucnamespace: '*',
+			ucuser: user,
+			leuser: user,
+			ucprop: 'timestamp',
+			leprop: 'timestamp',
+			uctag: 'Bot',
+			letag: 'Bot',
+		});
+		const usercontribs = data?.query?.usercontribs || [];
+		const logevents = data?.query?.logevents || [];
+		const contribsTimestamp = usercontribs.length
+			? timestampCST(usercontribs[0].timestamp)
+			: isCm || ['AnnAngela-bbot', 'AnnAngela-cbot', '星海-oversightbot', '星海-userrightsbot', '萌百娘'].includes(user)
+				? '-'
+				: NO_EDIT_HTML;
+		const logeventsTimestamp = logevents.length
+			? timestampCST(logevents[0].timestamp)
+			: '-';
+		return `|| ${contribsTimestamp} || ${logeventsTimestamp} `;
+	} catch (err) {
+		console.warn(`queryLatestEvents failed for ${user}:`, err?.message || err);
+		return '|| - || - ';
+	}
 };
 
-const updateData = async (pageid, text) => {
+const fetchGhiaHistory = async () => {
+	try {
+		const { data } = await axios.get(GHIA_HISTORY_URL, { timeout: 15000 });
+		return data && typeof data === 'object' ? data : {};
+	} catch (err) {
+		console.warn('Failed to fetch GHIAHistory.json, continuing without GHIA data:', err?.message || err);
+		return {};
+	}
+};
+
+const updateData = async (zhapi, pageid, text) => {
 	await zhapi.postWithToken('csrf', {
 		action: 'edit',
 		pageid,
@@ -123,107 +193,97 @@ const updateData = async (pageid, text) => {
 	}).then(({ data }) => console.log(JSON.stringify(data)));
 };
 
+const userInfo = (user) => `{{#Avatar:${user}|class=userlink-avatar-small}}{{User|${user}}}`;
+
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
-	
-	await Promise.all([
-		zhapi.login(
-			config.zh.ibot.name,
-			config.zh.ibot.password,
-			undefined,
-			{ retry: 25, noCache: true },
-		).then(console.log),
-		cmapi.login(
-			config.cm.ibot.name,
-			config.cm.ibot.password,
-			undefined,
-			{ retry: 25, noCache: true },
-		).then(console.log),
+
+	const [zhapi, cmapi] = await Promise.all([
+		createAndLogin('zh', 'ibot'),
+		createAndLogin('cm', 'ibot'),
 	]);
-	
+
 	const userData = await (async () => {
-		const [{ data: { query: { pages: [{ revisions: [{ content }] }] } } },
-			{ data: { query: { allusers } } }] = await Promise.all([
-			zhapi.post({
+		const [{ data: moduleData }, { data: botsData }] = await Promise.all([
+			safePost(zhapi, {
 				prop: 'revisions',
 				titles: 'Module:UserGroup/data',
 				rvprop: 'content',
-			}, {
-				retry: 15,
 			}),
-			zhapi.post({
+			safePost(zhapi, {
 				list: 'allusers',
 				augroup: 'bot',
 				aulimit: 'max',
-			}, {
-				retry: 15,
 			}),
 		]);
+		const content = moduleData?.query?.pages?.[0]?.revisions?.[0]?.content;
+		if (!content) {
+			throw new Error('Failed to load Module:UserGroup/data');
+		}
 		const data = JSON.parse(content);
-		const filterBots = ['滥用过滤器', 'Abuse filter', '不正利用フィルター', 'Delete page script', '重定向修复器', '萌娘百科·注销管理员'];
-		data.bot = allusers.filter((user) => !filterBots.includes(user.name)).map((user) => user.name);
+		const allusers = botsData?.query?.allusers || [];
+		data.bot = allusers.filter((user) => !FILTER_BOTS.has(user.name)).map((user) => user.name);
 		return data;
 	})();
 
-	const userInfo = (user) => {
-    	return `{{#Avatar:${user}|class=userlink-avatar-small}}{{User|${user}}}`;
-	};
-
 	const maintainTable = async () => {
+		const sysopUsers = Array.isArray(userData.sysop) ? userData.sysop : [];
+		const patrollerUsers = Array.isArray(userData.patroller) ? userData.patroller : [];
 		const [sysop, patroller] = await Promise.all([
 			Promise.all([
-				queryContribs(zhapi, userData.sysop, '0|10|14|12|4|6', time[30]),
-				queryContribs(cmapi, userData.sysop, '0|10|14|12|4|6', time[30]),
+				queryContribs(zhapi, sysopUsers, '0|10|14|12|4|6', time[30]),
+				queryContribs(cmapi, sysopUsers, '0|10|14|12|4|6', time[30]),
 			]),
 			Promise.all([
-				queryContribs(zhapi, userData.patroller, '0|10|14|12|4|6', time[60]),
-				queryContribs(cmapi, userData.patroller, '0|10|14|12|4|6', time[60]),
+				queryContribs(zhapi, patrollerUsers, '0|10|14|12|4|6', time[60]),
+				queryContribs(cmapi, patrollerUsers, '0|10|14|12|4|6', time[60]),
 			]),
 		]);
 		const data = {
 			sysop: sysop.flat(),
 			patroller: patroller.flat(),
 		};
-	
+
 		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的维护人员有效编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 管理员\n|-\n! 用户名 !! 30日编辑数 !! 最后编辑时间\n';
-	
-		const processUser = (group, minCount) => {
-			for (const user of userData[group]) {
-				const contribsData = data[group].filter((item) => item.user === user && !/Sandbox|测试|沙盒/i.test(item.title)) || [];
+
+		const processUser = (users, contribsList, minCount) => {
+			for (const user of users) {
+				const contribsData = contribsList.filter((item) => item.user === user && !/Sandbox|测试|沙盒/i.test(item.title));
 				const contribsCount = contribsData.length;
-				const count = contribsCount 
+				const count = contribsCount
 					? contribsCount >= minCount
 						? `data-sort-value="${contribsCount}"|${contribsCount}次`
 						: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`
-					: 'data-sort-value="0"|<i style="color:red">无相关编辑</i>';
-				const timestamp = contribsCount
-					? timestampCST(moment.max(contribsData.map((item) => moment(item.timestamp))))
-					: '<i style="color:red">无相关编辑</i>';
+					: `data-sort-value="0"|${NO_EDIT_HTML}`;
+				const latest = maxMoment(contribsData.map((item) => item.timestamp));
+				const timestamp = latest ? timestampCST(latest) : NO_EDIT_HTML;
 				text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
 			}
 		};
-	
-		processUser('sysop', 3);
+
+		processUser(sysopUsers, data.sysop, 3);
 
 		text += '|}\n</div>\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 维护姬\n|-\n! 用户名 !! 60日编辑数 !! 最后编辑时间\n';
 
-		processUser('patroller', 5);
+		processUser(patrollerUsers, data.patroller, 5);
 
 		text += '|}\n</div>\n</div>\n\n[[Category:萌娘百科数据报告]]';
-		
-		await updateData('540045', text);
+
+		await updateData(zhapi, '540045', text);
 	};
 
 	const techTable = async () => {
-		const { data: ghiaData } = await axios.get('https://raw.githubusercontent.com/MoegirlPediaInterfaceAdmins/MoegirlPediaInterfaceCodes/master/src/global/zh/GHIAHistory.json');
-		const [techeditor, interfaceAdmin] = await Promise.all([
+		const techeditorUsers = Array.isArray(userData.techeditor) ? userData.techeditor : [];
+		const interfaceAdminUsers = Array.isArray(userData['interface-admin']) ? userData['interface-admin'] : [];
+		const [ghiaData, techeditor, interfaceAdmin] = await Promise.all([
+			fetchGhiaHistory(),
 			Promise.all([
-				queryContribs(zhapi, userData.techeditor, '10|828', time[365]),
-				queryContribs(cmapi, userData.techeditor, '10|828', time[365]),
+				queryContribs(zhapi, techeditorUsers, '10|828', time[365]),
+				queryContribs(cmapi, techeditorUsers, '10|828', time[365]),
 			]),
 			Promise.all([
-				queryContribs(zhapi, userData['interface-admin'], '10|828|8|274', time[180]),
-				queryContribs(cmapi, userData['interface-admin'], '10|828|8|274', time[180]),
+				queryContribs(zhapi, interfaceAdminUsers, '10|828|8|274', time[180]),
+				queryContribs(cmapi, interfaceAdminUsers, '10|828|8|274', time[180]),
 			]),
 		]);
 		const data = {
@@ -233,88 +293,102 @@ const updateData = async (pageid, text) => {
 
 		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的技术人员有效编辑数统计与特定命名空间最后编辑时间。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 界面管理员\n|-\n! 用户名 !! 180日编辑数 !! MediaWiki或Widget最后编辑时间 \n';
 
-		for (const user of userData['interface-admin']) {
-			const contribsData = data['interface-admin'] && data['interface-admin'].filter((item) => item.user === user) || [];
-			const nsContribsData = contribsData && contribsData.filter((item) => item.ns === 8 || item.ns === 274) || [];
+		for (const user of interfaceAdminUsers) {
+			const contribsData = data['interface-admin'].filter((item) => item.user === user);
+			const nsContribsData = contribsData.filter((item) => item.ns === 8 || item.ns === 274);
 
 			const { [`U:${user}`]: ghiaUserData } = ghiaData;
-			const ghiaContribsCount = ghiaUserData && ghiaUserData.filter((item) => moment(item.datetime).isAfter(moment(time[180]))).reduce((total, item) => total + item.changedFiles, 0) || 0;
+			const ghiaEntries = Array.isArray(ghiaUserData) ? ghiaUserData : [];
+			const ghiaContribsCount = ghiaEntries
+				.filter((item) => moment(item.datetime).isAfter(moment(time[180])))
+				.reduce((total, item) => total + (item.changedFiles || 0), 0);
 
 			const contribsCount = contribsData.length + ghiaContribsCount;
-			const count = contribsCount 
+			const count = contribsCount
 				? contribsCount >= 3
 					? `data-sort-value="${contribsCount}"|${contribsCount}次`
 					: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`
-				: 'data-sort-value="0"|<i style="color:red">无相关编辑</i>';
+				: `data-sort-value="0"|${NO_EDIT_HTML}`;
 
 			if (nsContribsData.length || ghiaContribsCount) {
-				const nsLatestTimestamp = nsContribsData.length && moment.max(nsContribsData.map((item) => moment(item.timestamp)));
-				const ghiaLatestTimestamp = ghiaUserData?.length && moment.max(ghiaUserData.map((item) => moment(item.datetime))) || 0;
-				const latestTimestamp = moment.max([nsLatestTimestamp, ghiaLatestTimestamp]);
-				const timestamp = timestampCST(latestTimestamp);
+				const nsLatestTimestamp = maxMoment(nsContribsData.map((item) => item.timestamp));
+				const ghiaLatestTimestamp = maxMoment(ghiaEntries.map((item) => item.datetime));
+				const latestTimestamp = maxMoment([nsLatestTimestamp, ghiaLatestTimestamp]);
+				const timestamp = latestTimestamp ? timestampCST(latestTimestamp) : NO_EDIT_HTML;
 				text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
 			} else {
 				const moreContribs = await Promise.all([
 					queryLatestContribs(zhapi, user, '8|274', time[365]),
 					queryLatestContribs(cmapi, user, '8|274', time[365]),
 				]).then((result) => result.flat().filter((item) => item !== undefined));
-				const nsLatestTimestamp = moreContribs.length && moment.max(moreContribs.map((item) => moment(item)));
-				
-				const ghiaTimestamp = ghiaUserData && moment.max(ghiaUserData.map((item) => moment(item.datetime)));
-				const ghiaLatestTimestamp = ghiaTimestamp?.isAfter(moment(time[365])) && ghiaTimestamp;
+				const nsLatestTimestamp = maxMoment(moreContribs);
 
-				const latestTimestamp = nsLatestTimestamp && ghiaLatestTimestamp
-					? moment.max([nsLatestTimestamp, ghiaLatestTimestamp])
-					: nsLatestTimestamp || ghiaLatestTimestamp;
-				const timestamp = latestTimestamp
-					? timestampCST(latestTimestamp)
-					: '<i style="color:red">无相关编辑</i>';
+				const ghiaTimestamp = maxMoment(ghiaEntries.map((item) => item.datetime));
+				const ghiaLatestTimestamp = ghiaTimestamp?.isAfter(moment(time[365])) ? ghiaTimestamp : null;
+
+				const latestTimestamp = maxMoment([nsLatestTimestamp, ghiaLatestTimestamp]);
+				const timestamp = latestTimestamp ? timestampCST(latestTimestamp) : NO_EDIT_HTML;
 				text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
 			}
 		}
 
 		text += '|}\n</div>\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 技术编辑员\n|-\n! 用户名 !! 365日编辑数 !! 最后编辑时间\n';
 
-		for (const user of userData.techeditor) {
-			const contribsData = data.techeditor && data.techeditor.filter((item) => item.user === user) || [];
+		for (const user of techeditorUsers) {
+			const contribsData = data.techeditor.filter((item) => item.user === user);
 			const contribsCount = contribsData.length;
-			const count = contribsCount 
+			const count = contribsCount
 				? contribsCount >= 3
 					? `data-sort-value="${contribsCount}"|${contribsCount}次`
 					: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`
-				: 'data-sort-value="0"|<i style="color:red">无相关编辑</i>';
-			const timestamp = contribsCount
-				? timestampCST(moment.max(contribsData.map((item) => moment(item.timestamp))))
-				: '<i style="color:red">无相关编辑</i>';
+				: `data-sort-value="0"|${NO_EDIT_HTML}`;
+			const latest = maxMoment(contribsData.map((item) => item.timestamp));
+			const timestamp = latest ? timestampCST(latest) : NO_EDIT_HTML;
 			text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
 		}
 
 		text += '|}\n</div>\n</div>\n\n[[Category:萌娘百科数据报告]]';
 
-		await updateData('540046', text);
+		await updateData(zhapi, '540046', text);
 	};
 
 	const botTable = async () => {
 		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的机器人90日内最后活跃时间。\n* 只统计带有<code>Bot</code>标签的贡献和公开日志。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|-\n!rowspan=2 | 用户名 || colspan=2 | 主站 || colspan=2 | 共享站\n|-\n! 最后编辑时间 !! 最后日志时间 !! 最后编辑时间 !! 最后日志时间\n';
 
-		for (const user of userData.bot) {
-			const timestamp = (await Promise.all([
-				queryLatestEvents(zhapi, user, time[90]),
-				queryLatestEvents(cmapi, user, time[90]),
-			])).join('');
-			text += `|-\n| ${userInfo(user)} ${timestamp}\n`;
-		}
+		const rows = await mapLimit(userData.bot, 4, async (user) => {
+			const [zhEvents, cmEvents] = await Promise.all([
+				queryLatestEvents(zhapi, user, time[90], false),
+				queryLatestEvents(cmapi, user, time[90], true),
+			]);
+			return `|-\n| ${userInfo(user)} ${zhEvents}${cmEvents}\n`;
+		});
 
-		text += '|}\n</div>\n</div>\n\n[[Category:萌娘百科数据报告]]';
-		
-		await updateData('540047', text);
+		text += `${rows.join('')}|}\n</div>\n</div>\n\n[[Category:萌娘百科数据报告]]`;
+
+		await updateData(zhapi, '540047', text);
 	};
 
-	await Promise.all([
-		maintainTable(),
-		techTable(),
-		botTable(),
-	]);
+	const tasks = [
+		{ name: 'maintainTable', fn: maintainTable },
+		{ name: 'techTable', fn: techTable },
+		{ name: 'botTable', fn: botTable },
+	];
+	let failures = 0;
+	for (const { name, fn } of tasks) {
+		try {
+			await fn();
+		} catch (err) {
+			failures++;
+			console.error(`${name} failed:`, err?.message || err);
+		}
+	}
+
+	if (failures === tasks.length) {
+		throw new Error('All maintainer tasks failed');
+	}
 
 	console.log(`End time: ${new Date().toISOString()}`);
-})();
+})().catch((err) => {
+	console.error(err);
+	process.exit(1);
+});
