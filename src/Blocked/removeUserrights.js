@@ -1,23 +1,10 @@
 import moment from 'moment';
-import { MediaWikiApi } from 'wiki-saikou';
 import mapLimit from '../utils/concurrency.js';
-import config from '../utils/config.js';
-
-const api = new MediaWikiApi({
-	baseURL: config.zh.api,
-	fexiosConfigs: {
-		headers: { 'user-agent': config.useragent },
-	},
-});
+import { createAndLogin } from '../utils/createApi.js';
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
-	await api.login(
-		config.zh.abot.name,
-		config.zh.abot.password,
-		undefined,
-		{ retry: 25, noCache: true },
-	).then(console.log);
+	const api = await createAndLogin('zh', 'abot');
 
 	const { data: { query: { allusers } } } = await api.post({
 		list: 'allusers',

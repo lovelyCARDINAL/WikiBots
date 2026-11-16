@@ -1,26 +1,13 @@
-import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import mapLimit from '../utils/concurrency.js';
-import config from '../utils/config.js';
+import { createAndLogin } from '../utils/createApi.js';
 
 Parser.config = 'moegirl';
-
-const api = new MediaWikiApi({
-	baseURL: config.zh.api,
-	fexiosConfigs: {
-		headers: { 'user-agent': config.useragent },
-	},
-});
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
-	await api.login(
-		config.zh.abot.name,
-		config.zh.abot.password,
-		undefined,
-		{ retry: 25, noCache: true },
-	).then(console.log);
+	const api = await createAndLogin('zh', 'abot');
 
 	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await api.post({
 		prop: 'revisions',

@@ -1,13 +1,5 @@
-import { MediaWikiApi } from 'wiki-saikou';
 import mapLimit from '../utils/concurrency.js';
-import config from '../utils/config.js';
-
-const api = new MediaWikiApi({
-	baseURL: config.zh.api,
-	fexiosConfigs: {
-		headers: { 'user-agent': config.useragent },
-	},
-});
+import { createAndLogin } from '../utils/createApi.js';
 
 const NS_LIST = [1, 2, 3, 5, 9, 11, 13, 15, 115, 117, 118, 119, 275, 829];
 const NS_REASON_MAP = {
@@ -22,12 +14,7 @@ const NS_REASON_MAP = {
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
-	await api.login(
-		config.zh.abot.name,
-		config.zh.abot.password,
-		undefined,
-		{ retry: 25, noCache: true },
-	).then(console.log);
+	const api = await createAndLogin('zh', 'abot');
 
 	const { data: { query: { logevents } } } = await api.post({
 		list: 'logevents',
