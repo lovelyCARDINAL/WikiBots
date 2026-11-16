@@ -8,6 +8,7 @@
  * @returns {Promise<R[]>}
  */
 async function mapLimit(items, limit, fn) {
+	const safeLimit = Number.isFinite(limit) && limit >= 1 ? Math.floor(limit) : 1;
 	const results = new Array(items.length);
 	let cursor = 0;
 	const worker = async () => {
@@ -16,7 +17,7 @@ async function mapLimit(items, limit, fn) {
 			results[index] = await fn(items[index], index);
 		}
 	};
-	await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker));
+	await Promise.all(Array.from({ length: Math.max(1, Math.min(safeLimit, items.length)) }, worker));
 	return results;
 }
 
