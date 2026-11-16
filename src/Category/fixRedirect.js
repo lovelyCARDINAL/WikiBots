@@ -10,6 +10,21 @@ Parser.conversionTable = new Map(parserConfig.conversionTable);
 
 const SITE_LIST = ['zh', 'cm'];
 
+/**
+ * Remove a CategoryToken and collapse its trailing newline when it occupied its own line.
+ *
+ * @param {Parser.CategoryToken} category
+ */
+function removeCategory(category) {
+	const prev = category.previousSibling;
+	const next = category.nextSibling;
+	const atLineStart = !prev || prev.type === 'text' && /\n$/.test(prev.data);
+	if (atLineStart && next?.type === 'text' && next.data.startsWith('\n')) {
+		next.replaceData(next.data.slice(1));
+	}
+	category.remove();
+}
+
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	const zhapi = new MediaWikiApi({
@@ -139,11 +154,23 @@ const SITE_LIST = ['zh', 'cm'];
 				const wikitext = Parser.parse(contentData?.[pageid]?.content || content);
 
 				// 分类
-				// TODO: nomoralize origin Category
-				for (const category of wikitext.querySelectorAll(
-					Array.from(variant, (item) => `category[name='Category:${item}']`).join(', '),
-				)) {
-					category.setTarget(`Category:${target}`);
+				const targetName = Parser.normalizeTitle(`Category:${target}`).title;
+				const variantNames = new Set(Array.from(variant, (item) => Parser.normalizeTitle(`Category:${item}`).title));
+				const categories = wikitext.querySelectorAll('category');
+				let targetCategory = categories.find((cat) => Parser.normalizeTitle(cat.name).title === targetName);
+				for (const category of categories) {
+					if (!variantNames.has(Parser.normalizeTitle(category.name).title)) {
+						continue;
+					}
+					if (targetCategory) {
+						if (!targetCategory.sortkey && category.sortkey) {
+							targetCategory.setSortkey(category.sortkey);
+						}
+						removeCategory(category);
+					} else {
+						category.setTarget(`Category:${target}`);
+						targetCategory = category;
+					}
 				}
 
 				if (site === 'zh') {
