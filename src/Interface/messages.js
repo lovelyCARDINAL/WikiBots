@@ -12,6 +12,26 @@ const SUMMARY = {
 	Widget: '同步微件页面',
 };
 
+/**
+ * 从指定站点的 MediaWiki:Gadgets-definition 解析所有 gadget 名称。
+ * @param {MediaWikiApi} siteApi
+ * @returns {Promise<string[]>}
+ */
+async function parseGadgetNames(siteApi) {
+	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await siteApi.post({
+		prop: 'revisions',
+		titles: 'MediaWiki:Gadgets-definition',
+		rvprop: 'content',
+	}, {
+		retry: 15,
+	});
+	return content
+		.split('\n')
+		.filter((line) => line.startsWith('*'))
+		.map((line) => line.replace(/^\*\s*/, '').split(/[\s[|]/)[0])
+		.filter(Boolean);
+}
+
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
@@ -43,7 +63,19 @@ const SUMMARY = {
 		const setData = JSON.parse(content);
 		const suffixes = ['', '/zh-hans', '/zh-cn', '/zh-hant', '/zh-tw', '/zh-hk'];
 
-		return Object.entries(setData)
+		// 从 cm 站 Gadgets-definition 解析 gadget 列表，排除 JSON 配置中的黑名单
+		const gadgetExclude = new Set(setData.Gadget?.exclude ?? []);
+		const gadgetSite = setData.Gadget?.site ?? ['cm'];
+		const gadgetNames = await parseGadgetNames(api.cm);
+		const gadgetPages = gadgetNames
+			.filter((name) => !gadgetExclude.has(name))
+			.flatMap((name) => suffixes
+				.map((suffix) => [`MediaWiki:Gadget-${name}${suffix}`, 'Gadget', gadgetSite]),
+			);
+
+		// 从 JSON 配置读取其余分组（Abusefilter、Titleblacklist、Widget）
+		const configPages = Object.entries(setData)
+			.filter(([key]) => key !== 'Gadget')
 			.flatMap(([key, value]) => {
 				// Widget 命名空间不需要拼接 /zh-hans 等语言后缀，且 title 应包含或自动补全 Widget: 前缀
 				if (key === 'Widget') {
@@ -57,6 +89,8 @@ const SUMMARY = {
 					.map((suffix) => [`MediaWiki:${title}${suffix}`, key, value.site]),
 				);
 			});
+
+		return [...gadgetPages, ...configPages];
 	})();
 
 	const time = moment().subtract(16, 'days');
