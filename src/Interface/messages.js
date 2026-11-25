@@ -18,18 +18,48 @@ const SUMMARY = {
  * @returns {Promise<string[]>}
  */
 async function parseGadgetNames(siteApi) {
-	const { data: { query: { pages: [{ revisions: [{ content }] }] } } } = await siteApi.post({
-		prop: 'revisions',
-		titles: 'MediaWiki:Gadgets-definition',
-		rvprop: 'content',
-	}, {
-		retry: 15,
-	});
-	return content
-		.split('\n')
-		.filter((line) => line.startsWith('*'))
-		.map((line) => line.replace(/^\*\s*/, '').split(/[\s[|]/)[0])
-		.filter(Boolean);
+	try {
+		const { data } = await siteApi.post({
+			prop: 'revisions',
+			titles: 'MediaWiki:Gadgets-definition',
+			rvprop: 'content',
+		}, {
+			retry: 15,
+		});
+		const content = data?.query?.pages?.[0]?.revisions?.[0]?.content;
+		if (!content) {
+			console.warn('MediaWiki:Gadgets-definition 未找到有效内容，跳过 Gadget 同步');
+			return [];
+		}
+		return content
+			.split('\n')
+			.filter((line) => line.startsWith('*'))
+			.map((line) => line.replace(/^\*\s*/, '').split(/[|[]/)[0].trim())
+			.filter(Boolean);
+	} catch (error) {
+		console.error('读取 MediaWiki:Gadgets-definition 失败，跳过 Gadget 同步:', error);
+		return [];
+	}
+}
+
+/**
+ * 将 MediaWiki query.pages 转换为按标题索引的 Map（兼容 normalized 标题）。
+ * @param {object} data
+ * @returns {Map<string, object>}
+ */
+function buildPageMap(data) {
+	const pageMap = new Map();
+	const normalizedMap = new Map(
+		(data?.query?.normalized ?? []).map(({ from, to }) => [to, from]),
+	);
+	for (const page of data?.query?.pages ?? []) {
+		pageMap.set(page.title, page);
+		const originalTitle = normalizedMap.get(page.title);
+		if (originalTitle) {
+			pageMap.set(originalTitle, page);
+		}
+	}
+	return pageMap;
 }
 
 (async () => {
@@ -96,22 +126,64 @@ async function parseGadgetNames(siteApi) {
 	const time = moment().subtract(16, 'days');
 
 	const pagelist = await (async () => {
-		const { data: { query: { pages } } } = await api.zh.post({
+		const { data: zhData } = await api.zh.post({
 			prop: 'revisions',
 			titles: pageGroup.map(([title]) => title),
 			rvprop: 'timestamp|content',
 		}, {
 			retry: 15,
 		});
-		const result = pages
-			.filter(({ missing, revisions }) => !missing && moment(revisions[0].timestamp).isAfter(time))
-			.map(({ title, revisions }) => [title, revisions[0].content]);
-		return pageGroup
-			.filter((item) => result.map(([title]) => title).includes(item[0]))
-			.map((item) => {
-				const content = result.find((subArray) => subArray[0] === item[0])[1];
-				return [...item, content];
+		const zhPages = buildPageMap(zhData);
+
+		// 对于 16 天内未编辑的 Gadget 页面，检查目标站点是否缺失或内容过期，避免新启用小工具的消息被跳过
+		const staleGadgetCandidates = pageGroup.filter(([title, key]) => {
+			if (key !== 'Gadget') {
+				return false;
+			}
+			const page = zhPages.get(title);
+			const rev = page?.revisions?.[0];
+			return page && !page.missing && rev && !moment(rev.timestamp).isAfter(time);
+		});
+
+		const targetPageMaps = new Map();
+		if (staleGadgetCandidates.length > 0) {
+			const targetSites = [...new Set(staleGadgetCandidates.flatMap(([, , sites]) => sites))]
+				.filter((site) => api[site]);
+			await Promise.all(targetSites.map(async (site) => {
+				const siteTitles = staleGadgetCandidates
+					.filter(([, , sites]) => sites.includes(site))
+					.map(([title]) => title);
+				const { data: targetData } = await api[site].post({
+					prop: 'revisions',
+					titles: siteTitles,
+					rvprop: 'content',
+				}, {
+					retry: 15,
+				});
+				targetPageMaps.set(site, buildPageMap(targetData));
+			}));
+		}
+
+		return pageGroup.flatMap((item) => {
+			const [title, key, sites] = item;
+			const zhPage = zhPages.get(title);
+			const zhRev = zhPage?.revisions?.[0];
+			if (!zhPage || zhPage.missing || !zhRev) {
+				return [];
+			}
+			if (moment(zhRev.timestamp).isAfter(time)) {
+				return [ [...item, zhRev.content] ];
+			}
+			if (key !== 'Gadget') {
+				return [];
+			}
+			const sitesToSync = sites.filter((site) => {
+				const targetPage = targetPageMaps.get(site)?.get(title);
+				const targetContent = targetPage?.revisions?.[0]?.content;
+				return !targetPage || targetPage.missing || targetContent !== zhRev.content;
 			});
+			return sitesToSync.length > 0 ? [ [title, key, sitesToSync, zhRev.content] ] : [];
+		});
 	})();
 
 	await Promise.all(SITE_LIST.splice(1).map(async (site) => {
