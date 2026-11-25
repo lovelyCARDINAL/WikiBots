@@ -1,6 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import clientLogin from '../utils/clientLogin.js';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,
@@ -33,7 +34,7 @@ const api = new MediaWikiApi({
 	const userList = avatarLogs.map(({ title }) => title.replace(/^User:(.+?)\/?$/, '$1'));
 
 	await Promise.all(userList.map(async (user) => {
-		const { data } = await api.postWithToken('userrights', {
+		await safePostWithToken(api, 'userrights', {
 			action: 'userrights',
 			user,
 			remove: 'goodeditor|honoredmaintainer|techeditor|manually-confirmed|file-maintainer|extendedconfirmed|flood', /*TODO: 可能需要行政员用户组移除Bot用户组 */
@@ -43,7 +44,6 @@ const api = new MediaWikiApi({
 			retry: 50,
 			noCache: true,
 		});
-		console.log(JSON.stringify(data));
 	}));
 
 	const rightLogIds = await api.post({
@@ -58,7 +58,7 @@ const api = new MediaWikiApi({
 		retry: 15,
 	}).then(({ data: { query: { logevents } } }) => logevents.filter(({ suppressed, comment }) => !suppressed && comment === '用户注销').map(({ logid }) => logid));
 
-	const { data } = await api.postWithToken('csrf', {
+	await safePostWithToken(api, 'csrf', {
 		action: 'revisiondelete',
 		type: 'logging',
 		ids: [...avatarLogIds, ...rightLogIds],
@@ -70,7 +70,6 @@ const api = new MediaWikiApi({
 		retry: 50,
 		noCache: true,
 	});
-	console.log(JSON.stringify(data));
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

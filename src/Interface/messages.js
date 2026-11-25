@@ -1,6 +1,7 @@
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const SITE_LIST = ['zh', 'cm'];
 const api = {};
@@ -29,6 +30,7 @@ async function parseGadgetNames(siteApi) {
 		const content = data?.query?.pages?.[0]?.revisions?.[0]?.content;
 		if (!content) {
 			console.warn('MediaWiki:Gadgets-definition 未找到有效内容，跳过 Gadget 同步');
+			process.exitCode = 1;
 			return [];
 		}
 		return content
@@ -38,6 +40,7 @@ async function parseGadgetNames(siteApi) {
 			.filter(Boolean);
 	} catch (error) {
 		console.error('读取 MediaWiki:Gadgets-definition 失败，跳过 Gadget 同步:', error);
+		process.exitCode = 1;
 		return [];
 	}
 }
@@ -190,7 +193,7 @@ function buildPageMap(data) {
 		console.groupCollapsed(site.toUpperCase());
 		const pages = pagelist.filter((item) => item[2].includes(site));
 		await Promise.all(pages.map(async ([title, key, , text]) => {
-			await api[site].postWithToken('csrf', {
+			await safePostWithToken(api[site], 'csrf', {
 				action: 'edit',
 				title,
 				text,
@@ -202,7 +205,7 @@ function buildPageMap(data) {
 			}, {
 				retry: 50,
 				noCache: true,
-			}).then(({ data }) => console.log(JSON.stringify(data)));
+			});
 		}));
 		console.groupEnd();
 	}));

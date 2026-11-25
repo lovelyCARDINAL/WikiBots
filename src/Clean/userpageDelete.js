@@ -1,6 +1,7 @@
 
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,
@@ -30,7 +31,7 @@ async function ruleTest(title, pageid, maintainlist) {
 }
 
 async function pageDelete(pageid) {
-	const { data } = await api.postWithToken('csrf', {
+	await safePostWithToken(api, 'csrf', {
 		action: 'delete',
 		pageid,
 		reason: '自动删除悬挂{{[[Template:ns2d|ns2d]]}}的用户页面',
@@ -40,7 +41,6 @@ async function pageDelete(pageid) {
 		retry: 50,
 		noCache: true,
 	});
-	console.log(JSON.stringify(data));
 }
 
 async function cannotDelete(pageid) {
@@ -53,7 +53,7 @@ async function cannotDelete(pageid) {
 	});
 	let wikitext = pages[0].revisions[0].content;
 	wikitext = wikitext.replaceAll(/(?:<noinclude>\s*)?{{\s*(?:T:|模板:|[样樣]板:|Template:)?\s*ns2d\s*}}(?:\s*<\/noinclude>)?/gi, '');
-	await api.postWithToken('csrf', {
+	await safePostWithToken(api, 'csrf', {
 		action: 'edit',
 		pageid,
 		tags: 'Bot',
@@ -65,7 +65,7 @@ async function cannotDelete(pageid) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 }
 
 (async () => {

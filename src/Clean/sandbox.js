@@ -1,6 +1,7 @@
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,
@@ -33,7 +34,7 @@ const PAGE_MAP = {
 };
 
 async function pageEdit(title) {
-	await api.postWithToken('csrf', {
+	await safePostWithToken(api, 'csrf', {
 		action: 'edit',
 		title,
 		text: PAGE_MAP[title].content,
@@ -45,7 +46,7 @@ async function pageEdit(title) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 }
 
 (async () => {
@@ -70,7 +71,7 @@ async function pageEdit(title) {
 			});
 			console.info(`${title} has ${length} revisions.`);
 			if (length > 2000) {
-				await api.postWithToken('csrf', {
+				await safePostWithToken(api, 'csrf', {
 					action: 'delete',
 					title,
 					reason: '沙盒清理作业：删除并重建版本过多的公共沙盒。',
@@ -79,7 +80,7 @@ async function pageEdit(title) {
 				}, {
 					retry: 50,
 					noCache: true,
-				}).then(({ data }) => console.log(JSON.stringify(data)));
+				});
 				await pageEdit(title);
 			}
 		}));
@@ -102,7 +103,7 @@ async function pageEdit(title) {
 		})).then((result) => result.flat());
 		console.info(`There are ${deletePages.length} pages to delete.`);
 		await Promise.all(deletePages.map(async ([title, timestamp]) => {
-			await api.postWithToken('csrf', {
+			await safePostWithToken(api, 'csrf', {
 				action: 'delete',
 				title,
 				reason: `沙盒清理作业：最后编辑时间 ${timestamp} 超过90日。如有需要请联系管理员恢复页面。`,
@@ -111,7 +112,7 @@ async function pageEdit(title) {
 			}, {
 				retry: 50,
 				noCache: true,
-			}).then(({ data }) => console.log(JSON.stringify(data)));
+			});
 		}));
 	}
 
@@ -126,7 +127,7 @@ async function pageEdit(title) {
 
 	await Promise.all(pages.map(async ({ title, revisions: [{ content }], protection, touched }) => {
 		if (protection.length === 0 || protection[0].type !== 'move' || protection[0].level !== 'sysop') {
-			await api.postWithToken('csrf', {
+			await safePostWithToken(api, 'csrf', {
 				action: 'protect',
 				title,
 				protections: 'move=sysop',
@@ -137,7 +138,7 @@ async function pageEdit(title) {
 			}, {
 				retry: 50,
 				noCache: true,
-			}).then(({ data }) => console.log(JSON.stringify(data)));
+			});
 		}
 		if (PAGE_MAP[title].content !== content) {
 			const minutesDiff = moment().diff(moment(touched), 'minutes');

@@ -78,20 +78,30 @@ const SITE_LIST = ['zh', 'cm'];
 			
 		await Promise.all(
 			result.map(async ([pageid, target]) => {
-				await api.postWithToken('csrf', {
-					action: 'edit',
-					pageid,
-					text: `#Redirect [[:${target}]]\n{{Cr|${target.replace('Category:', '')}}}`,
-					minor: true,
-					bot: true,
-					nocreate: true,
-					tags: 'Bot',
-					summary: `添加至「[[:${target}]]」的[[Template:分类重定向|分类重定向]]`,
-					watchlist: 'nochange',
-				}, {
-					retry: 50,
-					noCache: true,
-				}).then(({ data }) => console.log(JSON.stringify(data)));
+				try {
+					const { data } = await api.postWithToken('csrf', {
+						action: 'edit',
+						pageid,
+						text: `#Redirect [[:${target}]]\n{{Cr|${target.replace('Category:', '')}}}`,
+						minor: true,
+						bot: true,
+						nocreate: true,
+						tags: 'Bot',
+						summary: `添加至「[[:${target}]]」的[[Template:分类重定向|分类重定向]]`,
+						watchlist: 'nochange',
+					}, {
+						retry: 50,
+						noCache: true,
+					});
+					console.log(JSON.stringify(data));
+					if (data?.edit?.result && data.edit.result !== 'Success') {
+						console.error(`${site} ${pageid} 编辑未成功:`, JSON.stringify(data));
+						process.exitCode = 1;
+					}
+				} catch (error) {
+					console.error(`${site} ${pageid} 编辑失败:`, error?.message || error);
+					process.exitCode = 1;
+				}
 			}),
 		);
 	}));

@@ -1,6 +1,7 @@
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
 const api = new MediaWikiApi({
@@ -11,14 +12,14 @@ const api = new MediaWikiApi({
 });
 
 async function watch(titles, unwatch) {
-	await api.postWithToken('watch', {
+	await safePostWithToken(api, 'watch', {
 		action: 'watch',
 		titles,
 		unwatch,
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 }
 
 (async () => {

@@ -52,24 +52,28 @@ import splitAndJoin from '../utils/splitAndJoin.js';
 	}).then((result) => result.flat().filter(Boolean));
 
 	await mapLimit(archivelist, 5, async ([target, ids]) => {
-		await api.postWithToken('csrf', {
-			action: 'revisiondelete',
-			target,
-			ids,
-			type: 'oldimage',
-			hide: 'content',
-			reason: '删除长期未使用的旧版本文件',
-			tags: 'Bot',
-		}, {
-			retry: 50,
-			noCache: true,
-		}).then(({ data }) => {
+		try {
+			const { data } = await api.postWithToken('csrf', {
+				action: 'revisiondelete',
+				target,
+				ids,
+				type: 'oldimage',
+				hide: 'content',
+				reason: '删除长期未使用的旧版本文件',
+				tags: 'Bot',
+			}, {
+				retry: 50,
+				noCache: true,
+			});
 			if (data?.revisiondelete?.items) {
 				data.revisiondelete.items = data.revisiondelete.items
 					.map(({ status, archivename, timestamp }) => ({ status, archivename, timestamp }));
 			}
 			console.log(JSON.stringify(data));
-		});
+		} catch (error) {
+			console.error(`revisiondelete(${target}) 执行失败:`, error?.message || error);
+			process.exitCode = 1;
+		}
 	});
 
 	await editTimeData(lastTime, 'file-revision-deletion', lestart);

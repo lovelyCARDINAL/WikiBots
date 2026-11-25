@@ -4,6 +4,7 @@ import moment from 'moment';
 import mapLimit from '../utils/concurrency.js';
 import { createAndLogin } from '../utils/createApi.js';
 import paginate from '../utils/paginate.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const GHIA_HISTORY_URL = 'https://raw.githubusercontent.com/MoegirlPediaInterfaceAdmins/MoegirlPediaInterfaceCodes/master/src/global/zh/GHIAHistory.json';
 const FILTER_BOTS = new Set(['滥用过滤器', 'Abuse filter', '不正利用フィルター', 'Delete page script', '重定向修复器', '萌娘百科·注销管理员']);
@@ -177,7 +178,7 @@ const fetchGhiaHistory = async () => {
 };
 
 const updateData = async (zhapi, pageid, text) => {
-	await zhapi.postWithToken('csrf', {
+	await safePostWithToken(zhapi, 'csrf', {
 		action: 'edit',
 		pageid,
 		text,
@@ -190,7 +191,7 @@ const updateData = async (zhapi, pageid, text) => {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 };
 
 const userInfo = (user) => `{{#Avatar:${user}|class=userlink-avatar-small}}{{User|${user}}}`;
@@ -383,8 +384,8 @@ const userInfo = (user) => `{{#Avatar:${user}|class=userlink-avatar-small}}{{Use
 		}
 	}
 
-	if (failures === tasks.length) {
-		throw new Error('All maintainer tasks failed');
+	if (failures > 0) {
+		throw new Error(`${failures}/${tasks.length} maintainer task(s) failed`);
 	}
 
 	console.log(`End time: ${new Date().toISOString()}`);

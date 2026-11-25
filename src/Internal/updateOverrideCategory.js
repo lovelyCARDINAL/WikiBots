@@ -88,6 +88,7 @@ const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
 		console.log('SUCCESS!');
 	} catch (error) {
 		console.error('ERROR:', error.message);
+		process.exitCode = 1;
 	}
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

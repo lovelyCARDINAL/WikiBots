@@ -1,5 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,
@@ -64,7 +65,7 @@ async function isActive(user) {
 			const userRegex = new RegExp(`#[ _]\\[\\[User[ _]talk:(${userlistString})(\\/[^\\]]+)?\\]\\]\n`, 'gi');
 			const text = wikitext.replace(userRegex, '');
 			
-			await api.postWithToken('csrf', {
+			await safePostWithToken(api, 'csrf', {
 				action: 'edit',
 				pageid,
 				text,
@@ -78,7 +79,7 @@ async function isActive(user) {
 			}, {
 				retry: 50,
 				noCache: true,
-			}).then(({ data }) => console.log(JSON.stringify(data)));
+			});
 		}
 	}));
 

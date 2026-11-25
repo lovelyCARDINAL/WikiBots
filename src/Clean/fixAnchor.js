@@ -428,6 +428,7 @@ async function cleanupResolvedBrokenAnchors(api) {
 			await processTargetPage(api, targetTitle, state);
 		} catch (err) {
 			console.error(`Error processing [[${targetTitle}]]:`, err?.message || err);
+			process.exitCode = 1;
 		}
 	});
 

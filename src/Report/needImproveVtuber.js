@@ -3,6 +3,7 @@ import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
 import readData from '../utils/readData.js';
+import { safePostWithToken } from '../utils/retry.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
 Parser.config = 'moegirl';
@@ -101,7 +102,7 @@ const api = new MediaWikiApi({
 	}
 	text += '|}\n\n[[Category:萌娘百科数据报告]]';
 
-	await api.postWithToken('csrf', {
+	await safePostWithToken(api, 'csrf', {
 		action: 'edit',
 		pageid: '558472',
 		text,
@@ -113,7 +114,7 @@ const api = new MediaWikiApi({
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

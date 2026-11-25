@@ -2,6 +2,7 @@ import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
 import paginate from '../utils/paginate.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 Parser.config = 'moegirl';
 
@@ -42,7 +43,7 @@ async function queryContribs(api, ucuser) {
 }
 
 async function updateData(text) {
-	await zhapi.postWithToken('csrf', {
+	await safePostWithToken(zhapi, 'csrf', {
 		action: 'edit',
 		pageid: '544630',
 		text,
@@ -55,7 +56,7 @@ async function updateData(text) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 }
 
 (async () => {

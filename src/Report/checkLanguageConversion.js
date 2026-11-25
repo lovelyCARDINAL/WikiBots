@@ -180,6 +180,7 @@ async function buildConversionAliases(api, groupNames) {
 				});
 			} catch (err) {
 				console.warn(`Failed to generate aliases for variant ${variant}:`, err?.message || err);
+				process.exitCode = 1;
 			}
 		}
 	}
@@ -448,6 +449,7 @@ ${reportWikitext}
 			}
 		} catch (err) {
 			console.warn('Error fetching info batch:', err?.message || err);
+			process.exitCode = 1;
 		}
 	});
 
@@ -520,6 +522,7 @@ ${reportWikitext}
 			});
 		} catch (err) {
 			console.error('Error processing NoteTA batch:', err?.message || err);
+			process.exitCode = 1;
 		}
 	});
 

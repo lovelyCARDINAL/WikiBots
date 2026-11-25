@@ -1,6 +1,7 @@
 import { env } from 'process';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
 const site = env.SITE;
@@ -70,7 +71,7 @@ const replaceSpecialCharacters = (wikitext, pageid, setting) => {
 				const { pageid, revisions } = page;
 				if (revisions.length) {
 					const { content: wikitext } = revisions[0];
-					await api.postWithToken('csrf', {
+					await safePostWithToken(api, 'csrf', {
 						action: 'edit',
 						pageid,
 						text: replaceSpecialCharacters(wikitext, pageid, setting),
@@ -83,7 +84,7 @@ const replaceSpecialCharacters = (wikitext, pageid, setting) => {
 					}, {
 						retry: 50,
 						noCache: true,
-					}).then(({ data }) => console.log(JSON.stringify(data)));
+					});
 				}
 			}));
 		}));

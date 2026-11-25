@@ -1,6 +1,7 @@
 import moment from 'moment';
 import mapLimit from '../utils/concurrency.js';
 import { createAndLogin } from '../utils/createApi.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
@@ -22,7 +23,7 @@ import { createAndLogin } from '../utils/createApi.js';
 		.filter(Boolean);
 
 	await mapLimit(userids, 5, async (userid) => {
-		await api.postWithToken('userrights', {
+		await safePostWithToken(api, 'userrights', {
 			action: 'userrights',
 			userid,
 			remove: 'goodeditor|honoredmaintainer|techeditor|manually-confirmed|file-maintainer|extendedconfirmed',
@@ -31,7 +32,7 @@ import { createAndLogin } from '../utils/createApi.js';
 		}, {
 			retry: 50,
 			noCache: true,
-		}).then(({ data }) => console.log(JSON.stringify(data)));
+		});
 	});
 
 	console.log(`End time: ${new Date().toISOString()}`);

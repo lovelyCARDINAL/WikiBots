@@ -3,6 +3,7 @@ import axiosRetry from 'axios-retry';
 import jsonpath from 'jsonpath';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
 const zhapi = new MediaWikiApi({
@@ -59,7 +60,7 @@ function findImageName(imgSrc) {
 }
 
 async function pageProtect(title, protections, reason) {
-	await cmapi.postWithToken('csrf', {
+	await safePostWithToken(cmapi, 'csrf', {
 		action: 'protect',
 		reason,
 		protections,
@@ -70,11 +71,11 @@ async function pageProtect(title, protections, reason) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 }
 
 async function pageEdit(title, text, summary, sectiontitle) {
-	await zhapi.postWithToken('csrf', {
+	await safePostWithToken(zhapi, 'csrf', {
 		action: 'edit',
 		title,
 		...sectiontitle && { section: 'new', sectiontitle },
@@ -88,7 +89,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 }
 
 (async () => {

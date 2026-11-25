@@ -2,6 +2,7 @@ import { env } from 'process';
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const type = env.TYPE;
 const api = new MediaWikiApi({
@@ -63,7 +64,7 @@ async function getPagelist() {
 	const sectiontitle = getSectionTitle();
 
 	const sendNews = async (title) => {
-		const { data } = await api.postWithToken('csrf', {
+		await safePostWithToken(api, 'csrf', {
 			action: 'edit',
 			title,
 			section: 'new',
@@ -76,7 +77,6 @@ async function getPagelist() {
 		}, {
 			retry: 50,
 		});
-		console.log(JSON.stringify(data));
 	};
 
 	switch (type) {
@@ -86,7 +86,7 @@ async function getPagelist() {
 			await sendNews('User talk:星海子/月报');
 			break;
 		case '1':
-			Promise.all((await getPagelist()).map(async (title) => {
+			await Promise.all((await getPagelist()).map(async (title) => {
 				await sendNews(title);
 			}));
 			break;

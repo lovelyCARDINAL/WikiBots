@@ -1,6 +1,7 @@
 import { env } from 'process';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const site = env.SITE;
 const api = new MediaWikiApi({
@@ -47,7 +48,7 @@ const api = new MediaWikiApi({
 	})();
 
 	await Promise.all(titles.map(async (title) => {
-		await api.postWithToken('csrf', {
+		await safePostWithToken(api, 'csrf', {
 			action: 'undelete',
 			title,
 			reason: '用户申请',
@@ -56,7 +57,7 @@ const api = new MediaWikiApi({
 		}, {
 			retry: 50,
 			noCache: true,
-		}).then(({ data }) => console.log(JSON.stringify(data)));
+		});
 
 		const { data: { query: { pages: [{ missing, revisions }] } } } = await api.post({
 			prop: 'revisions',
@@ -83,7 +84,7 @@ const api = new MediaWikiApi({
 		}
 
 		if (undo) {
-			await api.postWithToken('csrf', {
+			await safePostWithToken(api, 'csrf', {
 				action: 'edit',
 				title,
 				undo,
@@ -97,11 +98,11 @@ const api = new MediaWikiApi({
 			}, {
 				retry: 50,
 				noCache: true,
-			}).then(({ data }) => console.log(JSON.stringify(data)));
+			});
 		}
 	}));
 
-	await main.postWithToken('csrf', {
+	await safePostWithToken(main, 'csrf', {
 		action: 'edit',
 		title: 'User:星海子/BotConfig',
 		section: '2',
@@ -115,7 +116,7 @@ const api = new MediaWikiApi({
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

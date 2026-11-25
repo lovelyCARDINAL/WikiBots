@@ -1,6 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 Parser.config = 'moegirl';
 
@@ -27,7 +28,7 @@ async function isActive(user) {
 }
 
 async function edit(pageid, text) {
-	await api.postWithToken('csrf', {
+	await safePostWithToken(api, 'csrf', {
 		action: 'edit',
 		pageid,
 		text,
@@ -40,7 +41,7 @@ async function edit(pageid, text) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 }
 
 (async () => {

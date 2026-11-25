@@ -206,22 +206,26 @@ const deleteAvatar = async (username) => {
 	const idslist = splitAndJoin(idlist, 500);
 
 	await Promise.all(idslist.map(async (ids) => {
-		await cmapi.postWithToken('csrf', {
-			action: 'revisiondelete',
-			type: 'logging',
-			ids,
-			hide: 'content|user|comment',
-			suppress: 'yes',
-			reason: 'test',
-			tags: 'Bot',
-		}, {
-			retry: 50,
-			noCache: true,
-		}).then(({ data }) => {
+		try {
+			const { data } = await cmapi.postWithToken('csrf', {
+				action: 'revisiondelete',
+				type: 'logging',
+				ids,
+				hide: 'content|user|comment',
+				suppress: 'yes',
+				reason: 'test',
+				tags: 'Bot',
+			}, {
+				retry: 50,
+				noCache: true,
+			});
 			data.revisiondelete.items = data.revisiondelete.items
 				.map(({ status, id, action, type }) => ({ status, id, action, type }));
 			console.log(JSON.stringify(data));
-		});
+		} catch (error) {
+			console.error('revisiondelete(logging) 执行失败:', error?.message || error);
+			process.exitCode = 1;
+		}
 	}));
 
 	await editTimeData(lastTime, 'hide-user-log', lestart);

@@ -1,6 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import mapLimit from '../utils/concurrency.js';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,
@@ -10,7 +11,7 @@ const api = new MediaWikiApi({
 });
 
 async function edit(title, text, summary) {
-	await api.postWithToken('csrf', {
+	await safePostWithToken(api, 'csrf', {
 		action: 'edit',
 		title,
 		text,
@@ -23,7 +24,7 @@ async function edit(title, text, summary) {
 	}, {
 		retry: 25,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 }
 
 (async () => {

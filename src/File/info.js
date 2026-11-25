@@ -1,6 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 import { getTimeData, editTimeData } from '../utils/lastTime.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const zhapi = new MediaWikiApi({
 		baseURL: config.zh.api,
@@ -16,7 +17,7 @@ const zhapi = new MediaWikiApi({
 	});
 
 async function pageEdit(title, text, summary, sectiontitle) {
-	await zhapi.postWithToken('csrf', {
+	await safePostWithToken(zhapi, 'csrf', {
 		action: 'edit',
 		title,
 		sectiontitle,
@@ -29,7 +30,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 }
 
 (async () => {
@@ -207,7 +208,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 		
 		// 输出日志
 		if (appendtext) {
-			await zhapi.postWithToken('csrf', {
+			await safePostWithToken(zhapi, 'csrf', {
 				action: 'edit',
 				pageid: '541069',
 				summary: 'log: file-info',
@@ -219,7 +220,7 @@ async function pageEdit(title, text, summary, sectiontitle) {
 			}, {
 				retry: 50,
 				noCache: true,
-			}).then(({ data }) => console.log(JSON.stringify(data)));
+			});
 		}
 	}
 

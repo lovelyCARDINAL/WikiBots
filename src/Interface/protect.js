@@ -1,5 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const SITE_LIST = ['zh', 'cm'];
 const api = {};
@@ -22,7 +23,7 @@ function isEqual(array, key) {
 }
 
 async function protect(site, title, protections) {
-	await api[site].postWithToken('csrf', {
+	await safePostWithToken(api[site], 'csrf', {
 		action: 'protect',
 		title,
 		protections,
@@ -33,7 +34,7 @@ async function protect(site, title, protections) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 }
 
 (async () => {

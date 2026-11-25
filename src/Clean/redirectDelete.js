@@ -1,5 +1,6 @@
 import mapLimit from '../utils/concurrency.js';
 import { createAndLogin } from '../utils/createApi.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const NS_LIST = [1, 2, 3, 5, 9, 11, 13, 15, 115, 117, 118, 119, 275, 829];
 const NS_REASON_MAP = {
@@ -55,7 +56,7 @@ const NS_REASON_MAP = {
 			return !missing && revisions.length === 1 && revisions[0]?.tags?.includes('mw-new-redirect');
 		})();
 		if (needsDelete) {
-			await api.postWithToken('csrf', {
+			await safePostWithToken(api, 'csrf', {
 				action: 'delete',
 				pageid,
 				reason,
@@ -64,7 +65,7 @@ const NS_REASON_MAP = {
 			}, {
 				retry: 50,
 				noCache: true,
-			}).then(({ data }) => console.log(JSON.stringify(data)));
+			});
 		}
 	});
 

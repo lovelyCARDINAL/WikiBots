@@ -1,6 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
 import paginate from '../utils/paginate.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const zhapi = new MediaWikiApi({
 		baseURL: config.zh.api,
@@ -55,7 +56,7 @@ function isBadTitle(fulltitle) {
 }
 
 async function updateData(title, text) {
-	await zhapi.postWithToken('csrf', {
+	await safePostWithToken(zhapi, 'csrf', {
 		action: 'edit',
 		title,
 		text,
@@ -68,7 +69,7 @@ async function updateData(title, text) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 }
 
 (async () => {

@@ -1,6 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,
@@ -109,7 +110,7 @@ function sectionCount(parsed, setData, root, sub) {
 		}
 	}));
 	
-	await api.postWithToken('csrf', {
+	await safePostWithToken(api, 'csrf', {
 		action: 'edit',
 		title: 'Module:VOCALOID_Song_Counter/data.json',
 		text: JSON.stringify(setData),
@@ -120,7 +121,7 @@ function sectionCount(parsed, setData, root, sub) {
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 	
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

@@ -1,6 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 Parser.config = 'moegirl';
 
@@ -77,7 +78,7 @@ async function querySearch(srsearch) {
 	}
 	
 	await Promise.all([...navdata].map(async ([title, name]) => {
-		await api.postWithToken('csrf', {
+		await safePostWithToken(api, 'csrf', {
 			action: 'edit',
 			title,
 			prependtext: `{{warn navbox|name=${name}}}\n\n`,
@@ -89,7 +90,7 @@ async function querySearch(srsearch) {
 		}, {
 			retry: 50,
 			noCache: true,
-		}).then(({ data }) => console.log(JSON.stringify(data)));
+		});
 	}));
 
 	console.log(`End time: ${new Date().toISOString()}`);

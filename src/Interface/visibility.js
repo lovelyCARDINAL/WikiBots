@@ -1,6 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 Parser.config = 'moegirl';
 
@@ -52,7 +53,7 @@ const PAGE_LIST = [
 			.map(async ([pageid, content]) => {
 				const parser = Parser.parse(content, true);
 				if (parser.text().length !== 0) {
-					await api.postWithToken('csrf', {
+					await safePostWithToken(api, 'csrf', {
 						action: 'edit',
 						pageid,
 						text: content.replace(/\n/, '<onlyinclude></onlyinclude>\n'),
@@ -65,7 +66,7 @@ const PAGE_LIST = [
 					}, {
 						retry: 25,
 						noCache: true,
-					}).then(({ data }) => console.log(JSON.stringify(data)));
+					});
 				}
 			}),
 		);

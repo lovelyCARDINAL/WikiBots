@@ -1,5 +1,6 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const SITE_LIST = ['zh', 'cm'];
 
@@ -77,7 +78,7 @@ const SITE_LIST = ['zh', 'cm'];
 					if (pagelist.length) {
 						await Promise.all(
 							pagelist.map(async (pageid) => {
-								await api.postWithToken('csrf', {
+								await safePostWithToken(api, 'csrf', {
 									action: 'edit',
 									pageid,
 									appendtext: '',
@@ -90,7 +91,7 @@ const SITE_LIST = ['zh', 'cm'];
 								}, {
 									retry: 50,
 									noCache: true,
-								}).then(({ data }) => console.log(JSON.stringify(data)));
+								});
 							}),
 						);
 					} else {

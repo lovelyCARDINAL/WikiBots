@@ -110,6 +110,9 @@ async function publishReport(api, pageid, text) {
 		noCache: true,
 	});
 	console.log(JSON.stringify(data));
+	if (data?.edit?.result && data.edit.result !== 'Success') {
+		throw new Error(`publishReport failed: ${JSON.stringify(data)}`);
+	}
 }
 
 export {

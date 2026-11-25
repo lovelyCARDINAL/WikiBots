@@ -2,6 +2,7 @@ import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
 import paginate from '../utils/paginate.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 Parser.config = 'moegirl';
 
@@ -76,7 +77,7 @@ const api = new MediaWikiApi({
 	}
 	text += '|}\n\n[[Category:萌娘百科数据报告]][[Category:积压工作]]';
 
-	await api.postWithToken('csrf', {
+	await safePostWithToken(api, 'csrf', {
 		action: 'edit',
 		pageid: '573287',
 		text,
@@ -88,7 +89,7 @@ const api = new MediaWikiApi({
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

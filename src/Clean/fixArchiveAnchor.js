@@ -235,6 +235,7 @@ async function processArchiveBoard(api, boardTitle) {
 			await processArchiveBoard(api, boardTitle);
 		} catch (err) {
 			console.error(`Error processing archive board [[${boardTitle}]]:`, err?.message || err);
+			process.exitCode = 1;
 		}
 	});
 

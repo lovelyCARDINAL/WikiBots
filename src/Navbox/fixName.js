@@ -1,6 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 import splitAndJoin from '../utils/splitAndJoin.js';
 
 Parser.config = 'moegirl';
@@ -66,7 +67,7 @@ async function querySearch(srsearch) {
 			const titleValue = title.replace('Template:', '');
 			if (value.replaceAll('_', ' ') !== titleValue) {
 				const regex = new RegExp(`(\\|\\s*name\\s*=\\s*)${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
-				await api.postWithToken('csrf', {
+				await safePostWithToken(api, 'csrf', {
 					action: 'edit',
 					title,
 					text: content.replace(regex, `$1${titleValue}`),
@@ -77,7 +78,7 @@ async function querySearch(srsearch) {
 				}, {
 					retry: 50,
 					noCache: true,
-				}).then(({ data }) => console.log(JSON.stringify(data)));
+				});
 			}
 		}));
 	}));

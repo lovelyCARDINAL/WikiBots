@@ -1,6 +1,7 @@
 import Parser from 'wikiparser-node';
 import mapLimit from '../utils/concurrency.js';
 import { createAndLogin } from '../utils/createApi.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 Parser.config = 'moegirl';
 
@@ -44,7 +45,7 @@ Parser.config = 'moegirl';
 		}
 	});
 
-	await api.postWithToken('csrf', {
+	await safePostWithToken(api, 'csrf', {
 		action: 'edit',
 		title: '萌娘百科:长期破坏者',
 		text: String(root),
@@ -56,7 +57,7 @@ Parser.config = 'moegirl';
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

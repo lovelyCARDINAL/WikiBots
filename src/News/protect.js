@@ -1,6 +1,7 @@
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,
@@ -51,7 +52,7 @@ async function queryPages(apprefix, apprtype, apprlevel) {
 	if (pagelist.length) {
 		await Promise.all(
 			pagelist.map(async (title) => {
-				await api.postWithToken('csrf', {
+				await safePostWithToken(api, 'csrf', {
 					action: 'protect',
 					title,
 					protections: 'edit=patrolleredit|move=sysop',
@@ -62,7 +63,7 @@ async function queryPages(apprefix, apprtype, apprlevel) {
 				}, {
 					retry: 50,
 					noCache: true,
-				}).then(({ data }) => console.log(JSON.stringify(data)));
+				});
 			}),
 		);
 	} else {

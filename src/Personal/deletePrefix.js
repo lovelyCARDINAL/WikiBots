@@ -2,6 +2,7 @@ import { env } from 'process';
 import { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import config from '../utils/config.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 const site = env.SITE;
 const apfilterredir = env.FILTERREDIR;
@@ -62,7 +63,7 @@ const api = new MediaWikiApi({
 	})).then((result) => result.flat());
 
 	await Promise.all(ids.map(async (pageid) => {
-		await api.postWithToken('csrf', {
+		await safePostWithToken(api, 'csrf', {
 			action: 'delete',
 			pageid,
 			reason: '根据页面前缀批量删除页面',
@@ -71,10 +72,10 @@ const api = new MediaWikiApi({
 		}, {
 			retry: 50,
 			noCache: true,
-		}).then(({ data }) => console.log(JSON.stringify(data)));
+		});
 	}));
 
-	await main.postWithToken('csrf', {
+	await safePostWithToken(main, 'csrf', {
 		action: 'edit',
 		title: 'User:星海子/BotConfig',
 		section: '2',
@@ -88,7 +89,7 @@ const api = new MediaWikiApi({
 	}, {
 		retry: 50,
 		noCache: true,
-	}).then(({ data }) => console.log(JSON.stringify(data)));
+	});
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

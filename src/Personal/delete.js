@@ -3,6 +3,7 @@ import Parser from 'wikiparser-node';
 import mapLimit from '../utils/concurrency.js';
 import { createAndLogin } from '../utils/createApi.js';
 import paginate from '../utils/paginate.js';
+import { safePostWithToken } from '../utils/retry.js';
 
 Parser.config = 'moegirl';
 
@@ -64,7 +65,7 @@ const site = env.SITE;
 			return;
 		}
 
-		await api.postWithToken('csrf', {
+		await safePostWithToken(api, 'csrf', {
 			action: 'delete',
 			reason: `批量删除[[Cat:即将删除的页面]]（[[User_talk:${lastEditUser}|${lastEditUser}]]的挂删理由：${reason} ）`,
 			pageid,
@@ -72,7 +73,7 @@ const site = env.SITE;
 		}, {
 			retry: 50,
 			noCache: true,
-		}).then(({ data }) => console.log(JSON.stringify(data)));
+		});
 	});
 
 	console.log(`End time: ${new Date().toISOString()}`);
