@@ -1,5 +1,5 @@
 name: "[manually] Personal"
-# src/Personal/watch.js - 1x evening.yaml
+# src/Personal/watch.ts - 1x evening.yaml
 
 on:
   workflow_dispatch:
@@ -10,27 +10,6 @@ on:
         required: true
         options:
           - test
-          - deletion
-          - batch-delete-prefix
-          - batch-undelete
-      site:
-        description: 'Select the site to run on'
-        type: choice
-        required: false
-        default: all
-        options:
-          - zh
-          - cm
-          - all
-      filterredir:
-        description: 'Select the redirect filter'
-        type: choice
-        required: false
-        default: all
-        options:
-          - all
-          - redirects
-          - nonredirects
 
 env:
   MOEGIRL_API_USER_AGENT: ${{ secrets.MOEGIRL_API_USER_AGENT }}
@@ -53,91 +32,4 @@ jobs:
       - name: Run Script
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: npm start src/Personal/test.js
-
-  zh-deletion:
-    if: |
-      github.event.inputs.task == 'deletion' &&
-      (github.event.inputs.site == 'zh' || github.event.inputs.site == 'all')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Set Node Version
-        uses: actions/setup-node@v7
-        with:
-          node-version: 26
-          cache: npm
-      - name: Install dependencies
-        run: npm ci
-      - name: Run Script
-        env:
-          SITE: zh
-          ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: npm start src/Personal/delete.js
-
-  cm-deletion:
-    if: |
-      github.event.inputs.task == 'deletion' &&
-      (github.event.inputs.site == 'cm' || github.event.inputs.site == 'all')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Set Node Version
-        uses: actions/setup-node@v7
-        with:
-          node-version: 26
-          cache: npm
-      - name: Install dependencies
-        run: npm ci
-      - name: Run Script
-        env:
-          SITE: cm
-          CM_ABOT: ${{ secrets.CM_ABOT }}
-        run: npm start src/Personal/delete.js
-
-  batch-undelete:
-    if: |
-      github.event.inputs.task == 'batch-undelete' &&
-      (github.event.inputs.site == 'zh' || github.event.inputs.site == 'cm')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Set Node Version
-        uses: actions/setup-node@v7
-        with:
-          node-version: 26
-          cache: npm
-      - name: Install dependencies
-        run: npm ci
-      - name: Run Script
-        env:
-          SITE: ${{ github.event.inputs.site }}
-          ZH_ABOT: ${{ secrets.ZH_ABOT }}
-          CM_ABOT: ${{ secrets.CM_ABOT }}
-        run: npm start src/Personal/undelete.js
-
-  batch-delete-prefix:
-    if: |
-      github.event.inputs.task == 'batch-delete-prefix' &&
-      (github.event.inputs.site == 'zh' || github.event.inputs.site == 'cm')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Set Node Version
-        uses: actions/setup-node@v7
-        with:
-          node-version: 26
-          cache: npm
-      - name: Install dependencies
-        run: npm ci
-      - name: Run Script
-        env:
-          SITE: ${{ github.event.inputs.site }}
-          FILTERREDIR: ${{ github.event.inputs.filterredir }}
-          ZH_ABOT: ${{ secrets.ZH_ABOT }}
-          CM_ABOT: ${{ secrets.CM_ABOT }}
-        run: npm start src/Personal/deletePrefix.js
+        run: npm start src/Personal/test.ts

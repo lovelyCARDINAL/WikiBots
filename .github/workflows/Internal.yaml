@@ -35,4 +35,4 @@ jobs:
       - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
-        run: npm start src/Internal/updateOverrideCategory.js
+        run: npm start src/Internal/updateOverrideCategory.ts

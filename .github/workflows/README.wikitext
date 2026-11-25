@@ -5,64 +5,64 @@
 ! Config
 |-
 | rowspan="4" colspan="2" | 00:35
-| [[../../src/Personal/watch.js|watch]]
+| [[../../src/Personal/watch.ts|watch]]
 | rowspan="4" | [[1x daily.yaml|1x daily]]
 |-
-| [[../../src/Clean/purge.js|purge]]
+| [[../../src/Clean/purge.ts|purge]]
 |-
-| [[../../src/File/mainpageImages.js|mainpage-image-protection]]
+| [[../../src/File/mainpageImages.ts|mainpage-image-protection]]
 |-
-| [[../../src/Category/fixRedirect.js|fix-redirect-category]]
+| [[../../src/Category/fixRedirect.ts|fix-redirect-category]]
 |-
 | colspan="2" | 01:35
 | colspan="2" style="background-color:#c0c0c0; color:#656565;" | -
 |-
 | rowspan="2" colspan="2" | 02:35
-| [[../../src/Category/nulledit.js|nulledit-in-category]]
+| [[../../src/Category/nulledit.ts|nulledit-in-category]]
 | rowspan="2" | [[3x daily.yaml|3x daily]]
 |-
-| [[../../src/File/info.js|file-info]]
+| [[../../src/File/info.ts|file-info]]
 |-
 | rowspan="3" colspan="2" | 03:35
-| [[../../src/Clean/userpageDelete.js|userpage-deletion]]
+| [[../../src/Clean/userpageDelete.ts|userpage-deletion]]
 | rowspan="3" | [[4x daily.yaml|4x daily]]
 |-
-| [[../../src/Clean/redirectDelete.js|redirect-deletion]]
+| [[../../src/Clean/redirectDelete.ts|redirect-deletion]]
 |-
-| [[../../src/Clean/invisibleCharacter.js|invisible-character]]
+| [[../../src/Clean/invisibleCharacter.ts|invisible-character]]
 |-
 | rowspan="3" colspan="2" | 04:50
-| [[../../src/Clean/sandbox.js|clean-sandbox]]
+| [[../../src/Clean/sandbox.ts|clean-sandbox]]
 | rowspan="3" | [[1x daily.yaml|1x daily]]
 |-
-| [[../../src/Clean/brokenRedirectDelete.js|broken-redirect-deletion]]
+| [[../../src/Clean/brokenRedirectDelete.ts|broken-redirect-deletion]]
 |-
-| [[../../src/Activity/maintainer.js|check-activities]]
+| [[../../src/Activity/maintainer.ts|check-activities]]
 |-
 | rowspan="9" | 05:55
 | rowspan="2" | mon
-| [[../../src/Report/badFileName.js|bad-file-name]]
+| [[../../src/Report/badFileName.ts|bad-file-name]]
 | rowspan="9" | [[Activity.yaml|Activity]]<br>[[Anchor.yaml|Anchor]]<br>[[Report.yaml|Report]]
 |-
-| [[../../src/Report/mostTranscludedPages.js|most-transcluded-pages]]
+| [[../../src/Report/mostTranscludedPages.ts|most-transcluded-pages]]
 |-
 | rowspan="2" | tue
-| [[../../src/Report/brokenFileLinks.js|broken-file-links]]
+| [[../../src/Report/brokenFileLinks.ts|broken-file-links]]
 |-
-| [[../../src/Report/shortPages.js|short-pages]]
+| [[../../src/Report/shortPages.ts|short-pages]]
 |-
 | rowspan="2" | wed
-| [[../../src/Report/needImprove.js|need-improve]]
+| [[../../src/Report/needImprove.ts|need-improve]]
 |-
-| [[../../src/Report/needImproveWelcome.js|need-improve-welcome]]
+| [[../../src/Report/needImproveWelcome.ts|need-improve-welcome]]
 |-
 | rowspan="2" | thu
-| [[../../src/Activity/groupLeader.js|group-leader-activities]]
+| [[../../src/Activity/groupLeader.ts|group-leader-activities]]
 |-
-| [[../../src/Clean/fixArchiveAnchor.js|fix-archive-anchor]]
+| [[../../src/Clean/fixArchiveAnchor.ts|fix-archive-anchor]]
 |-
 | sun
-| [[../../src/Report/checkLanguageConversion.js|check-language-conversion]]
+| [[../../src/Report/checkLanguageConversion.ts|check-language-conversion]]
 |-
 | rowspan="2" colspan="2" | 06:55
 | log-archive
@@ -71,7 +71,7 @@
 | talk-archive
 |-
 | colspan="2" | 09:35
-| [[../../src/Clean/urlUnquote.js|url-unquote]]
+| [[../../src/Clean/urlUnquote.ts|url-unquote]]
 | [[1x daily.yaml|1x daily]]
 |-
 | colspan="2" | 10:35
@@ -79,29 +79,29 @@
 |-
 | rowspan="2" | 11:35
 | daily
-| [[../../src/Clean/fixAnchor.js|fix-anchor]]
+| [[../../src/Clean/fixAnchor.ts|fix-anchor]]
 | [[Anchor.yaml|Anchor]]
 |-
 | 10th, 25th
-| [[../../src/Interface/messages.js|interface-messages]]
+| [[../../src/Interface/messages.ts|interface-messages]]
 | [[Interface.yaml|Interface]]
 |-
 | rowspan="4" | 12:35
 | rowspan="2" | mon
-| [[../../src/Blocked/markAbuserStatus.js|mark-abuser-status]]
+| [[../../src/Blocked/markAbuserStatus.ts|mark-abuser-status]]
 | rowspan="4" | [[Blocked.yaml|Blocked]]<br>[[Category.yaml|Category]]<br>[[File.yaml|File]]
 |-
-| [[../../src/Blocked/removeUserrights.js|remove-userrights]]
+| [[../../src/Blocked/removeUserrights.ts|remove-userrights]]
 |-
 | thu
-| [[../../src/File/revisionDelete.js|file-revision-deletion]]
+| [[../../src/File/revisionDelete.ts|file-revision-deletion]]
 |-
 | sat
-| [[../../src/Category/redirectTemplate.js|add-category-redirect]]
+| [[../../src/Category/redirectTemplate.ts|add-category-redirect]]
 |-
 | 13:35
 | mon, fri
-| [[../../src/Interface/protect.js|interface-protection]]
+| [[../../src/Interface/protect.ts|interface-protection]]
 | [[Interface.yaml|Interface]]
 |-
 | colspan="2" | 14:35
@@ -109,52 +109,52 @@
 |-
 | rowspan="8" | 15:35
 | 1st
-| [[../../src/News/subscriber.js|news-subscriber]]
+| [[../../src/News/subscriber.ts|news-subscriber]]
 | rowspan="8" | [[Internal.yaml|Internal]]<br>[[Navbox.yaml|Navbox]]<br>[[News.yaml|News]]<br>[[Report.yaml|Report]]
 |-
 | 2nd
-| [[../../src/Internal/updateOverrideCategory.js|override-category]]
+| [[../../src/Internal/updateOverrideCategory.ts|override-category]]
 |-
 | 4th
-| [[../../src/Navbox/fixName.js|navbox-fix-name]]
+| [[../../src/Navbox/fixName.ts|navbox-fix-name]]
 |-
 | 5th
-| [[../../src/Navbox/article.js|navbox-in-article]]
+| [[../../src/Navbox/article.ts|navbox-in-article]]
 |-
 | 6th, 21st
-| [[../../src/Report/badDisplayTitle.js|bad-display-title]]
+| [[../../src/Report/badDisplayTitle.ts|bad-display-title]]
 |-
 | 7th, 22nd
-| [[../../src/Report/tentativeTitle.js|tentative-title]]
+| [[../../src/Report/tentativeTitle.ts|tentative-title]]
 |-
 | 8th
-| [[../../src/News/protect.js|news-protection]]
+| [[../../src/News/protect.ts|news-protection]]
 |-
 | 23rd
-| [[../../src/Report/needImproveVtuber.js|need-improve-vtuber]]
+| [[../../src/Report/needImproveVtuber.ts|need-improve-vtuber]]
 |-
 | rowspan="3" | 16:35
 | mon, fri
-| [[../../src/Suppress/pageLog.js|hide-page-log]]
+| [[../../src/Suppress/pageLog.ts|hide-page-log]]
 | rowspan="3" | [[Suppress.yaml|Suppress]]
 |-
 | tue, sat
-| [[../../src/Suppress/revokeUser.js|revoke-user]]
+| [[../../src/Suppress/revokeUser.ts|revoke-user]]
 |-
 | wed, sun
-| [[../../src/Suppress/userLog.js|hide-user-log]]
+| [[../../src/Suppress/userLog.ts|hide-user-log]]
 |-
 | colspan="2" | 17:35
 | colspan="2" style="background-color:#C0C0C0; color:#656565;" | 同3:35
 |-
 | 19:35
 | 10th, 25th
-| [[../../src/Activity/groupMember.js|group-member-activities]]
+| [[../../src/Activity/groupMember.ts|group-member-activities]]
 | [[Activity.yaml|Activity]]
 |-
 | 20:35
 | thu, sun
-| [[../../src/AbuseFilter/update.js|abusefilter-update]]
+| [[../../src/AbuseFilter/update.ts|abusefilter-update]]
 | [[AbuseFilter.yaml|AbuseFilter]]
 |-
 | colspan="2" | 21:35
@@ -165,7 +165,7 @@
 |-
 | 23:35
 | 10th, 25th
-| [[../../src/AbuseFilter/global.js|abusefilter-global]]
+| [[../../src/AbuseFilter/global.ts|abusefilter-global]]
 | [[AbuseFilter.yaml|AbuseFilter]]
 |-
 | rowspan="2" colspan="2" | Continuous
@@ -176,9 +176,9 @@
 | 
 |-
 | rowspan="2" colspan="2" | Manually
-| [[../../src/News/sender.js|news-sender]]
+| [[../../src/News/sender.ts|news-sender]]
 | [[News.yaml|News]]
 |-
-| [[../../src/Suppress/revokeUser.js|revoke-user]]
+| [[../../src/Suppress/revokeUser.ts|revoke-user]]
 | [[Suppress.yaml|Suppress]]
 |}

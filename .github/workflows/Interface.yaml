@@ -38,7 +38,7 @@ jobs:
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
           CM_ABOT: ${{ secrets.CM_ABOT }}
-        run: npm start src/Interface/protect.js
+        run: npm start src/Interface/protect.ts
 
   messages:
     runs-on: ubuntu-latest
@@ -59,4 +59,4 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: npm start src/Interface/messages.js
+        run: npm start src/Interface/messages.ts

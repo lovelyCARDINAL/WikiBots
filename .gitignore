@@ -199,3 +199,4 @@ dist
 # Personal
 */test*
 localConfig.js
+localConfig.ts

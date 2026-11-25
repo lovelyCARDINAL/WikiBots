@@ -1,6 +1,6 @@
 name: "[schedule] File"
-# src/File/info.js - 3x daily.yaml
-# src/File/mainpageImages.js - 1x evening.yaml
+# src/File/info.ts - 3x daily.yaml
+# src/File/mainpageImages.ts - 1x evening.yaml
 
 on:
   schedule:
@@ -37,4 +37,4 @@ jobs:
       - name: Run Script
         env:
           CM_ABOT: ${{ secrets.CM_ABOT }}
-        run: npm start src/File/revisionDelete.js
+        run: npm start src/File/revisionDelete.ts

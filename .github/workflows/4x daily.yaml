@@ -1,7 +1,7 @@
 name: "[daily] 4x"
-# Clean/userpageDelete.js
-# Clean/redirectDelete.js
-# Clean/invisibleCharacter.js
+# Clean/userpageDelete.ts
+# Clean/redirectDelete.ts
+# Clean/invisibleCharacter.ts
 
 on:
   schedule:
@@ -40,7 +40,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: npm start src/Clean/userpageDelete.js
+        run: npm start src/Clean/userpageDelete.ts
 
   redirect-deletion:
     if: |
@@ -60,7 +60,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: npm start src/Clean/redirectDelete.js
+        run: npm start src/Clean/redirectDelete.ts
 
   invisible-character:
     needs: [userpage-deletion, redirect-deletion]
@@ -84,4 +84,4 @@ jobs:
         env:
           SITE: 'zh'
           ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: npm start src/Clean/invisibleCharacter.js
+        run: npm start src/Clean/invisibleCharacter.ts

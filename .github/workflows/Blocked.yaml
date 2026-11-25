@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run Script
-        run: npm start src/Blocked/markAbuserStatus.js
+        run: npm start src/Blocked/markAbuserStatus.ts
 
   remove-userrights:
     runs-on: ubuntu-latest
@@ -53,4 +53,4 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run Script
-        run: npm start src/Blocked/removeUserrights.js
+        run: npm start src/Blocked/removeUserrights.ts

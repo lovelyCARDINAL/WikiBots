@@ -1,5 +1,5 @@
 name: "[schedule] Activity"
-# src/Activity/maintainer.js - 1x morning.yaml
+# src/Activity/maintainer.ts - 1x morning.yaml
 
 on:
   schedule:
@@ -39,7 +39,7 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: npm start src/Activity/groupLeader.js
+        run: npm start src/Activity/groupLeader.ts
 
   group-member:
     runs-on: ubuntu-latest
@@ -59,4 +59,4 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: npm start src/Activity/groupMember.js
+        run: npm start src/Activity/groupMember.ts

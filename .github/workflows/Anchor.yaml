@@ -1,6 +1,6 @@
 name: "[schedule] Anchor"
-# src/Clean/fixAnchor.js - 11:35 CST daily
-# src/Clean/fixArchiveAnchor.js - 05:55 CST Thursday
+# src/Clean/fixAnchor.ts - 11:35 CST daily
+# src/Clean/fixArchiveAnchor.ts - 05:55 CST Thursday
 
 on:
   schedule:
@@ -39,7 +39,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: npm start src/Clean/fixAnchor.js
+        run: npm start src/Clean/fixAnchor.ts
 
   fix-archive-anchor:
     if: |
@@ -59,4 +59,4 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: npm start src/Clean/fixArchiveAnchor.js
+        run: npm start src/Clean/fixArchiveAnchor.ts

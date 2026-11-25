@@ -1,6 +1,6 @@
 name: "[daily] 3x"
-# Category/nulledit.js
-# File/info.js
+# Category/nulledit.ts
+# File/info.ts
 
 on:
   schedule:
@@ -42,7 +42,7 @@ jobs:
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
           CM_BOT: ${{ secrets.CM_BOT }}
-        run: npm start src/Category/nulledit.js
+        run: npm start src/Category/nulledit.ts
 
   file-info:
     if: |
@@ -63,4 +63,4 @@ jobs:
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
           CM_BOT: ${{ secrets.CM_BOT }}
-        run: npm start src/File/info.js
+        run: npm start src/File/info.ts

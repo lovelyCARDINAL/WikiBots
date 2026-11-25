@@ -1,6 +1,6 @@
 name: "[schedule] Category"
-# src/Category/fixRedirect.js - 1x evening.yaml
-# src/Category/nulledit.js - 3x daily.yaml
+# src/Category/fixRedirect.ts - 1x evening.yaml
+# src/Category/nulledit.ts - 3x daily.yaml
 
 on:
   schedule:
@@ -38,4 +38,4 @@ jobs:
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
           CM_BOT: ${{ secrets.CM_BOT }}
-        run: npm start src/Category/redirectTemplate.js
+        run: npm start src/Category/redirectTemplate.ts

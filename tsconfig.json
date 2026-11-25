@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"noEmit": true,
+		"allowImportingTsExtensions": true,
+		"erasableSyntaxOnly": true,
+		"verbatimModuleSyntax": true,
+		"allowJs": true,
+		"checkJs": false,
+		"strict": true,
+		"noFallthroughCasesInSwitch": true,
+		"forceConsistentCasingInFileNames": true,
+		"noUncheckedSideEffectImports": true,
+		"skipLibCheck": true,
+		"types": ["node"]
+	},
+	"include": ["eslint.config.ts", "src/**/*.ts", "src/**/*.js"],
+	"exclude": ["node_modules", "src/test"]
+}

@@ -1,19 +1,19 @@
 name: "[daily] 1x"
 # 0
-# # Clean/purge.js
-# # File/mainpageImages.js
-# # Cateorgy/fixRedirect.js
+# # Clean/purge.ts
+# # File/mainpageImages.ts
+# # Category/fixRedirect.ts
 # 1
-# # Clean/invisibleCharacter.js
-# # Personal/watch.js
-# # Clean/draftDelete.js
+# # Clean/invisibleCharacter.ts
+# # Personal/watch.ts
+# # Clean/draftDelete.ts
 # 4
-# # Clean/sandbox.js
-# # Clean/brokenRedirectDelete.js
-# # Activity/maintainer.js
+# # Clean/sandbox.ts
+# # Clean/brokenRedirectDelete.ts
+# # Activity/maintainer.ts
 # 6
-# # Clean/urlUnquote.js
-# # Report/songCounter.js
+# # Clean/urlUnquote.ts
+# # Report/songCounter.ts
 
 on:
   schedule:
@@ -64,7 +64,7 @@ jobs:
         env:
           SITE: 'cm'
           CM_BOT: ${{ secrets.CM_BOT }}
-        run: npm start src/Clean/invisibleCharacter.js
+        run: npm start src/Clean/invisibleCharacter.ts
   
   watch:
     needs: [invisible-character]
@@ -87,7 +87,7 @@ jobs:
       - name: Run Script
         env:
           ZH_MAIN: ${{ secrets.ZH_MAIN }}
-        run: npm start src/Personal/watch.js
+        run: npm start src/Personal/watch.ts
 
   purge:
     if: |
@@ -107,7 +107,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: npm start src/Clean/purge.js
+        run: npm start src/Clean/purge.ts
 
   mainpage-image-protection:
     needs: purge
@@ -131,7 +131,7 @@ jobs:
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
           CM_ABOT: ${{ secrets.CM_ABOT }}
-        run: npm start src/File/mainpageImages.js
+        run: npm start src/File/mainpageImages.ts
 
   fix-redirect-category:
     needs: mainpage-image-protection
@@ -155,7 +155,7 @@ jobs:
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
           CM_BOT: ${{ secrets.CM_BOT }}
-        run: npm start src/Category/fixRedirect.js
+        run: npm start src/Category/fixRedirect.ts
 
   clean-sandbox:
     if: |
@@ -175,7 +175,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: npm start src/Clean/sandbox.js
+        run: npm start src/Clean/sandbox.ts
 
   broken-redirect-deletion:
     if: |
@@ -195,7 +195,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: npm start src/Clean/brokenRedirectDelete.js
+        run: npm start src/Clean/brokenRedirectDelete.ts
 
   check-activities:
     needs: [clean-sandbox, broken-redirect-deletion]
@@ -219,7 +219,7 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: npm start src/Activity/maintainer.js
+        run: npm start src/Activity/maintainer.ts
 
   url-unquote:
     needs: song-counter
@@ -243,7 +243,7 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: npm start src/Clean/urlUnquote.js
+        run: npm start src/Clean/urlUnquote.ts
 
   song-counter:
     if: |
@@ -264,7 +264,7 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: npm start src/Report/songCounter.js
+        run: npm start src/Report/songCounter.ts
 
   draft-deletion:
     if: |
@@ -284,4 +284,4 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: npm start src/Clean/draftDelete.js
+        run: npm start src/Clean/draftDelete.ts

@@ -47,7 +47,7 @@ jobs:
       - name: Run Script
         env:
           ZH_ABOT: ${{ secrets.ZH_ABOT }}
-        run: npm start src/News/protect.js
+        run: npm start src/News/protect.ts
 
   subscriber:
     runs-on: ubuntu-latest
@@ -67,7 +67,7 @@ jobs:
       - name: Run Script
         env:
           ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: npm start src/News/subscriber.js
+        run: npm start src/News/subscriber.ts
 
   sender:
     if: |
@@ -87,4 +87,4 @@ jobs:
         env:
           TYPE: ${{ github.event.inputs.number }}
           ZH_BOT: ${{ secrets.ZH_BOT }}
-        run: npm start src/News/sender.js
+        run: npm start src/News/sender.ts

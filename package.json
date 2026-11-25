@@ -1,15 +1,15 @@
 {
   "name": "wikibot",
   "description": "moegirlpedia bot",
-  "main": "index.js",
   "engines": {
     "node": ">= 24.11.0"
   },
   "scripts": {
     "start": "node --tls-cipher-list=DEFAULT@SECLEVEL=1",
-    "test": "npm start ./src/Personal/test.js",
-    "lint": "eslint src --exit-on-fatal-error --max-warnings 0",
-    "format": "eslint src --fix"
+    "test": "npm start ./src/Personal/test.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config src --exit-on-fatal-error --max-warnings 0",
+    "format": "eslint --flag unstable_native_nodejs_ts_config src --fix"
   },
   "author": "hoshimi",
   "license": "MIT",
@@ -31,9 +31,12 @@
     "@eslint/markdown": "^9.0.0",
     "@types/js-yaml": "^4.0.9",
     "@types/jsonpath": "^0.2.4",
+    "@types/node": "^26.6.10",
     "eslint": "^10.15.0",
     "eslint-plugin-import-x": "^4.18.1",
     "eslint-plugin-yml": "^3.10.0",
-    "globals": "^17.14.0"
+    "globals": "^17.14.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.74.0"
   }
 }

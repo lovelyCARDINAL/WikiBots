@@ -52,7 +52,7 @@ jobs:
       - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
-        run: npm start src/Report/badDisplayTitle.js
+        run: npm start src/Report/badDisplayTitle.ts
 
   bad-file-name:
     needs: most-transcluded-pages
@@ -76,7 +76,7 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: npm start src/Report/badFileName.js
+        run: npm start src/Report/badFileName.ts
 
   broken-file-links:
     needs: short-pages
@@ -100,7 +100,7 @@ jobs:
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
           CM_IBOT: ${{ secrets.CM_IBOT }}
-        run: npm start src/Report/brokenFileLinks.js
+        run: npm start src/Report/brokenFileLinks.ts
 
   most-transcluded-pages:
     if: |
@@ -120,7 +120,7 @@ jobs:
       - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
-        run: npm start src/Report/mostTranscludedPages.js
+        run: npm start src/Report/mostTranscludedPages.ts
 
   need-improve:
     if: |
@@ -140,7 +140,7 @@ jobs:
       - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
-        run: npm start src/Report/needImprove.js
+        run: npm start src/Report/needImprove.ts
 
   need-improve-vtuber:
     runs-on: ubuntu-latest
@@ -160,7 +160,7 @@ jobs:
       - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
-        run: npm start src/Report/needImproveVtuber.js
+        run: npm start src/Report/needImproveVtuber.ts
 
   need-improve-welcome:
     needs: need-improve
@@ -183,7 +183,7 @@ jobs:
       - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
-        run: npm start src/Report/needImproveWelcome.js
+        run: npm start src/Report/needImproveWelcome.ts
 
   short-pages:
     if: |
@@ -203,7 +203,7 @@ jobs:
       - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
-        run: npm start src/Report/shortPages.js
+        run: npm start src/Report/shortPages.ts
 
   tentative-title:
     if: |
@@ -223,7 +223,7 @@ jobs:
       - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
-        run: npm start src/Report/tentativeTitle.js
+        run: npm start src/Report/tentativeTitle.ts
 
   check-language-conversion:
     if: |
@@ -243,4 +243,4 @@ jobs:
       - name: Run Script
         env:
           ZH_IBOT: ${{ secrets.ZH_IBOT }}
-        run: npm start src/Report/checkLanguageConversion.js
+        run: npm start src/Report/checkLanguageConversion.ts
