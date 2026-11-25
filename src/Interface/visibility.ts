@@ -1,6 +1,6 @@
 import Parser from 'wikiparser-node';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 Parser.config = 'moegirl';
 

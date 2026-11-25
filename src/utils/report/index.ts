@@ -1,7 +1,9 @@
 import moment from 'moment';
 import type { MediaWikiApi, MwApiParams } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
-import paginate from './paginate.ts';
+import readData from '../common/readData.ts';
+import { createAndLogin } from '../core/createApi.ts';
+import paginate from '../core/paginate.ts';
 
 interface ReportPage {
 	pageid?: number;
@@ -23,29 +25,35 @@ function parseOverrideCategories(raw: string): string[] {
 }
 
 /**
+ * Merge a single API page batch entry into the accumulator map.
+ */
+function mergePageIntoMap(pageMap: Map<string | number, ReportPage>, page: ReportPage): void {
+	const key = page.pageid ?? page.title;
+	const existing = pageMap.get(key);
+	if (!existing) {
+		pageMap.set(key, {
+			...page,
+			categories: page.categories ? [...page.categories] : undefined,
+		});
+		return;
+	}
+	if (!existing.revisions && page.revisions) {
+		existing.revisions = page.revisions;
+	}
+	if (page.categories?.length) {
+		existing.categories = [...existing.categories || [], ...page.categories];
+	}
+}
+
+/**
  * Collect and merge paginated generator pages by pageid/title so multi-batch
  * `clcontinue` responses neither duplicate rows nor drop categories.
  */
 async function collectPages(api: MediaWikiApi, params: MwApiParams): Promise<ReportPage[]> {
 	const pageMap = new Map<string | number, ReportPage>();
 	for await (const data of paginate<{ query?: { pages?: Record<string, ReportPage> } }>(api, params)) {
-		const pages = Object.values(data?.query?.pages || {});
-		for (const page of pages) {
-			const key = page.pageid ?? page.title;
-			const existing = pageMap.get(key);
-			if (!existing) {
-				pageMap.set(key, {
-					...page,
-					categories: page.categories ? [...page.categories] : undefined,
-				});
-			} else {
-				if (!existing.revisions && page.revisions) {
-					existing.revisions = page.revisions;
-				}
-				if (page.categories?.length) {
-					existing.categories = [...existing.categories || [], ...page.categories];
-				}
-			}
+		for (const page of Object.values(data?.query?.pages || {})) {
+			mergePageIntoMap(pageMap, page);
 		}
 	}
 	return [...pageMap.values()].filter((page) => page.revisions?.length);
@@ -122,9 +130,43 @@ async function publishReport(api: MediaWikiApi, pageid: string, text: string): P
 	}
 }
 
+interface RunImproveReportOptions {
+	queryParams: MwApiParams;
+	header: string;
+	templateSelector: string;
+	emptyReason: string;
+	targetPageId: string;
+}
+
+/**
+ * End-to-end runner for improvement report bots: login, collect pages, build report, and publish.
+ */
+async function runImproveReport({
+	queryParams,
+	header,
+	templateSelector,
+	emptyReason,
+	targetPageId,
+}: RunImproveReportOptions): Promise<void> {
+	console.log(`Start time: ${new Date().toISOString()}`);
+	const api = await createAndLogin('zh', 'ibot');
+	const overrideCategory = parseOverrideCategories(await readData('overrideCategory.json'));
+	const pages = await collectPages(api, queryParams);
+	const text = buildImproveReport({
+		pages,
+		overrideCategory,
+		header,
+		templateSelector,
+		emptyReason,
+	});
+	await publishReport(api, targetPageId, text);
+	console.log(`End time: ${new Date().toISOString()}`);
+}
+
 export {
 	parseOverrideCategories,
 	collectPages,
 	buildImproveReport,
 	publishReport,
+	runImproveReport,
 };

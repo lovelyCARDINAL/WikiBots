@@ -1,4 +1,3 @@
-import type { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 
 Parser.config = 'moegirl';
@@ -37,25 +36,13 @@ function normalizeAnchor(anchor: string): string {
 		.replace(/[\s_]+/g, '_');
 }
 
-/**
- * Extract all valid anchors (section headings, {{anchor}} templates, HTML id attributes)
- * from wikitext using wikiparser-node.
- *
- * @param {string} wikitext
- * @returns {{ headings: string[], all: Set<string> }}
- */
-function extractAnchors(wikitext: string): AnchorSet {
-	const root = Parser.parse(wikitext);
+function extractHeadingAnchors(root: Parser.Token, all: Set<string>): string[] {
 	const headings: string[] = [];
-	const all = new Set<string>();
 	const seenHeadingCount = new Map<string, number>();
 
 	for (const heading of root.querySelectorAll('heading')) {
 		const rawId = heading.id?.trim();
-		if (!rawId) {
-			continue;
-		}
-		const base = normalizeAnchor(rawId);
+		const base = rawId ? normalizeAnchor(rawId) : '';
 		if (!base) {
 			continue;
 		}
@@ -65,10 +52,12 @@ function extractAnchors(wikitext: string): AnchorSet {
 		headings.push(finalAnchor);
 		all.add(finalAnchor);
 	}
+	return headings;
+}
 
-	// Explicit {{anchor|...}} templates
+function extractTemplateAnchors(root: Parser.Token, all: Set<string>): void {
 	const ANCHOR_TEMPLATE_RE = /^Template:anchor$/i;
-	for (const temp of root.querySelectorAll('template')) {
+	for (const temp of root.querySelectorAll<Parser.TranscludeToken>('template')) {
 		if (!ANCHOR_TEMPLATE_RE.test(temp.name)) {
 			continue;
 		}
@@ -79,15 +68,27 @@ function extractAnchors(wikitext: string): AnchorSet {
 			}
 		}
 	}
+}
 
-	// Explicit HTML id="..." attributes
+function extractHtmlIdAnchors(root: Parser.Token, all: Set<string>): void {
 	for (const el of root.querySelectorAll('html[id]')) {
 		const idVal = (el as { getAttr?: (name: string) => unknown }).getAttr?.('id');
 		if (typeof idVal === 'string' && idVal.trim()) {
 			all.add(normalizeAnchor(idVal));
 		}
 	}
+}
 
+/**
+ * Extract all valid anchors (section headings, {{anchor}} templates, HTML id attributes)
+ * from wikitext using wikiparser-node.
+ */
+function extractAnchors(wikitext: string): AnchorSet {
+	const root = Parser.parse(wikitext);
+	const all = new Set<string>();
+	const headings = extractHeadingAnchors(root, all);
+	extractTemplateAnchors(root, all);
+	extractHtmlIdAnchors(root, all);
 	return { headings, all };
 }
 
@@ -224,19 +225,33 @@ function buildRenameMap(
 	return combined;
 }
 
+function resolveLinkRewriteTarget(
+	link: Parser.LinkToken,
+	normalizedTargetTitles: Set<string>,
+	renameMap: Map<string, RenameTarget>,
+	isTargetPage: boolean,
+): string | null {
+	if (!link.fragment) {
+		return null;
+	}
+	const mapping = renameMap.get(normalizeAnchor(link.fragment));
+	if (!mapping) {
+		return null;
+	}
+	const isSelfSection = !link.name && isTargetPage;
+	const normalizedLinkName = link.name ? Parser.normalizeTitle(link.name).title : '';
+	if (!isSelfSection && !normalizedTargetTitles.has(normalizedLinkName)) {
+		return null;
+	}
+	if (typeof mapping === 'string') {
+		return link.name ? `${link.name}#${mapping}` : `#${mapping}`;
+	}
+	return `${mapping.title}#${mapping.anchor}`;
+}
+
 /**
  * Rewrite broken section links on a page that point to any of targetTitles
  * (the target page itself and its redirects) using renameMap.
- *
- * `renameMap` values may be:
- * - `string`: same-page anchor rename (`newAnchor`)
- * - `{ title: string, anchor: string }`: cross-page rename (e.g. moved to an archive subpage)
- *
- * @param {string} content
- * @param {Set<string>} normalizedTargetTitles
- * @param {Map<string, string | { title: string, anchor: string }>} renameMap
- * @param {boolean} [isTargetPage=false]
- * @returns {{ changed: boolean, content: string, replacements: Array<{ from: string, to: string }> }}
  */
 function rewriteAnchorLinks(
 	content: string,
@@ -251,30 +266,11 @@ function rewriteAnchorLinks(
 	const root = Parser.parse(content);
 	const replacements: Array<{ from: string; to: string }> = [];
 
-	for (const link of root.querySelectorAll('link')) {
-		const rawFragment = link.fragment;
-		if (!rawFragment) {
+	for (const link of root.querySelectorAll<Parser.LinkToken>('link')) {
+		const newTarget = resolveLinkRewriteTarget(link, normalizedTargetTitles, renameMap, isTargetPage);
+		if (!newTarget) {
 			continue;
 		}
-		const normFragment = normalizeAnchor(rawFragment);
-		const mapping = renameMap.get(normFragment);
-		if (!mapping) {
-			continue;
-		}
-
-		const isSelfSection = !link.name && isTargetPage;
-		const normalizedLinkName = link.name ? Parser.normalizeTitle(link.name).title : '';
-		if (!isSelfSection && !normalizedTargetTitles.has(normalizedLinkName)) {
-			continue;
-		}
-
-		let newTarget;
-		if (typeof mapping === 'string') {
-			newTarget = link.name ? `${link.name}#${mapping}` : `#${mapping}`;
-		} else {
-			newTarget = `${mapping.title}#${mapping.anchor}`;
-		}
-
 		const before = link.toString();
 		link.setTarget(newTarget);
 		const after = link.toString();
@@ -346,168 +342,10 @@ function findBrokenAnchorLinks(
  * @param {string} [options.removeTemplate]
  * @returns {{ changed: boolean, content: string, addedCount: number, removedCount: number, templateRemoved: boolean }}
  */
-interface UpdateBrokenAnchorsOptions {
-	addLinks?: string[];
-	isStillBroken?: (title: string, anchor: string) => boolean;
-	removeTemplate?: string;
-}
-
-function updateBrokenAnchorsTalkPage(
-	talkContent: string,
-	{ addLinks = [], isStillBroken = () => true, removeTemplate = '' }: UpdateBrokenAnchorsOptions = {},
-): { changed: boolean; content: string; addedCount: number; removedCount: number; templateRemoved: boolean } {
-	const BROKEN_ANCHORS_RE = /^Template:Broken[ _]anchors$/i;
-	const root = Parser.parse(talkContent);
-
-	let removedNoticeTpl = false;
-	if (addLinks.length > 0 && removeTemplate) {
-		const targetRemoveName = Parser.normalizeTitle(removeTemplate).title;
-		for (const tpl of root.querySelectorAll('template')) {
-			if (Parser.normalizeTitle(tpl.name).title === targetRemoveName) {
-				const prev = tpl.previousSibling;
-				const next = tpl.nextSibling;
-				const atLineStart = !prev || prev.type === 'text' && /\n$/.test(prev.data);
-				if (atLineStart && next?.type === 'text' && next.data.startsWith('\n')) {
-					next.replaceData(next.data.slice(1));
-				}
-				tpl.remove();
-				removedNoticeTpl = true;
-			}
-		}
-	}
-
-	const template = root.querySelectorAll('template').find((t) => BROKEN_ANCHORS_RE.test(t.name));
-
-	let addedCount = 0;
-	let removedCount = 0;
-	let templateRemoved = false;
-
-	if (!template) {
-		if (!addLinks.length) {
-			return { changed: false, content: talkContent, addedCount: 0, removedCount: 0, templateRemoved: false };
-		}
-		const cleanedTalk = root.toString();
-		const block = `{{Broken anchors\n|links=\n${addLinks.map((l) => `* ${l}`).join('\n')}\n}}`;
-		const newContent = cleanedTalk.trim() ? `${block}\n${cleanedTalk}` : block;
-		return {
-			changed: true,
-			content: newContent,
-			addedCount: addLinks.length,
-			removedCount: 0,
-			templateRemoved: false,
-		};
-	}
-
-	const rawLinks = template.getValue('links') || '';
-	const existingLines = rawLinks
-		.split(/\r?\n/)
-		.map((l) => l.trim())
-		.filter(Boolean);
-
-	const keptLines = [];
-	const existingNormalized = new Set();
-
-	for (const line of existingLines) {
-		const parsedLine = Parser.parse(line);
-		const link = parsedLine.querySelector('link');
-		if (!link || !link.name || !link.fragment) {
-			keptLines.push(line);
-			continue;
-		}
-		const normTitle = Parser.normalizeTitle(link.name).title;
-		const normFragment = normalizeAnchor(link.fragment);
-		if (!isStillBroken(normTitle, normFragment)) {
-			removedCount++;
-			continue;
-		}
-		existingNormalized.add(`[[${normTitle}#${normFragment}]]`);
-		keptLines.push(line);
-	}
-
-	for (const newLink of addLinks) {
-		const parsedNew = Parser.parse(newLink);
-		const link = parsedNew.querySelector('link');
-		const key = link?.name && link?.fragment
-			? `[[${Parser.normalizeTitle(link.name).title}#${normalizeAnchor(link.fragment)}]]`
-			: newLink;
-		if (!existingNormalized.has(key)) {
-			existingNormalized.add(key);
-			keptLines.push(`* ${newLink}`);
-			addedCount++;
-		}
-	}
-
-	if (keptLines.length === 0) {
-		const prev = template.previousSibling;
-		const next = template.nextSibling;
-		const atLineStart = !prev || prev.type === 'text' && /\n$/.test(prev.data);
-		if (atLineStart && next?.type === 'text' && next.data.startsWith('\n')) {
-			next.replaceData(next.data.slice(1));
-		}
-		template.remove();
-		templateRemoved = true;
-	} else if (addedCount > 0 || removedCount > 0) {
-		template.setValue('links', `\n${keptLines.join('\n')}\n`);
-	}
-
-	const newContent = root.toString();
-	return {
-		changed: addedCount > 0 || removedCount > 0 || templateRemoved || removedNoticeTpl,
-		content: newContent,
-		addedCount,
-		removedCount,
-		templateRemoved,
-	};
-}
-
-const DEFAULT_ANCHOR_CONFIG = {
-	archiveTemplates: [
-		'ArchiveBox',
-		'Archives',
-		'Auto-archive',
-		'档案馆',
-		'提问求助区页顶/档案馆',
-		'讨论版页顶/旧版/档案馆',
-		'用户存档页顶',
-	],
-	archivePages: [],
-	ignorePages: [],
-};
-
-/**
- * Load external JSON configuration from `User:星海子/BotConfig/fixArchiveAnchor.json`,
- * falling back to safe defaults if the page is missing or invalid.
- *
- * @param {import('wiki-saikou').MediaWikiApi} api
- * @returns {Promise<{ archiveTemplates: string[], archivePages: string[], ignorePages: string[] }>}
- */
-async function loadFixAnchorConfig(
-	api: MediaWikiApi,
-): Promise<{ archiveTemplates: string[]; archivePages: string[]; ignorePages: string[] }> {
-	try {
-		const { data } = await api.post<{
-			query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> };
-		}>({
-			prop: 'revisions',
-			titles: 'User:星海子/BotConfig/fixArchiveAnchor.json',
-			rvprop: 'content',
-		}, { retry: 15 });
-		const page = Object.values(data?.query?.pages || {})[0];
-		const raw = page?.revisions?.[0]?.content;
-		if (!raw) {
-			return { ...DEFAULT_ANCHOR_CONFIG };
-		}
-		const parsed = JSON.parse(raw) as Partial<typeof DEFAULT_ANCHOR_CONFIG>;
-		return {
-			archiveTemplates: Array.isArray(parsed.archiveTemplates) ? parsed.archiveTemplates : DEFAULT_ANCHOR_CONFIG.archiveTemplates,
-			archivePages: Array.isArray(parsed.archivePages) ? parsed.archivePages : DEFAULT_ANCHOR_CONFIG.archivePages,
-			ignorePages: Array.isArray(parsed.ignorePages) ? parsed.ignorePages : DEFAULT_ANCHOR_CONFIG.ignorePages,
-		};
-	} catch (err) {
-		console.warn('Failed to load User:星海子/BotConfig/fixArchiveAnchor.json, using defaults:', err instanceof Error ? err.message : String(err));
-		return { ...DEFAULT_ANCHOR_CONFIG };
-	}
-}
+export {
+	updateBrokenAnchorsTalkPage,
+	loadFixAnchorConfig,
+} from './talkPage.ts';
 
 export {
 	normalizeAnchor,
@@ -517,6 +355,4 @@ export {
 	buildRenameMap,
 	rewriteAnchorLinks,
 	findBrokenAnchorLinks,
-	updateBrokenAnchorsTalkPage,
-	loadFixAnchorConfig,
 };

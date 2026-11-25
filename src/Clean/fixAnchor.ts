@@ -10,11 +10,11 @@ import {
 	findBrokenAnchorLinks,
 	updateBrokenAnchorsTalkPage,
 	loadFixAnchorConfig,
-} from '../utils/anchor.ts';
-import mapLimit from '../utils/concurrency.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import { getTimeData, editTimeData } from '../utils/lastTime.ts';
-import paginate from '../utils/paginate.ts';
+} from '../utils/anchor/index.ts';
+import mapLimit from '../utils/common/concurrency.ts';
+import { getTimeData, editTimeData } from '../utils/common/lastTime.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import paginate from '../utils/core/paginate.ts';
 
 Parser.config = 'moegirl';
 
@@ -185,10 +185,80 @@ async function saveOrDeleteTalkPage(
 	}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
 }
 
+async function fetchPageContent(api: MediaWikiApi, title: string, redirects = false): Promise<string | undefined> {
+	const { data } = await api.post<{
+		query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> };
+	}>({
+		prop: 'revisions',
+		titles: title,
+		rvprop: 'content',
+		...redirects && { redirects: true },
+	}, { retry: 15 });
+	return Object.values(data?.query?.pages || {})[0]?.revisions?.[0]?.content;
+}
+
+async function processCandidatePage(
+	api: MediaWikiApi,
+	pageTitle: string,
+	targetTitle: string,
+	normalizedTarget: string,
+	targetTitles: Set<string>,
+	{ renameMap, brokenAnchors, finalAnchors }: { renameMap: Map<string, string>; brokenAnchors: Set<string>; finalAnchors: Set<string> },
+): Promise<void> {
+	const content = await fetchPageContent(api, pageTitle);
+	if (!content || NOBOTS_REGEX.test(content.replace(/\s+/g, ''))) {
+		return;
+	}
+
+	const isSelf = Parser.normalizeTitle(pageTitle).title === normalizedTarget;
+	const result = rewriteAnchorLinks(content, targetTitles, renameMap, isSelf);
+	const latestContent = result.changed ? result.content : content;
+
+	if (result.changed) {
+		const summary = `修复指向[[${targetTitle}]]的失效章节锚点（${result.replacements.length}处）`;
+		await api.postWithToken('csrf', {
+			action: 'edit',
+			title: pageTitle,
+			text: latestContent,
+			summary,
+			bot: true,
+			minor: true,
+			nocreate: true,
+			tags: 'Bot',
+			watchlist: 'nochange',
+		}, {
+			retry: 25,
+			noCache: true,
+		}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
+	}
+
+	const remainingBroken = findBrokenAnchorLinks(latestContent, targetTitles, brokenAnchors, isSelf);
+	const parsedPageTitle = Parser.normalizeTitle(pageTitle);
+	if (parsedPageTitle.isTalkPage() || !remainingBroken.length && !result.changed) {
+		return;
+	}
+
+	const talkTitle = parsedPageTitle.toTalkPage().title;
+	const talkContent = await fetchPageContent(api, talkTitle) ?? '';
+	if (!talkContent && !remainingBroken.length) {
+		return;
+	}
+
+	const talkResult = updateBrokenAnchorsTalkPage(talkContent, {
+		addLinks: remainingBroken,
+		removeTemplate: 'Template:即将删除',
+		isStillBroken: (linkTitle, linkAnchor) => !targetTitles.has(linkTitle)
+			|| !finalAnchors.has(linkAnchor) && pageHasLinkTo(latestContent, linkTitle, linkAnchor),
+	});
+	if (talkResult.changed) {
+		await saveOrDeleteTalkPage(api, talkTitle, talkResult, false);
+	}
+}
+
 async function processTargetPage(
 	api: MediaWikiApi,
 	targetTitle: string,
-	{ renameMap, brokenAnchors, finalAnchors }: { renameMap: Map<string, string>; brokenAnchors: Set<string>; finalAnchors: Set<string> },
+	state: { renameMap: Map<string, string>; brokenAnchors: Set<string>; finalAnchors: Set<string> },
 ): Promise<void> {
 	const targetTitles = await getTargetTitleSet(api, targetTitle);
 	const backlinks = await getBacklinks(api, targetTitles);
@@ -198,85 +268,54 @@ async function processTargetPage(
 	}
 
 	const normalizedTarget = Parser.normalizeTitle(targetTitle).title;
-	await mapLimit(candidates, 5, async (pageTitle) => {
-		const { data } = await api.post<{
-			query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> };
-		}>({
-			prop: 'revisions',
-			titles: pageTitle,
-			rvprop: 'content|timestamp',
-		}, { retry: 15 });
-		const page = Object.values(data?.query?.pages || {})[0];
-		const content = page?.revisions?.[0]?.content;
-		if (!content || NOBOTS_REGEX.test(content.replace(/\s+/g, ''))) {
-			return;
+	await mapLimit(candidates, 5, (pageTitle) => processCandidatePage(api, pageTitle, targetTitle, normalizedTarget, targetTitles, state));
+}
+
+async function sweepTalkPage(
+	api: MediaWikiApi,
+	talkTitle: string,
+	anchorCache: Map<string, Set<string>>,
+	getTargetAnchors: (targetTitle: string) => Promise<Set<string>>,
+): Promise<void> {
+	const subjectTitle = Parser.normalizeTitle(talkTitle).toSubjectPage().title;
+	const [talkContent, subjectContent] = await Promise.all([
+		fetchPageContent(api, talkTitle),
+		fetchPageContent(api, subjectTitle),
+	]);
+	if (!talkContent || !subjectContent) {
+		return;
+	}
+
+	const tpl = Parser.parse(talkContent).querySelectorAll('template').find((t) => /^Template:Broken[ _]anchors$/i.test(t.name));
+	if (!tpl) {
+		return;
+	}
+
+	const rawLinks = tpl.getValue('links') || '';
+	const targetTitlesToFetch = new Set<string>();
+	for (const line of rawLinks.split(/\r?\n/)) {
+		const link = Parser.parse(line).querySelector('link');
+		if (link?.name) {
+			targetTitlesToFetch.add(Parser.normalizeTitle(link.name).title);
 		}
+	}
+	for (const t of targetTitlesToFetch) {
+		await getTargetAnchors(t);
+	}
 
-		const isSelf = Parser.normalizeTitle(pageTitle).title === normalizedTarget;
-		const result = rewriteAnchorLinks(content, targetTitles, renameMap, isSelf);
-		const latestContent = result.changed ? result.content : content;
-
-		if (result.changed) {
-			const summary = `修复指向[[${targetTitle}]]的失效章节锚点（${result.replacements.length}处）`;
-			await api.postWithToken('csrf', {
-				action: 'edit',
-				title: pageTitle,
-				text: latestContent,
-				summary,
-				bot: true,
-				minor: true,
-				nocreate: true,
-				tags: 'Bot',
-				watchlist: 'nochange',
-			}, {
-				retry: 25,
-				noCache: true,
-			}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
-		}
-
-		const remainingBroken = findBrokenAnchorLinks(latestContent, targetTitles, brokenAnchors, isSelf);
-		const parsedPageTitle = Parser.normalizeTitle(pageTitle);
-		if (parsedPageTitle.isTalkPage() || !remainingBroken.length && !result.changed) {
-			return;
-		}
-
-		const talkTitle = parsedPageTitle.toTalkPage().title;
-		const { data: talkData } = await api.post<{
-			query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> };
-		}>({
-			prop: 'revisions',
-			titles: talkTitle,
-			rvprop: 'content',
-		}, { retry: 15 });
-		const talkPage = Object.values(talkData?.query?.pages || {})[0];
-		const talkContent = talkPage?.revisions?.[0]?.content || '';
-		if (!talkContent && !remainingBroken.length) {
-			return;
-		}
-
-		const talkResult = updateBrokenAnchorsTalkPage(talkContent, {
-			addLinks: remainingBroken,
-			removeTemplate: 'Template:即将删除',
-			isStillBroken: (linkTitle, linkAnchor) => {
-				if (!targetTitles.has(linkTitle)) {
-					return true;
-				}
-				return !finalAnchors.has(linkAnchor) && pageHasLinkTo(latestContent, linkTitle, linkAnchor);
-			},
-		});
-		if (!talkResult.changed) {
-			return;
-		}
-
-		await saveOrDeleteTalkPage(api, talkTitle, talkResult, false);
+	const talkResult = updateBrokenAnchorsTalkPage(talkContent, {
+		addLinks: [],
+		isStillBroken: (linkTitle, linkAnchor) => pageHasLinkTo(subjectContent, linkTitle, linkAnchor)
+			&& !anchorCache.get(linkTitle)?.has(linkAnchor),
 	});
+	if (talkResult.changed) {
+		await saveOrDeleteTalkPage(api, talkTitle, talkResult, true);
+	}
 }
 
 /**
  * Sweep talk pages currently transcluding `Template:Broken anchors` and prune/remove
  * entries whose links no longer exist on the subject page or whose target anchors now exist.
- *
- * @param {import('wiki-saikou').MediaWikiApi} api
  */
 async function cleanupResolvedBrokenAnchors(api: MediaWikiApi): Promise<void> {
 	const talkPages: string[] = [];
@@ -302,69 +341,13 @@ async function cleanupResolvedBrokenAnchors(api: MediaWikiApi): Promise<void> {
 		if (anchorCache.has(norm)) {
 			return anchorCache.get(norm)!;
 		}
-		const { data } = await api.post<{
-			query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> };
-		}>({
-			prop: 'revisions',
-			titles: norm,
-			rvprop: 'content',
-			redirects: true,
-		}, { retry: 15 });
-		const page = Object.values(data?.query?.pages || {})[0];
-		const content = page?.revisions?.[0]?.content;
+		const content = await fetchPageContent(api, norm, true);
 		const anchors = content ? extractAnchors(content).all : new Set<string>();
 		anchorCache.set(norm, anchors);
 		return anchors;
 	};
 
-	await mapLimit(talkPages, 3, async (talkTitle) => {
-		const subjectTitle = Parser.normalizeTitle(talkTitle).toSubjectPage().title;
-
-		const [{ data: talkData }, { data: subjectData }] = await Promise.all([
-			api.post<{ query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> } }>({ prop: 'revisions', titles: talkTitle, rvprop: 'content' }, { retry: 15 }),
-			api.post<{ query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> } }>({ prop: 'revisions', titles: subjectTitle, rvprop: 'content' }, { retry: 15 }),
-		]);
-
-		const talkContent = Object.values(talkData?.query?.pages || {})[0]?.revisions?.[0]?.content;
-		const subjectContent = Object.values(subjectData?.query?.pages || {})[0]?.revisions?.[0]?.content;
-		if (!talkContent || !subjectContent) {
-			return;
-		}
-
-		const root = Parser.parse(talkContent);
-		const tpl = root.querySelectorAll('template').find((t) => /^Template:Broken[ _]anchors$/i.test(t.name));
-		if (!tpl) {
-			return;
-		}
-
-		const rawLinks = tpl.getValue('links') || '';
-		const targetTitlesToFetch = new Set<string>();
-		for (const line of rawLinks.split(/\r?\n/)) {
-			const link = Parser.parse(line).querySelector('link');
-			if (link?.name) {
-				targetTitlesToFetch.add(Parser.normalizeTitle(link.name).title);
-			}
-		}
-		for (const t of targetTitlesToFetch) {
-			await getTargetAnchors(t);
-		}
-
-		const talkResult = updateBrokenAnchorsTalkPage(talkContent, {
-			addLinks: [],
-			isStillBroken: (linkTitle, linkAnchor) => {
-				if (!pageHasLinkTo(subjectContent, linkTitle, linkAnchor)) {
-					return false;
-				}
-				const targetAnchors = anchorCache.get(linkTitle);
-				return !targetAnchors?.has(linkAnchor);
-			},
-		});
-		if (!talkResult.changed) {
-			return;
-		}
-
-		await saveOrDeleteTalkPage(api, talkTitle, talkResult, true);
-	});
+	await mapLimit(talkPages, 3, (talkTitle) => sweepTalkPage(api, talkTitle, anchorCache, getTargetAnchors));
 }
 
 (async () => {

@@ -1,10 +1,9 @@
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
-import jsonpath from 'jsonpath';
 import type { MediaWikiApi } from 'wiki-saikou';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
-import splitAndJoin from '../utils/splitAndJoin.ts';
+import splitAndJoin from '../utils/common/splitAndJoin.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 axiosRetry(axios, {
 	retries: 3,
@@ -13,8 +12,28 @@ axiosRetry(axios, {
 	},
 });
 
+function collectImageSrc(node: unknown, out: string[]): void {
+	if (!node || typeof node !== 'object') {
+		return;
+	}
+	if (Array.isArray(node)) {
+		for (const item of node) {
+			collectImageSrc(item, out);
+		}
+		return;
+	}
+	const record = node as Record<string, unknown>;
+	if (typeof record.imageSrc === 'string') {
+		out.push(record.imageSrc);
+	}
+	for (const value of Object.values(record)) {
+		collectImageSrc(value, out);
+	}
+}
+
 function findImageSrc(data: unknown): string[] {
-	const matches = jsonpath.query(data, '$..imageSrc') as string[];
+	const matches: string[] = [];
+	collectImageSrc(data, matches);
 	const regex = /(?:(?:app)\.moegirl\.org|aojiaostudio\.com|storage\.moegirl\.org(?=.*\/moegirl\/(?!commons\/|en\/|ja\/|library\/)))/i;
 	return matches.filter((match) => match && !regex.test(match));
 }

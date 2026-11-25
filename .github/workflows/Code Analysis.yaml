@@ -7,38 +7,26 @@ on:
   pull_request:
     branches:
       - main
-  pull_request_target:
-    types:
-      - opened
-      - ready_for_review
   schedule:
     - cron: "59 23 * * *"
   workflow_dispatch:
 
 permissions:
-  actions: read
-  checks: read
   contents: read
-  deployments: read
-  issues: write
-  discussions: write
-  packages: read
-  pages: read
-  pull-requests: write
-  repository-projects: read
-  security-events: write
-  statuses: write
 
 jobs:
   Lint:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Set Node Version
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 26
           cache: npm
@@ -52,6 +40,10 @@ jobs:
   CodeQL:
     needs: Lint
     if: needs.Lint.result == 'success'
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -60,22 +52,27 @@ jobs:
           - javascript
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4.39.4
+        uses: github/codeql-action/init@e0462179768953fd6790193e15caaef674ff709e # v4.39.4
         with:
           languages: javascript
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4.39.4
+        uses: github/codeql-action/analyze@e0462179768953fd6790193e15caaef674ff709e # v4.39.4
         with:
           category: "/language:javascript"
 
   auto-assign:
-    if: github.event_name == 'pull_request_target'
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - name: Add Reviews
-        uses: kentaro-m/auto-assign-action@v2.0.2
+        uses: kentaro-m/auto-assign-action@0a2c53d3721e4c5cfcce6afd4014aecc337979f6 # v2.0.2
         with:
           configuration-path: .github/auto_assign.yaml
           repo-token: "${{ secrets.GITHUB_TOKEN }}"

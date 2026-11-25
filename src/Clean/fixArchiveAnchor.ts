@@ -5,10 +5,10 @@ import {
 	extractAnchors,
 	rewriteAnchorLinks,
 	loadFixAnchorConfig,
-} from '../utils/anchor.ts';
-import mapLimit from '../utils/concurrency.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import paginate from '../utils/paginate.ts';
+} from '../utils/anchor/index.ts';
+import mapLimit from '../utils/common/concurrency.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import paginate from '../utils/core/paginate.ts';
 
 Parser.config = 'moegirl';
 
@@ -41,6 +41,17 @@ async function getTargetTitleSet(api: MediaWikiApi, title: string): Promise<Set<
 	return titles;
 }
 
+async function fetchPageContent(api: MediaWikiApi, title: string): Promise<string | undefined> {
+	const { data } = await api.post<{
+		query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> };
+	}>({
+		prop: 'revisions',
+		titles: title,
+		rvprop: 'content',
+	}, { retry: 15 });
+	return Object.values(data?.query?.pages || {})[0]?.revisions?.[0]?.content;
+}
+
 async function collectArchiveBoards(
 	api: MediaWikiApi,
 	botConfig: { archiveTemplates: string[]; archivePages: string[]; ignorePages: string[] },
@@ -58,12 +69,12 @@ async function collectArchiveBoards(
 			eilimit: 'max',
 		})) {
 			for (const item of data?.query?.embeddedin || []) {
-				if (item.title) {
-					const norm = Parser.normalizeTitle(item.title).title;
-					// Skip archive subpages themselves
-					if (!norm.includes('/存档') && !/\/Archive/i.test(norm)) {
-						boards.add(norm);
-					}
+				if (!item.title) {
+					continue;
+				}
+				const norm = Parser.normalizeTitle(item.title).title;
+				if (!norm.includes('/存档') && !/\/Archive/i.test(norm)) {
+					boards.add(norm);
 				}
 			}
 		}
@@ -72,32 +83,8 @@ async function collectArchiveBoards(
 	return [...boards].filter((t) => !ignored.has(t));
 }
 
-/**
- * Build a map from archived section anchor -> unique archive subpage `{ title, anchor }`.
- * Anchors still present on the main board or appearing in multiple archives are omitted.
- *
- * @param {import('wiki-saikou').MediaWikiApi} api
- * @param {string} boardTitle
- * @returns {Promise<Map<string, { title: string, anchor: string }>>}
- */
-async function buildArchiveMap(
-	api: MediaWikiApi,
-	boardTitle: string,
-): Promise<Map<string, { title: string; anchor: string }>> {
+async function listSubpages(api: MediaWikiApi, boardTitle: string): Promise<string[]> {
 	const parsed = Parser.normalizeTitle(boardTitle);
-	const { data: boardData } = await api.post<{
-		query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> };
-	}>({
-		prop: 'revisions',
-		titles: boardTitle,
-		rvprop: 'content',
-	}, { retry: 15 });
-	const boardContent = Object.values(boardData?.query?.pages || {})[0]?.revisions?.[0]?.content;
-	if (!boardContent) {
-		return new Map();
-	}
-
-	const currentAnchors = extractAnchors(boardContent).all;
 	const subpages: string[] = [];
 	for await (const data of paginate(api, {
 		list: 'allpages',
@@ -112,35 +99,41 @@ async function buildArchiveMap(
 			}
 		}
 	}
+	return subpages;
+}
 
+/**
+ * Build a map from archived section anchor -> unique archive subpage `{ title, anchor }`.
+ * Anchors still present on the main board or appearing in multiple archives are omitted.
+ */
+async function buildArchiveMap(
+	api: MediaWikiApi,
+	boardTitle: string,
+): Promise<Map<string, { title: string; anchor: string }>> {
+	const boardContent = await fetchPageContent(api, boardTitle);
+	if (!boardContent) {
+		return new Map();
+	}
+
+	const currentAnchors = extractAnchors(boardContent).all;
+	const subpages = await listSubpages(api, boardTitle);
 	if (!subpages.length) {
 		return new Map();
 	}
 
 	const anchorOwners = new Map<string, Set<string>>();
 	await mapLimit(subpages, 5, async (subTitle) => {
-		const { data } = await api.post<{
-			query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> };
-		}>({
-			prop: 'revisions',
-			titles: subTitle,
-			rvprop: 'content',
-		}, { retry: 15 });
-		const subContent = Object.values(data?.query?.pages || {})[0]?.revisions?.[0]?.content;
+		const subContent = await fetchPageContent(api, subTitle);
 		if (!subContent) {
 			return;
 		}
-		const { all } = extractAnchors(subContent);
-		for (const anchor of all) {
+		for (const anchor of extractAnchors(subContent).all) {
 			if (currentAnchors.has(anchor)) {
 				continue;
 			}
-			let owners = anchorOwners.get(anchor);
-			if (!owners) {
-				owners = new Set();
-				anchorOwners.set(anchor, owners);
-			}
+			const owners = anchorOwners.get(anchor) ?? new Set<string>();
 			owners.add(subTitle);
+			anchorOwners.set(anchor, owners);
 		}
 	});
 
@@ -154,13 +147,7 @@ async function buildArchiveMap(
 	return archiveMap;
 }
 
-async function processArchiveBoard(api: MediaWikiApi, boardTitle: string): Promise<void> {
-	const archiveMap = await buildArchiveMap(api, boardTitle);
-	if (!archiveMap.size) {
-		return;
-	}
-
-	const targetTitles = await getTargetTitleSet(api, boardTitle);
+async function collectBoardBacklinks(api: MediaWikiApi, boardTitle: string, targetTitles: Set<string>): Promise<Set<string>> {
 	const backlinks = new Set<string>();
 	for (const targetTitle of targetTitles) {
 		for await (const data of paginate(api, {
@@ -177,7 +164,17 @@ async function processArchiveBoard(api: MediaWikiApi, boardTitle: string): Promi
 			}
 		}
 	}
+	return backlinks;
+}
 
+async function processArchiveBoard(api: MediaWikiApi, boardTitle: string): Promise<void> {
+	const archiveMap = await buildArchiveMap(api, boardTitle);
+	if (!archiveMap.size) {
+		return;
+	}
+
+	const targetTitles = await getTargetTitleSet(api, boardTitle);
+	const backlinks = await collectBoardBacklinks(api, boardTitle, targetTitles);
 	if (!backlinks.size) {
 		return;
 	}
@@ -185,14 +182,7 @@ async function processArchiveBoard(api: MediaWikiApi, boardTitle: string): Promi
 	console.log(`[[${boardTitle}]]: ${archiveMap.size} archived anchor(s), checking ${backlinks.size} backlink(s)...`);
 
 	await mapLimit([...backlinks], 5, async (pageTitle) => {
-		const { data } = await api.post<{
-			query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> };
-		}>({
-			prop: 'revisions',
-			titles: pageTitle,
-			rvprop: 'content',
-		}, { retry: 15 });
-		const content = Object.values(data?.query?.pages || {})[0]?.revisions?.[0]?.content;
+		const content = await fetchPageContent(api, pageTitle);
 		if (!content || NOBOTS_REGEX.test(content.replace(/\s+/g, ''))) {
 			return;
 		}

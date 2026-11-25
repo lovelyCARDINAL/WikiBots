@@ -1,7 +1,7 @@
 import moment from 'moment';
 import type { MediaWikiApi } from 'wiki-saikou';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 const SITE_LIST = ['zh', 'cm'] as const;
 type Site = (typeof SITE_LIST)[number];

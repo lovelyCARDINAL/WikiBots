@@ -1,10 +1,10 @@
 import process from 'process';
-import { load } from 'cheerio';
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import type { MwQueryResponse } from '../types/mediawiki.d.ts';
-import clientLogin from '../utils/clientLogin.ts';
-import config from '../utils/config.ts';
+import clientLogin from '../utils/core/clientLogin.ts';
+import config from '../utils/core/config.ts';
+import { getAbuseFilterDetails } from '../utils/wiki/abuseFilter.ts';
 
 const SITE_LIST = ['en', 'ja', 'lb'] as const;
 
@@ -30,31 +30,6 @@ async function getAbuseFilter(api: MediaWikiApi): Promise<AbuseFilterEntry[]> {
 		retry: 50,
 	});
 	return abusefilters;
-}
-
-async function getAbuseFilterDetails(api: MediaWikiApi, id: number) {
-	const { response: { data } } = await api.request.get('/index.php', {
-		query: {
-			title: `Special:AbuseFilter/${id}`,
-		},
-	});
-	const $raw = load(data);
-	const $form = $raw('#mw-content-text > form');
-	const textInputTypes = [undefined, 'hidden'];
-	const checkboxInputTypes = ['checkbox'];
-	const acceptableInputTypes = [...textInputTypes, ...checkboxInputTypes];
-	return {
-		formSnippet: Object.fromEntries([
-			...$form.find('input').toArray()
-				.map(({ attribs: { name, value, type, checked } }) => [acceptableInputTypes.includes(type) ? name : false, checkboxInputTypes.includes(type) ? !!checked : value]),
-			...$form.find('textarea').toArray()
-				.map(({ attribs: { name }, children }) => [name, (children[0] as { data?: string } | undefined)?.data || '']),
-			...$form.find('select').toArray()
-				.map((ele) => [ele.attribs.name, ele.childNodes.find((n): n is typeof ele => 'attribs' in n && typeof n.attribs?.selected === 'string')])
-				.map(([name, option]) => [name, typeof option === 'object' ? option?.attribs?.value : undefined]),
-		].filter(([name]) => Boolean(name))) as Record<string, unknown>,
-		action: $form.attr('action') || '',
-	};
 }
 
 (async () => {

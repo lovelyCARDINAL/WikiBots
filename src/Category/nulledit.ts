@@ -1,7 +1,7 @@
 import type { MediaWikiApi } from 'wiki-saikou';
 import type { MwPageContentResponse } from '../types/mediawiki.d.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 const SITE_LIST = ['zh', 'cm'] as const;
 

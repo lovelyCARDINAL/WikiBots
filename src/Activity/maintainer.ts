@@ -2,10 +2,10 @@ import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import moment from 'moment';
 import type { MediaWikiApi, MwApiParams } from 'wiki-saikou';
-import mapLimit from '../utils/concurrency.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import paginate from '../utils/paginate.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import mapLimit from '../utils/common/concurrency.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import paginate from '../utils/core/paginate.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 const GHIA_HISTORY_URL = 'https://raw.githubusercontent.com/MoegirlPediaInterfaceAdmins/MoegirlPediaInterfaceCodes/master/src/global/zh/GHIAHistory.json';
 const FILTER_BOTS = new Set(['滥用过滤器', 'Abuse filter', '不正利用フィルター', 'Delete page script', '重定向修复器', '萌娘百科·注销管理员']);
@@ -197,6 +197,72 @@ const updateData = async (zhapi: MediaWikiApi, pageid: string, text: string): Pr
 
 const userInfo = (user: string): string => `{{#Avatar:${user}|class=userlink-avatar-small}}{{User|${user}}}`;
 
+const formatContribCount = (contribsCount: number, minCount: number): string => {
+	if (!contribsCount) {
+		return `data-sort-value="0"|${NO_EDIT_HTML}`;
+	}
+	return contribsCount >= minCount
+		? `data-sort-value="${contribsCount}"|${contribsCount}次`
+		: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`;
+};
+
+const renderContribRows = (
+	users: string[],
+	contribsList: Array<{ user: string; title: string; timestamp: string }>,
+	minCount: number,
+	excludeSandbox = false,
+): string => users.map((user) => {
+	const contribsData = contribsList.filter((item) => item.user === user && (!excludeSandbox || !/Sandbox|测试|沙盒/i.test(item.title)));
+	const count = formatContribCount(contribsData.length, minCount);
+	const latest = maxMoment(contribsData.map((item) => item.timestamp));
+	const timestamp = latest ? timestampCST(latest) : NO_EDIT_HTML;
+	return `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
+}).join('');
+
+interface GhiaEntry {
+	datetime?: string;
+	changedFiles?: number;
+}
+
+const renderInterfaceAdminRow = async (
+	user: string,
+	contribsList: Array<{ user: string; title: string; timestamp: string; ns?: number }>,
+	ghiaData: Record<string, unknown>,
+	zhapi: MediaWikiApi,
+	cmapi: MediaWikiApi,
+): Promise<string> => {
+	const contribsData = contribsList.filter((item) => item.user === user);
+	const nsContribsData = contribsData.filter((item) => item.ns === 8 || item.ns === 274);
+	const ghiaUserData = ghiaData[`U:${user}`];
+	const ghiaEntries = Array.isArray(ghiaUserData) ? (ghiaUserData as GhiaEntry[]) : [];
+	const ghiaContribsCount = ghiaEntries
+		.filter((item) => moment(item.datetime).isAfter(moment(time[180])))
+		.reduce((total, item) => total + (item.changedFiles || 0), 0);
+
+	const count = formatContribCount(contribsData.length + ghiaContribsCount, 3);
+	let latestTimestamp: moment.Moment | null;
+
+	if (nsContribsData.length || ghiaContribsCount) {
+		latestTimestamp = maxMoment([
+			maxMoment(nsContribsData.map((item) => item.timestamp)),
+			maxMoment(ghiaEntries.map((item) => item.datetime)),
+		]);
+	} else {
+		const moreContribs = await Promise.all([
+			queryLatestContribs(zhapi, user, '8|274', time[365]),
+			queryLatestContribs(cmapi, user, '8|274', time[365]),
+		]).then((result) => result.flat().filter((item) => item !== undefined));
+		const ghiaTimestamp = maxMoment(ghiaEntries.map((item) => item.datetime));
+		latestTimestamp = maxMoment([
+			maxMoment(moreContribs),
+			ghiaTimestamp?.isAfter(moment(time[365])) ? ghiaTimestamp : null,
+		]);
+	}
+
+	const timestamp = latestTimestamp ? timestampCST(latestTimestamp) : NO_EDIT_HTML;
+	return `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
+};
+
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 
@@ -241,34 +307,11 @@ const userInfo = (user: string): string => `{{#Avatar:${user}|class=userlink-ava
 				queryContribs(cmapi, patrollerUsers, '0|10|14|12|4|6', time[60]),
 			]),
 		]);
-		const data = {
-			sysop: sysop.flat(),
-			patroller: patroller.flat(),
-		};
 
 		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的维护人员有效编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 管理员\n|-\n! 用户名 !! 30日编辑数 !! 最后编辑时间\n';
-
-		const processUser = (users: string[], contribsList: Array<{ user: string; title: string; timestamp: string }>, minCount: number): void => {
-			for (const user of users) {
-				const contribsData = contribsList.filter((item) => item.user === user && !/Sandbox|测试|沙盒/i.test(item.title));
-				const contribsCount = contribsData.length;
-				const count = contribsCount
-					? contribsCount >= minCount
-						? `data-sort-value="${contribsCount}"|${contribsCount}次`
-						: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`
-					: `data-sort-value="0"|${NO_EDIT_HTML}`;
-				const latest = maxMoment(contribsData.map((item) => item.timestamp));
-				const timestamp = latest ? timestampCST(latest) : NO_EDIT_HTML;
-				text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
-			}
-		};
-
-		processUser(sysopUsers, data.sysop, 3);
-
+		text += renderContribRows(sysopUsers, sysop.flat(), 3, true);
 		text += '|}\n</div>\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 维护姬\n|-\n! 用户名 !! 60日编辑数 !! 最后编辑时间\n';
-
-		processUser(patrollerUsers, data.patroller, 5);
-
+		text += renderContribRows(patrollerUsers, patroller.flat(), 5, true);
 		text += '|}\n</div>\n</div>\n\n[[Category:萌娘百科数据报告]]';
 
 		await updateData(zhapi, '540045', text);
@@ -288,67 +331,15 @@ const userInfo = (user: string): string => `{{#Avatar:${user}|class=userlink-ava
 				queryContribs(cmapi, interfaceAdminUsers, '10|828|8|274', time[180]),
 			]),
 		]);
-		const data = {
-			techeditor: techeditor.flat(),
-			'interface-admin': interfaceAdmin.flat(),
-		};
+
+		const interfaceRows = await Promise.all(
+			interfaceAdminUsers.map((user) => renderInterfaceAdminRow(user, interfaceAdmin.flat(), ghiaData, zhapi, cmapi)),
+		);
 
 		let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的技术人员有效编辑数统计与特定命名空间最后编辑时间。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 界面管理员\n|-\n! 用户名 !! 180日编辑数 !! MediaWiki或Widget最后编辑时间 \n';
-
-		for (const user of interfaceAdminUsers) {
-			const contribsData = data['interface-admin'].filter((item) => item.user === user);
-			const nsContribsData = contribsData.filter((item) => item.ns === 8 || item.ns === 274);
-
-			const { [`U:${user}`]: ghiaUserData } = ghiaData;
-			const ghiaEntries = Array.isArray(ghiaUserData) ? ghiaUserData : [];
-			const ghiaContribsCount = ghiaEntries
-				.filter((item) => moment(item.datetime).isAfter(moment(time[180])))
-				.reduce((total, item) => total + (item.changedFiles || 0), 0);
-
-			const contribsCount = contribsData.length + ghiaContribsCount;
-			const count = contribsCount
-				? contribsCount >= 3
-					? `data-sort-value="${contribsCount}"|${contribsCount}次`
-					: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`
-				: `data-sort-value="0"|${NO_EDIT_HTML}`;
-
-			if (nsContribsData.length || ghiaContribsCount) {
-				const nsLatestTimestamp = maxMoment(nsContribsData.map((item) => item.timestamp));
-				const ghiaLatestTimestamp = maxMoment(ghiaEntries.map((item) => item.datetime));
-				const latestTimestamp = maxMoment([nsLatestTimestamp, ghiaLatestTimestamp]);
-				const timestamp = latestTimestamp ? timestampCST(latestTimestamp) : NO_EDIT_HTML;
-				text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
-			} else {
-				const moreContribs = await Promise.all([
-					queryLatestContribs(zhapi, user, '8|274', time[365]),
-					queryLatestContribs(cmapi, user, '8|274', time[365]),
-				]).then((result) => result.flat().filter((item) => item !== undefined));
-				const nsLatestTimestamp = maxMoment(moreContribs);
-
-				const ghiaTimestamp = maxMoment(ghiaEntries.map((item) => item.datetime));
-				const ghiaLatestTimestamp = ghiaTimestamp?.isAfter(moment(time[365])) ? ghiaTimestamp : null;
-
-				const latestTimestamp = maxMoment([nsLatestTimestamp, ghiaLatestTimestamp]);
-				const timestamp = latestTimestamp ? timestampCST(latestTimestamp) : NO_EDIT_HTML;
-				text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
-			}
-		}
-
+		text += interfaceRows.join('');
 		text += '|}\n</div>\n<div style="width: 100%; max-width: 600px; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|+ 技术编辑员\n|-\n! 用户名 !! 365日编辑数 !! 最后编辑时间\n';
-
-		for (const user of techeditorUsers) {
-			const contribsData = data.techeditor.filter((item) => item.user === user);
-			const contribsCount = contribsData.length;
-			const count = contribsCount
-				? contribsCount >= 3
-					? `data-sort-value="${contribsCount}"|${contribsCount}次`
-					: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`
-				: `data-sort-value="0"|${NO_EDIT_HTML}`;
-			const latest = maxMoment(contribsData.map((item) => item.timestamp));
-			const timestamp = latest ? timestampCST(latest) : NO_EDIT_HTML;
-			text += `|-\n| ${userInfo(user)} || ${count} || ${timestamp}\n`;
-		}
-
+		text += renderContribRows(techeditorUsers, techeditor.flat(), 3);
 		text += '|}\n</div>\n</div>\n\n[[Category:萌娘百科数据报告]]';
 
 		await updateData(zhapi, '540046', text);

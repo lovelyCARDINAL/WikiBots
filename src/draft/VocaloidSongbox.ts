@@ -1,42 +1,12 @@
-import type { FexiosFinalContext, MwApiResponse } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
-import { createAndLogin } from '../utils/createApi.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { collectEmbeddedPages } from '../utils/wiki/embeddedIn.ts';
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
 	const api = await createAndLogin('zh', 'abot');
-
-	interface SongboxPage {
-		title: string;
-		revisions: Array<{ content: string }>;
-	}
-	const pages = await (async () => {
-		const result: SongboxPage[] = [];
-		const eol = Symbol();
-		let geicontinue: string | typeof eol | undefined = undefined;
-		while (geicontinue !== eol) {
-			const res: FexiosFinalContext<MwApiResponse<{
-				query: { pages: Record<string, SongboxPage> };
-			}>> = await api.post<{
-				query: { pages: Record<string, SongboxPage> };
-			}>({
-				prop: 'revisions',
-				generator: 'embeddedin',
-				rvprop: 'content',
-				geititle: 'Template:VOCALOID Songbox Introduction',
-				geinamespace: '0',
-				geilimit: '500',
-				geicontinue: typeof geicontinue === 'string' ? geicontinue : undefined,
-			}, {
-				retry: 15,
-			});
-			const { data } = res;
-			geicontinue = data.continue ? data.continue.geicontinue : eol;
-			result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
-		}
-		return result;
-	})();
+	const pages = await collectEmbeddedPages(api, 'Template:VOCALOID Songbox Introduction');
 
 	await Promise.all(pages.map(async ({ title, revisions: [{ content }] }) => {
 		if (title !== 'Undefined') {

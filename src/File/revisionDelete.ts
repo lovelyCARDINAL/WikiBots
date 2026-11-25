@@ -1,8 +1,8 @@
-import mapLimit from '../utils/concurrency.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import { getTimeData, editTimeData } from '../utils/lastTime.ts';
-import paginate from '../utils/paginate.ts';
-import splitAndJoin from '../utils/splitAndJoin.ts';
+import mapLimit from '../utils/common/concurrency.ts';
+import { getTimeData, editTimeData } from '../utils/common/lastTime.ts';
+import splitAndJoin from '../utils/common/splitAndJoin.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import paginate from '../utils/core/paginate.ts';
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);

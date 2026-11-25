@@ -1,5 +1,5 @@
 import type { MwPageContentResponse } from '../types/mediawiki.d.ts';
-import { createAndLogin } from '../utils/createApi.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);

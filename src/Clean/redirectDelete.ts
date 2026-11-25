@@ -1,7 +1,7 @@
 import type { MwQueryResponse } from '../types/mediawiki.d.ts';
-import mapLimit from '../utils/concurrency.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import mapLimit from '../utils/common/concurrency.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 const NS_LIST = [1, 2, 3, 5, 9, 11, 13, 15, 115, 117, 118, 119, 275, 829];
 const NS_REASON_MAP: Record<number, [number[], string]> = {
@@ -19,6 +19,16 @@ interface MoveLogEvent {
 	comment: string;
 	params: { suppressredirect?: boolean; target_ns: number };
 	commenthidden?: boolean;
+}
+
+function shouldDeleteMoveLog({ pageid, ns, comment, params, commenthidden }: MoveLogEvent): boolean {
+	if (pageid === 0 || !NS_LIST.includes(ns)) {
+		return false;
+	}
+	if (params.suppressredirect || commenthidden) {
+		return false;
+	}
+	return !/(?:!nobot!|[暫暂]留)/i.test(comment);
 }
 
 (async () => {
@@ -39,12 +49,7 @@ interface MoveLogEvent {
 		retry: 15,
 	});
 
-	const pages = logevents.filter(({ pageid, ns, comment, params, commenthidden }) => pageid !== 0
-		&& NS_LIST.includes(ns)
-		&& !/(?:!nobot!|[暫暂]留)/i.test(comment)
-		&& !params.suppressredirect
-		&& !commenthidden,
-	);
+	const pages = logevents.filter(shouldDeleteMoveLog);
 
 	if (!pages.length) {
 		console.log('No pages to delete.');

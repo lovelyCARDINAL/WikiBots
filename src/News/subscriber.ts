@@ -1,7 +1,7 @@
 import type { MediaWikiApi } from 'wiki-saikou';
 import type { MwQueryResponse } from '../types/mediawiki.d.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 const time = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
 

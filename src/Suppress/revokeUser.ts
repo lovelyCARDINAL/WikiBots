@@ -1,7 +1,7 @@
 import { MediaWikiApi } from 'wiki-saikou';
-import clientLogin from '../utils/clientLogin.ts';
-import config from '../utils/config.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import clientLogin from '../utils/core/clientLogin.ts';
+import config from '../utils/core/config.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,

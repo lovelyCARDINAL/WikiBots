@@ -1,8 +1,8 @@
 import type { MediaWikiApi } from 'wiki-saikou';
 import type { MwPageContentResponse } from '../types/mediawiki.d.ts';
-import mapLimit from '../utils/concurrency.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import mapLimit from '../utils/common/concurrency.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 async function edit(api: MediaWikiApi, title: string, text: string, summary?: string) {
 	await safePostWithToken(api, 'csrf', {

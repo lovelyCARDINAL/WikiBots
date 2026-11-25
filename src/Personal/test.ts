@@ -1,5 +1,5 @@
 import { MediaWikiApi } from 'wiki-saikou';
-import config from '../utils/config.ts';
+import config from '../utils/core/config.ts';
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,

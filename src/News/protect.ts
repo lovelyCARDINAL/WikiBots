@@ -1,8 +1,8 @@
 import moment from 'moment';
 import type { MediaWikiApi } from 'wiki-saikou';
 import type { MwQueryResponse } from '../types/mediawiki.d.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 async function queryPages(api: MediaWikiApi, apprefix: string, apprtype?: string, apprlevel?: string): Promise<Array<{ pageid: number; title: string }>> {
 	const { data: { query: { allpages } } } = await api.post<MwQueryResponse<{

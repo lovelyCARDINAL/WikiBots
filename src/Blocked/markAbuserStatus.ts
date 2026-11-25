@@ -1,8 +1,8 @@
 import Parser from 'wikiparser-node';
 import type { MwQueryResponse } from '../types/mediawiki.d.ts';
-import mapLimit from '../utils/concurrency.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import mapLimit from '../utils/common/concurrency.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 Parser.config = 'moegirl';
 

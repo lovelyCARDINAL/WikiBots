@@ -2,8 +2,8 @@ import { Buffer } from 'buffer';
 import process, { env } from 'process';
 import { Octokit } from '@octokit/core';
 import type { MediaWikiApi } from 'wiki-saikou';
-import config from '../utils/config.ts';
-import { createAndLogin } from '../utils/createApi.ts';
+import config from '../utils/core/config.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
 
 interface OverrideCategoryConfig {
 	cat: string[];

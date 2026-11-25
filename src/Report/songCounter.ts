@@ -1,6 +1,6 @@
 import Parser from 'wikiparser-node';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 function templateCount(parsed: Parser.Token | Parser.AstRange): number {
 	const templates = parsed.querySelectorAll<Parser.TranscludeToken>('template#Template:China_Temple_Song, template#Template:Temple_Song, template#Template:China_Legendary_Song');

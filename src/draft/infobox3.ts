@@ -1,42 +1,12 @@
-import type { FexiosFinalContext, MwApiResponse } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
-import { createAndLogin } from '../utils/createApi.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { collectEmbeddedPages } from '../utils/wiki/embeddedIn.ts';
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	
 	const api = await createAndLogin('zh', 'abot');
-
-	interface InfoboxPage {
-		title: string;
-		revisions: Array<{ content: string }>;
-	}
-	const pages = await (async () => {
-		const result: InfoboxPage[] = [];
-		const eol = Symbol();
-		let geicontinue: string | typeof eol | undefined = undefined;
-		while (geicontinue !== eol) {
-			const res: FexiosFinalContext<MwApiResponse<{
-				query: { pages: Record<string, InfoboxPage> };
-			}>> = await api.post<{
-				query: { pages: Record<string, InfoboxPage> };
-			}>({
-				prop: 'revisions',
-				generator: 'embeddedin',
-				rvprop: 'content',
-				geititle: 'Template:信息栏2.0',
-				geinamespace: '0',
-				geilimit: '500',
-				geicontinue: typeof geicontinue === 'string' ? geicontinue : undefined,
-			}, {
-				retry: 15,
-			});
-			const { data } = res;
-			geicontinue = data.continue ? data.continue.geicontinue : eol;
-			result.push(...Object.values(data.query.pages).filter((page) => page.revisions));
-		}
-		return result;
-	})();
+	const pages = await collectEmbeddedPages(api, 'Template:信息栏2.0');
 
 	for (const page of pages) {
 		const { title, revisions: [{ content }] } = page;

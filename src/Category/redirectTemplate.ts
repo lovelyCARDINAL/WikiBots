@@ -1,5 +1,5 @@
-import { createAndLogin } from '../utils/createApi.ts';
-import paginate from '../utils/paginate.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import paginate from '../utils/core/paginate.ts';
 
 const SITE_LIST = ['zh', 'cm'] as const;
 

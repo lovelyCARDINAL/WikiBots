@@ -19,14 +19,15 @@ async function withRetry<T>(
 			return await fn();
 		} catch (err) {
 			lastErr = err;
-			if (i < attempts) {
-				const delay = Math.min(15000, 1000 * 2 ** Math.min(i - 1, 4)) + Math.floor(Math.random() * 500);
-				if (i === 1 || i % 5 === 0) {
-					const msg = err instanceof Error ? err.message : String(err);
-					console.warn(`${label} failed (attempt ${i}/${attempts}), retrying in ${delay}ms: ${msg}`);
-				}
-				await sleep(delay);
+			if (i >= attempts) {
+				continue;
 			}
+			const delay = Math.min(15000, 1000 * 2 ** Math.min(i - 1, 4)) + Math.floor(Math.random() * 500);
+			if (i === 1 || i % 5 === 0) {
+				const msg = err instanceof Error ? err.message : String(err);
+				console.warn(`${label} failed (attempt ${i}/${attempts}), retrying in ${delay}ms: ${msg}`);
+			}
+			await sleep(delay);
 		}
 	}
 	throw lastErr;

@@ -1,7 +1,7 @@
 import { env } from 'process';
-import { createAndLogin, type SiteKey } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
-import splitAndJoin from '../utils/splitAndJoin.ts';
+import splitAndJoin from '../utils/common/splitAndJoin.ts';
+import { createAndLogin, type SiteKey } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 const site = (env.SITE || 'zh') as Extract<SiteKey, 'zh' | 'cm'>;
 

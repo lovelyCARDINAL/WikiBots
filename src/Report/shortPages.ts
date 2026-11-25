@@ -1,6 +1,6 @@
 import type { MwQueryResponse } from '../types/mediawiki.d.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);

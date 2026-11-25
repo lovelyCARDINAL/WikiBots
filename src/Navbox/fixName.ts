@@ -1,9 +1,9 @@
 import type { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import type { MwQueryResponse } from '../types/mediawiki.d.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
-import splitAndJoin from '../utils/splitAndJoin.ts';
+import splitAndJoin from '../utils/common/splitAndJoin.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 Parser.config = 'moegirl';
 

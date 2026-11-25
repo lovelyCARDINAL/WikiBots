@@ -1,8 +1,8 @@
 import type { MediaWikiApi } from 'wiki-saikou';
 import type { MwPageContentResponse } from '../types/mediawiki.d.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import paginate from '../utils/paginate.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import paginate from '../utils/core/paginate.ts';
+import { safePostWithToken } from '../utils/core/retry.ts';
 
 const MAP = {
 	'A-D': ['A', 'B', 'C', 'D'],

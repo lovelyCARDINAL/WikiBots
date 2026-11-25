@@ -1,10 +1,10 @@
 import { load } from 'cheerio';
 import { MediaWikiApi } from 'wiki-saikou';
-import clientLogin from '../utils/clientLogin.ts';
-import config from '../utils/config.ts';
-import { getTimeData, editTimeData } from '../utils/lastTime.ts';
-import paginate from '../utils/paginate.ts';
-import splitAndJoin from '../utils/splitAndJoin.ts';
+import { getTimeData, editTimeData } from '../utils/common/lastTime.ts';
+import splitAndJoin from '../utils/common/splitAndJoin.ts';
+import clientLogin from '../utils/core/clientLogin.ts';
+import config from '../utils/core/config.ts';
+import paginate from '../utils/core/paginate.ts';
 
 const zhapi = new MediaWikiApi({
 		baseURL: config.zh.api,
@@ -56,6 +56,35 @@ const queryPages = async (apprefix: string, apnamespace: string): Promise<string
 		.filter((title) => prefixRegex.test(title));
 };
 
+const tryDeleteUserPage = async (title: string): Promise<boolean> => {
+	const { response: { data: htmlString } } = await zhapi.request.get('/index.php', {
+		query: { title, action: 'delete' },
+	});
+	if (htmlString.includes('<title>无法删除页面')) {
+		console.warn('The page could not be deleted. It may have already been deleted by someone else.');
+		return true;
+	}
+	const $ = load(htmlString);
+	const wpEditToken = $('[name="wpEditToken"]').get(0)?.attribs.value;
+	if (!wpEditToken) {
+		return false;
+	}
+	const { response: { data } } = await zhapi.request.post('/index.php', {
+		title,
+		action: 'delete',
+		wpDeleteReasonList: 'other',
+		wpReason: '被隐藏的用户',
+		wpSuppress: '',
+		wpConfirmB: '删除页面',
+		wpEditToken,
+	});
+	if (!data.includes('<title>操作完成')) {
+		return false;
+	}
+	console.log('Successful deleted the page');
+	return true;
+};
+
 const hidePages = async (user: string): Promise<void> => {
 	const pagelist = await Promise.all([
 		queryPages(user, '2'),
@@ -63,41 +92,11 @@ const hidePages = async (user: string): Promise<void> => {
 	]).then((result) => result.flat());
 
 	await Promise.all(pagelist.map(async (title) => {
-		let retry = 0;
-		while (retry < 30) {
-			const { response: { data: htmlString } } = await zhapi.request.get('/index.php', {
-				query: {
-					title,
-					action: 'delete',
-				},
-			});
-
-			if (htmlString.includes('<title>无法删除页面')) {
-				console.warn('The page could not be deleted. It may have already been deleted by someone else.');
-				break;
+		for (let retry = 0; retry < 30; retry++) {
+			if (await tryDeleteUserPage(title)) {
+				return;
 			}
-
-			const $ = load(htmlString);
-			const wpEditToken = $('[name="wpEditToken"]').get(0)?.attribs.value;
-
-			if (wpEditToken) {
-				const { response: { data } } = await zhapi.request.post('/index.php', {
-					title,
-					action: 'delete',
-					wpDeleteReasonList: 'other',
-					wpReason: '被隐藏的用户',
-					wpSuppress: '',
-					wpConfirmB: '删除页面',
-					wpEditToken,
-				});
-				if (data.includes('<title>操作完成')) {
-					console.log('Successful deleted the page');
-					break;
-				}
-			}
-
 			console.warn(`删除页面失败。重试第 ${retry} 次...`);
-			retry++;
 		}
 	}));
 };

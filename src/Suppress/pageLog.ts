@@ -1,8 +1,8 @@
 import { MediaWikiApi } from 'wiki-saikou';
-import clientLogin from '../utils/clientLogin.ts';
-import config from '../utils/config.ts';
-import { getTimeData, editTimeData } from '../utils/lastTime.ts';
-import paginate from '../utils/paginate.ts';
+import { getTimeData, editTimeData } from '../utils/common/lastTime.ts';
+import clientLogin from '../utils/core/clientLogin.ts';
+import config from '../utils/core/config.ts';
+import paginate from '../utils/core/paginate.ts';
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,

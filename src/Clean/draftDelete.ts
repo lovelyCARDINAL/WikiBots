@@ -1,7 +1,7 @@
 import type { MediaWikiApi } from 'wiki-saikou';
-import type { MwAllUser, MwPageContentResponse, MwQueryResponse } from '../types/mediawiki.d.ts';
-import { createAndLogin } from '../utils/createApi.ts';
-import { safePostWithToken } from '../utils/retry.ts';
+import type { MwAllUser, MwQueryResponse } from '../types/mediawiki.d.ts';
+import { createAndLogin } from '../utils/core/createApi.ts';
+import { deletePageById, removeDeletionTemplate } from '../utils/wiki/deletePage.ts';
 
 async function ruleTest(api: MediaWikiApi, pageid: number, maintainlist: string[]): Promise<boolean> {
 	const { data: { query: { pages } } } = await api.post<MwQueryResponse<{
@@ -23,41 +23,15 @@ async function ruleTest(api: MediaWikiApi, pageid: number, maintainlist: string[
 }
 
 async function pageDelete(api: MediaWikiApi, pageid: number) {
-	await safePostWithToken(api, 'csrf', {
-		action: 'delete',
-		pageid,
-		reason: '自动删除悬挂{{[[Template:nsdd|nsdd]]}}的草稿页面',
-		tags: 'Bot',
-		watchlist: 'nochange',
-	}, {
-		retry: 50,
-		noCache: true,
-	});
+	await deletePageById(api, pageid, '自动删除悬挂{{[[Template:nsdd|nsdd]]}}的草稿页面');
 }
 
 async function cannotDelete(api: MediaWikiApi, pageid: number) {
-	const { data: { query: { pages } } } = await api.post<MwPageContentResponse>({
-		prop: 'revisions',
-		pageids: pageid,
-		rvprop: 'content',
-	}, {
-		retry: 15,
-	});
-	let wikitext = pages[0].revisions[0].content;
-	wikitext = wikitext.replaceAll(/(?:<noinclude>\s*)?{{\s*(?:T:|模板:|[样樣]板:|Template:)?\s*nsdd\s*}}(?:\s*<\/noinclude>)?/gi, '');
-	await safePostWithToken(api, 'csrf', {
-		action: 'edit',
+	await removeDeletionTemplate(
+		api,
 		pageid,
-		tags: 'Bot',
-		watchlist: 'nochange',
-		text: wikitext,
-		minor: true,
-		bot: true,
-		summary: '无法自动删除，请至[[萌娘百科_talk:讨论版/操作申请]]提请维护人员删除。',
-	}, {
-		retry: 50,
-		noCache: true,
-	});
+		/(?:<noinclude>\s*)?{{\s*(?:T:|模板:|[样樣]板:|Template:)?\s*nsdd\s*}}(?:\s*<\/noinclude>)?/gi,
+	);
 }
 
 (async () => {

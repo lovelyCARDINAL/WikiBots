@@ -1,10 +1,10 @@
 import process from 'process';
-import { load } from 'cheerio';
 import moment from 'moment';
 import type { MwQueryResponse } from '../types/mediawiki.d.ts';
-import clientLogin from '../utils/clientLogin.ts';
-import config from '../utils/config.ts';
-import { createApi } from '../utils/createApi.ts';
+import clientLogin from '../utils/core/clientLogin.ts';
+import config from '../utils/core/config.ts';
+import { createApi } from '../utils/core/createApi.ts';
+import { getAbuseFilterDetails } from '../utils/wiki/abuseFilter.ts';
 
 const api = createApi('zh');
 
@@ -21,31 +21,6 @@ async function getAbuseFilter(id: number) {
 		retry: 15,
 	});
 	return abusefilters[0];
-}
-
-async function getAbuseFilterDetails(id: number) {
-	const { response: { data } } = await api.request.get('/index.php', {
-		query: {
-			title: `Special:AbuseFilter/${id}`,
-		},
-	});
-	const $raw = load(data);
-	const $form = $raw('#mw-content-text > form');
-	const textInputTypes = [undefined, 'hidden'];
-	const checkboxInputTypes = ['checkbox'];
-	const acceptableInputTypes = [...textInputTypes, ...checkboxInputTypes];
-	return {
-		formSnippet: Object.fromEntries([
-			...$form.find('input').toArray()
-				.map(({ attribs: { name, value, type, checked } }) => [acceptableInputTypes.includes(type) ? name : false, checkboxInputTypes.includes(type) ? !!checked : value]),
-			...$form.find('textarea').toArray()
-				.map(({ attribs: { name }, children }) => [name, (children[0] as { data?: string } | undefined)?.data || '']),
-			...$form.find('select').toArray()
-				.map((ele) => [ele.attribs.name, ele.childNodes.find((n): n is typeof ele => 'attribs' in n && typeof n.attribs?.selected === 'string')])
-				.map(([name, option]) => [name, typeof option === 'object' ? option?.attribs?.value : undefined]),
-		].filter(([name]) => Boolean(name))) as Record<string, unknown>,
-		action: $form.attr('action') || '',
-	};
 }
 
 (async () => {
@@ -65,7 +40,7 @@ async function getAbuseFilterDetails(id: number) {
 		return;
 	}
 	
-	const { formSnippet, action } = await getAbuseFilterDetails(18);
+	const { formSnippet, action } = await getAbuseFilterDetails(api, 18);
 	formSnippet.wpFilterRules = af18.replace(/(\/\*\s*下方内容由机器人同步自滥用过滤器70\s*\*\/).+$/s, '$1') + af70.replace(/^.+?\/\*\s*下方内容会被机器人同步到滥用过滤器18\s*\*\//s, '');
 	
 	try {
