@@ -5,17 +5,34 @@ Parser.config = 'moegirl';
 const LANG_CODE_RE = /^(?:zh|zh-(?:hans|hant|cn|tw|hk))$/i;
 
 /**
+ * Repeatedly strip all matches of `pattern` until the string stabilizes.
+ *
+ * @param {string} input
+ * @param {RegExp} pattern
+ * @returns {string}
+ */
+function stripPattern(input: string, pattern: RegExp): string {
+	let result = input;
+	let prev: string;
+	do {
+		prev = result;
+		result = result.replace(pattern, '');
+	} while (result !== prev);
+	return result;
+}
+
+/**
  * Normalize a CGroup name for fuzzy/alias matching.
  *
  * @param {string} groupName
  * @returns {string}
  */
 function normalizeGroupName(groupName: string): string {
-	return groupName
+	const cleaned = groupName
 		.replace(/[\s_\-–()（）{}「」#＝]/g, '')
 		.replace(/^CGroup\//i, '')
-		.replace(/^=+/g, '')
-		.replace(/<\/?\w[^<>]*>/g, '')
+		.replace(/^=+/g, '');
+	return stripPattern(cleaned, /<\/?\w[^<>]*>/g)
 		.replace(/s?[;:.，[\]]*$/g, '')
 		.trim()
 		.toLowerCase();
@@ -259,7 +276,7 @@ function parseSystemConversionTable(wikitext: string): {
 	}
 
 	const vocab = new Set(extractVocabularies(base.rules));
-	const stripped = wikitext.replace(/<!--[\s\S]*?-->/g, '');
+	const stripped = stripPattern(wikitext, /<!--[\s\S]*?-->/g);
 	for (const line of stripped.split(/\r?\n/)) {
 		const trimmed = line.trim();
 		if (!trimmed.startsWith('*')) {

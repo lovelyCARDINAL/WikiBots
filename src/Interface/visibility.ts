@@ -43,10 +43,14 @@ const PAGE_LIST = [
 			.map(async ([pageid, content]) => {
 				const parser = Parser.parse(content, true);
 				if (parser.text().length !== 0) {
+					const firstNewline = content.indexOf('\n');
+					const text = firstNewline === -1
+						? content
+						: `${content.slice(0, firstNewline)}<onlyinclude></onlyinclude>${content.slice(firstNewline)}`;
 					await safePostWithToken(api, 'csrf', {
 						action: 'edit',
 						pageid,
-						text: content.replace(/\n/, '<onlyinclude></onlyinclude>\n'),
+						text,
 						minor: true,
 						bot: true,
 						nocreate: true,
