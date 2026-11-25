@@ -1,11 +1,8 @@
 import process from 'process';
 import type { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
-import {
-	extractAnchors,
-	rewriteAnchorLinks,
-	loadFixAnchorConfig,
-} from '../utils/anchor/index.ts';
+import { extractAnchors, loadFixAnchorConfig, rewriteAnchorLinks } from '../utils/anchor/index.ts';
+import { fetchPageContent, getTargetTitleSet } from '../utils/anchor/wiki.ts';
 import mapLimit from '../utils/common/concurrency.ts';
 import { createAndLogin } from '../utils/core/createApi.ts';
 import paginate from '../utils/core/paginate.ts';
@@ -16,40 +13,25 @@ const BACKLINK_NAMESPACES = '0|4|10|12|14';
 const ARCHIVE_DISCOVERY_NAMESPACES = '4|12';
 const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-adminbot|all)))\}\}/;
 
-/**
- * Fetch normalized title set (page itself + redirects pointing to it).
- *
- * @param {import('wiki-saikou').MediaWikiApi} api
- * @param {string} title
- * @returns {Promise<Set<string>>}
- */
-async function getTargetTitleSet(api: MediaWikiApi, title: string): Promise<Set<string>> {
-	const titles = new Set([Parser.normalizeTitle(title).title]);
+async function collectTemplateBoards(api: MediaWikiApi, tpl: string, boards: Set<string>): Promise<void> {
+	const eititle = tpl.startsWith('Template:') ? tpl : `Template:${tpl}`;
 	for await (const data of paginate(api, {
-		prop: 'redirects',
-		titles: title,
-		rdlimit: 'max',
+		list: 'embeddedin',
+		eititle,
+		einamespace: ARCHIVE_DISCOVERY_NAMESPACES,
+		eifilterredir: 'nonredirects',
+		eilimit: 'max',
 	})) {
-		for (const page of Object.values((data?.query?.pages || {}) as Record<string, { redirects?: Array<{ title?: string }> }>)) {
-			for (const rd of page.redirects || []) {
-				if (rd.title) {
-					titles.add(Parser.normalizeTitle(rd.title).title);
-				}
+		for (const item of data?.query?.embeddedin || []) {
+			if (!item.title) {
+				continue;
+			}
+			const norm = Parser.normalizeTitle(item.title).title;
+			if (!norm.includes('/存档') && !/\/Archive/i.test(norm)) {
+				boards.add(norm);
 			}
 		}
 	}
-	return titles;
-}
-
-async function fetchPageContent(api: MediaWikiApi, title: string): Promise<string | undefined> {
-	const { data } = await api.post<{
-		query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> };
-	}>({
-		prop: 'revisions',
-		titles: title,
-		rvprop: 'content',
-	}, { retry: 15 });
-	return Object.values(data?.query?.pages || {})[0]?.revisions?.[0]?.content;
 }
 
 async function collectArchiveBoards(
@@ -58,28 +40,9 @@ async function collectArchiveBoards(
 ): Promise<string[]> {
 	const ignored = new Set(botConfig.ignorePages.map((t) => Parser.normalizeTitle(t).title));
 	const boards = new Set(botConfig.archivePages.map((t) => Parser.normalizeTitle(t).title));
-
 	for (const tpl of botConfig.archiveTemplates) {
-		const eititle = tpl.startsWith('Template:') ? tpl : `Template:${tpl}`;
-		for await (const data of paginate(api, {
-			list: 'embeddedin',
-			eititle,
-			einamespace: ARCHIVE_DISCOVERY_NAMESPACES,
-			eifilterredir: 'nonredirects',
-			eilimit: 'max',
-		})) {
-			for (const item of data?.query?.embeddedin || []) {
-				if (!item.title) {
-					continue;
-				}
-				const norm = Parser.normalizeTitle(item.title).title;
-				if (!norm.includes('/存档') && !/\/Archive/i.test(norm)) {
-					boards.add(norm);
-				}
-			}
-		}
+		await collectTemplateBoards(api, tpl, boards);
 	}
-
 	return [...boards].filter((t) => !ignored.has(t));
 }
 
@@ -102,10 +65,6 @@ async function listSubpages(api: MediaWikiApi, boardTitle: string): Promise<stri
 	return subpages;
 }
 
-/**
- * Build a map from archived section anchor -> unique archive subpage `{ title, anchor }`.
- * Anchors still present on the main board or appearing in multiple archives are omitted.
- */
 async function buildArchiveMap(
 	api: MediaWikiApi,
 	boardTitle: string,
@@ -192,21 +151,17 @@ async function processArchiveBoard(api: MediaWikiApi, boardTitle: string): Promi
 			return;
 		}
 
-		const summary = `修复指向[[${boardTitle}]]已存档章节的链接（${result.replacements.length}处）`;
 		await api.postWithToken('csrf', {
 			action: 'edit',
 			title: pageTitle,
 			text: result.content,
-			summary,
+			summary: `修复指向[[${boardTitle}]]已存档章节的链接（${result.replacements.length}处）`,
 			bot: true,
 			minor: true,
 			nocreate: true,
 			tags: 'Bot',
 			watchlist: 'nochange',
-		}, {
-			retry: 25,
-			noCache: true,
-		}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
+		}, { retry: 25, noCache: true }).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
 	});
 }
 

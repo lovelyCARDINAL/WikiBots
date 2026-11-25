@@ -1,18 +1,23 @@
 import process from 'process';
-import type { MediaWikiApi, MwApiParams } from 'wiki-saikou';
+import type { MediaWikiApi } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import {
-	normalizeAnchor,
 	extractAnchors,
-	detectSectionChanges,
-	buildRenameMap,
-	rewriteAnchorLinks,
 	findBrokenAnchorLinks,
-	updateBrokenAnchorsTalkPage,
 	loadFixAnchorConfig,
+	normalizeAnchor,
+	rewriteAnchorLinks,
+	updateBrokenAnchorsTalkPage,
 } from '../utils/anchor/index.ts';
+import {
+	computePageAnchorState,
+	fetchPageContent,
+	getBacklinks,
+	getTargetTitleSet,
+	saveOrDeleteTalkPage,
+} from '../utils/anchor/wiki.ts';
 import mapLimit from '../utils/common/concurrency.ts';
-import { getTimeData, editTimeData } from '../utils/common/lastTime.ts';
+import { editTimeData, getTimeData } from '../utils/common/lastTime.ts';
 import { createAndLogin } from '../utils/core/createApi.ts';
 import paginate from '../utils/core/paginate.ts';
 
@@ -23,188 +28,34 @@ const MAX_LOOKBACK_MS = 30 * 24 * 60 * 60 * 1000;
 const TARGET_NAMESPACES = '0|4|10|12|14';
 const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-adminbot|all)))\}\}/;
 
-/**
- * Fetch target page's normalized title set (including redirects to it).
- *
- * @param {import('wiki-saikou').MediaWikiApi} api
- * @param {string} title
- * @returns {Promise<Set<string>>}
- */
-async function getTargetTitleSet(api: MediaWikiApi, title: string): Promise<Set<string>> {
-	const titles = new Set([Parser.normalizeTitle(title).title]);
-	for await (const data of paginate(api, {
-		prop: 'redirects',
-		titles: title,
-		rdlimit: 'max',
-	})) {
-		const pages = Object.values((data?.query?.pages || {}) as Record<string, { redirects?: Array<{ title?: string }> }>);
-		for (const page of pages) {
-			for (const rd of page.redirects || []) {
-				if (rd.title) {
-					titles.add(Parser.normalizeTitle(rd.title).title);
-				}
-			}
-		}
-	}
-	return titles;
-}
-
-async function getBacklinks(api: MediaWikiApi, targetTitles: Set<string>): Promise<string[]> {
-	const backlinks = new Set<string>();
-	for (const targetTitle of targetTitles) {
-		for await (const data of paginate(api, {
-			list: 'backlinks',
-			bltitle: targetTitle,
-			blnamespace: TARGET_NAMESPACES,
-			blfilterredir: 'nonredirects',
-			bllimit: 'max',
-		})) {
-			for (const item of data?.query?.backlinks || []) {
-				if (item.title) {
-					backlinks.add(item.title);
-				}
-			}
-		}
-	}
-	return [...backlinks];
-}
-
-async function computePageAnchorState(
-	api: MediaWikiApi,
-	title: string,
-	sinceIso: string,
-): Promise<{ renameMap: Map<string, string>; brokenAnchors: Set<string>; finalAnchors: Set<string> }> {
-	const { data } = await api.post<{
-		query?: { pages?: Record<string, { revisions?: Array<{ timestamp: string; content?: string }> }> };
-	}>({
-		prop: 'revisions',
-		titles: title,
-		rvprop: 'ids|timestamp|content',
-		rvlimit: '15',
-		rvdir: 'older',
-	}, { retry: 15 });
-
-	const page = Object.values(data?.query?.pages || {})[0];
-	const revs = (page?.revisions || []).filter((r): r is { timestamp: string; content: string } => typeof r.content === 'string');
-	if (revs.length < 2) {
-		return { renameMap: new Map(), brokenAnchors: new Set(), finalAnchors: new Set() };
-	}
-
-	const chronological = [...revs].reverse();
-	const sinceMs = Date.parse(sinceIso);
-	const firstInWindowIdx = chronological.findIndex((r) => Date.parse(r.timestamp) >= sinceMs);
-	const startIdx = firstInWindowIdx > 0 ? firstInWindowIdx - 1 : 0;
-	const relevant = chronological.slice(startIdx);
-	if (relevant.length < 2) {
-		return { renameMap: new Map(), brokenAnchors: new Set(), finalAnchors: new Set() };
-	}
-
-	const anchorSnapshots = relevant.map((r) => extractAnchors(r.content));
-	const stepRenames: Array<Map<string, string>> = [];
-	const removedCandidates = new Set<string>();
-	for (let i = 1; i < anchorSnapshots.length; i++) {
-		const { renames, removed } = detectSectionChanges(anchorSnapshots[i - 1], anchorSnapshots[i]);
-		if (renames.size) {
-			stepRenames.push(renames);
-		}
-		for (const item of removed) {
-			removedCandidates.add(item);
-		}
-	}
-
-	const finalAnchors = anchorSnapshots[anchorSnapshots.length - 1].all;
-	const renameMap = buildRenameMap(stepRenames, finalAnchors);
-	const brokenAnchors = new Set(
-		[...removedCandidates].filter((a) => !finalAnchors.has(a) && !renameMap.has(a)),
-	);
-	return { renameMap, brokenAnchors, finalAnchors };
-}
-
-/**
- * Check if `content` still contains any link pointing to `targetTitle#targetAnchor`.
- *
- * @param {string} content
- * @param {string} targetTitle
- * @param {string} targetAnchor
- * @returns {boolean}
- */
 function pageHasLinkTo(content: string, targetTitle: string, targetAnchor: string): boolean {
 	const root = Parser.parse(content);
 	const normTarget = Parser.normalizeTitle(targetTitle).title;
 	const normAnchor = normalizeAnchor(targetAnchor);
-	return root.querySelectorAll('link').some((link) => {
-		if (!link.name || !link.fragment) {
-			return false;
-		}
-		return Parser.normalizeTitle(link.name).title === normTarget
-			&& normalizeAnchor(link.fragment) === normAnchor;
-	});
+	return root.querySelectorAll('link').some((link) => Boolean(
+		link.name && link.fragment
+		&& Parser.normalizeTitle(link.name).title === normTarget
+		&& normalizeAnchor(link.fragment) === normAnchor,
+	));
 }
 
-async function saveOrDeleteTalkPage(
-	api: MediaWikiApi,
-	talkTitle: string,
-	talkResult: { content: string; addedCount: number; removedCount: number; templateRemoved: boolean },
-	nocreate = false,
-): Promise<void> {
-	if (talkResult.templateRemoved && !talkResult.content.trim()) {
-		await api.postWithToken('csrf', {
-			action: 'delete',
-			title: talkTitle,
-			reason: '失效锚点已全部修复，移除{{Broken anchors}}后讨论页为空',
-			tags: 'Bot',
-			watchlist: 'nochange',
-		}, {
-			retry: 25,
-			noCache: true,
-		}).then(({ data: delRes }) => console.log(JSON.stringify(delRes)));
-		return;
-	}
-
-	const summary = talkResult.templateRemoved
-		? '失效锚点已全部修复，移除{{Broken anchors}}提醒'
-		: `更新{{Broken anchors}}提醒（新增${talkResult.addedCount}处，移除${talkResult.removedCount}处）`;
-
-	const editParams: MwApiParams = {
-		action: 'edit',
-		title: talkTitle,
-		text: talkResult.content,
-		summary,
-		bot: true,
-		minor: true,
-		tags: 'Bot',
-		watchlist: 'nochange',
-	};
-	if (nocreate) {
-		editParams.nocreate = true;
-	}
-
-	await api.postWithToken('csrf', editParams, {
-		retry: 25,
-		noCache: true,
-	}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
+interface ProcessCandidateOptions {
+	api: MediaWikiApi;
+	pageTitle: string;
+	targetTitle: string;
+	normalizedTarget: string;
+	targetTitles: Set<string>;
+	state: { renameMap: Map<string, string>; brokenAnchors: Set<string>; finalAnchors: Set<string> };
 }
 
-async function fetchPageContent(api: MediaWikiApi, title: string, redirects = false): Promise<string | undefined> {
-	const { data } = await api.post<{
-		query?: { pages?: Record<string, { revisions?: Array<{ content?: string }> }> };
-	}>({
-		prop: 'revisions',
-		titles: title,
-		rvprop: 'content',
-		...redirects && { redirects: true },
-	}, { retry: 15 });
-	return Object.values(data?.query?.pages || {})[0]?.revisions?.[0]?.content;
-}
-
-async function processCandidatePage(
-	api: MediaWikiApi,
-	pageTitle: string,
-	targetTitle: string,
-	normalizedTarget: string,
-	targetTitles: Set<string>,
-	{ renameMap, brokenAnchors, finalAnchors }: { renameMap: Map<string, string>; brokenAnchors: Set<string>; finalAnchors: Set<string> },
-): Promise<void> {
+async function processCandidatePage({
+	api,
+	pageTitle,
+	targetTitle,
+	normalizedTarget,
+	targetTitles,
+	state: { renameMap, brokenAnchors, finalAnchors },
+}: ProcessCandidateOptions): Promise<void> {
 	const content = await fetchPageContent(api, pageTitle);
 	if (!content || NOBOTS_REGEX.test(content.replace(/\s+/g, ''))) {
 		return;
@@ -215,21 +66,17 @@ async function processCandidatePage(
 	const latestContent = result.changed ? result.content : content;
 
 	if (result.changed) {
-		const summary = `修复指向[[${targetTitle}]]的失效章节锚点（${result.replacements.length}处）`;
 		await api.postWithToken('csrf', {
 			action: 'edit',
 			title: pageTitle,
 			text: latestContent,
-			summary,
+			summary: `修复指向[[${targetTitle}]]的失效章节锚点（${result.replacements.length}处）`,
 			bot: true,
 			minor: true,
 			nocreate: true,
 			tags: 'Bot',
 			watchlist: 'nochange',
-		}, {
-			retry: 25,
-			noCache: true,
-		}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
+		}, { retry: 25, noCache: true }).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
 	}
 
 	const remainingBroken = findBrokenAnchorLinks(latestContent, targetTitles, brokenAnchors, isSelf);
@@ -261,14 +108,21 @@ async function processTargetPage(
 	state: { renameMap: Map<string, string>; brokenAnchors: Set<string>; finalAnchors: Set<string> },
 ): Promise<void> {
 	const targetTitles = await getTargetTitleSet(api, targetTitle);
-	const backlinks = await getBacklinks(api, targetTitles);
+	const backlinks = await getBacklinks(api, targetTitles, TARGET_NAMESPACES);
 	const candidates = Array.from(new Set([targetTitle, ...backlinks]));
 	if (!candidates.length) {
 		return;
 	}
 
 	const normalizedTarget = Parser.normalizeTitle(targetTitle).title;
-	await mapLimit(candidates, 5, (pageTitle) => processCandidatePage(api, pageTitle, targetTitle, normalizedTarget, targetTitles, state));
+	await mapLimit(candidates, 5, (pageTitle) => processCandidatePage({
+		api,
+		pageTitle,
+		targetTitle,
+		normalizedTarget,
+		targetTitles,
+		state,
+	}));
 }
 
 async function sweepTalkPage(
@@ -291,9 +145,8 @@ async function sweepTalkPage(
 		return;
 	}
 
-	const rawLinks = tpl.getValue('links') || '';
 	const targetTitlesToFetch = new Set<string>();
-	for (const line of rawLinks.split(/\r?\n/)) {
+	for (const line of (tpl.getValue('links') || '').split(/\r?\n/)) {
 		const link = Parser.parse(line).querySelector('link');
 		if (link?.name) {
 			targetTitlesToFetch.add(Parser.normalizeTitle(link.name).title);
@@ -313,24 +166,15 @@ async function sweepTalkPage(
 	}
 }
 
-/**
- * Sweep talk pages currently transcluding `Template:Broken anchors` and prune/remove
- * entries whose links no longer exist on the subject page or whose target anchors now exist.
- */
 async function cleanupResolvedBrokenAnchors(api: MediaWikiApi): Promise<void> {
 	const talkPages: string[] = [];
-	for await (const data of paginate(api, {
-		list: 'embeddedin',
-		eititle: 'Template:Broken anchors',
-		eilimit: 'max',
-	})) {
+	for await (const data of paginate(api, { list: 'embeddedin', eititle: 'Template:Broken anchors', eilimit: 'max' })) {
 		for (const item of data?.query?.embeddedin || []) {
 			if (item.title && Parser.normalizeTitle(item.title).isTalkPage()) {
 				talkPages.push(item.title);
 			}
 		}
 	}
-
 	if (!talkPages.length) {
 		return;
 	}
@@ -361,13 +205,11 @@ async function cleanupResolvedBrokenAnchors(api: MediaWikiApi): Promise<void> {
 	const nowMs = Date.now();
 	const minSinceMs = nowMs - MAX_LOOKBACK_MS;
 	const lastMs = timeData[TIME_KEY] ? Date.parse(timeData[TIME_KEY]) : NaN;
-	const sinceIso = new Date(
-		Number.isFinite(lastMs) ? Math.max(lastMs, minSinceMs) : minSinceMs,
-	).toISOString();
+	const sinceIso = new Date(Number.isFinite(lastMs) ? Math.max(lastMs, minSinceMs) : minSinceMs).toISOString();
 	const nowIso = new Date(nowMs - 2 * 60 * 1000).toISOString();
 
 	const seen = new Set();
-	const targetPages = [];
+	const targetPages: string[] = [];
 	for await (const data of paginate(api, {
 		list: 'recentchanges',
 		rctype: 'edit',

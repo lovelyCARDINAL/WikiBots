@@ -151,7 +151,14 @@ async function runImproveReport({
 	console.log(`Start time: ${new Date().toISOString()}`);
 	const api = await createAndLogin('zh', 'ibot');
 	const overrideCategory = parseOverrideCategories(await readData('overrideCategory.json'));
-	const pages = await collectPages(api, queryParams);
+	const pages = await collectPages(api, {
+		prop: 'revisions|categories',
+		rvprop: 'content|timestamp|size',
+		rvsection: '0',
+		clshow: '!hidden',
+		cllimit: 'max',
+		...queryParams,
+	});
 	const text = buildImproveReport({
 		pages,
 		overrideCategory,

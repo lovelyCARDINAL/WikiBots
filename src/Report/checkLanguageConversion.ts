@@ -1,5 +1,4 @@
 import process from 'process';
-import type { MediaWikiApi, MwApiParams } from 'wiki-saikou';
 import Parser from 'wikiparser-node';
 import mapLimit from '../utils/common/concurrency.ts';
 import splitAndJoin from '../utils/common/splitAndJoin.ts';
@@ -13,12 +12,13 @@ import {
 	type ConversionPageMeta,
 	type QueryPage,
 } from '../utils/conversion/collect.ts';
+import { getGroupNameFromTitle, normalizeGroupName } from '../utils/conversion/index.ts';
 import {
-	normalizeGroupName,
-	getGroupNameFromTitle,
-	processNoteTAArticle,
-	updateInvalidCGroupTalkPage,
-} from '../utils/conversion/index.ts';
+	buildConversionListReport,
+	buildDuplicatedVocabReport,
+	processSingleNoteTAPage,
+	updateConversionReport,
+} from '../utils/conversion/report.ts';
 import { createAndLogin } from '../utils/core/createApi.ts';
 import paginate from '../utils/core/paginate.ts';
 import { withRetry } from '../utils/core/retry.ts';
@@ -29,113 +29,7 @@ const MAIN_CATEGORY = 'Category:公共转换组模块';
 const CONVERSION_LIST_PAGE = '萌娘百科:字词转换处理报告/各页面包含字词';
 const DUPLICATED_REPORT_PAGE = '萌娘百科:字词转换处理报告/重复字词报告';
 const UNREGISTERED_TEMPLATE = 'Template:Invalid CGroup';
-const TAGS = 'Bot';
-const MAX_VOCAB_LIST = 500;
 const TOUCHED_LOOKBACK_MS = 14 * 24 * 60 * 60 * 1000;
-const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-interfacebot|all)))\}\}/;
-
-function editWithRetry(api: MediaWikiApi, params: MwApiParams) {
-	return withRetry(async () => {
-		const res = await api.postWithToken<{ edit?: { result?: string } }>('csrf', params, { retry: 25, noCache: true });
-		if (res?.data?.edit?.result && res.data.edit.result !== 'Success') {
-			throw new Error(`Edit failed: ${JSON.stringify(res.data)}`);
-		}
-		return res;
-	}, 25, 'api.postWithToken(edit)');
-}
-
-async function updateReport(
-	api: MediaWikiApi,
-	title: string,
-	reportWikitext: string,
-	introduction: string,
-	summary: string,
-): Promise<void> {
-	const text = `__NOCONTENTCONVERT__
-* 本页面为[[U:星海-interfacebot|机器人]]生成的${introduction}
-* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}
-
--{
-${reportWikitext}
-}-
-
-[[Category:萌娘百科数据报告]]`;
-
-	await editWithRetry(api, {
-		action: 'edit',
-		title,
-		text,
-		summary,
-		bot: true,
-		nocreate: true,
-		tags: TAGS,
-		watchlist: 'nochange',
-	}).then(({ data }) => console.log(JSON.stringify(data)));
-}
-
-async function processSingleNoteTAPage(
-	api: MediaWikiApi,
-	page: QueryPage,
-	groupRules: Record<string, string[]>,
-	groupAlias: Record<string, string>,
-	invalidTalkPages: Set<string>,
-): Promise<void> {
-	const pageTitle = page.title;
-	const content = page?.revisions?.[0]?.content;
-	if (!pageTitle || !content || NOBOTS_REGEX.test(content.replace(/\s+/g, ''))) {
-		return;
-	}
-
-	const result = processNoteTAArticle(content, { groupRules, groupAlias });
-	if (result.changed) {
-		await editWithRetry(api, {
-			action: 'edit',
-			title: pageTitle,
-			text: result.content,
-			summary: result.summaryParts.join('；'),
-			bot: true,
-			minor: true,
-			nocreate: true,
-			tags: TAGS,
-			watchlist: 'nochange',
-		}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
-	}
-
-	const talkTitle = Parser.normalizeTitle(pageTitle).toTalkPage().title;
-	if (!result.unregisteredGroups.length && !invalidTalkPages.has(talkTitle)) {
-		return;
-	}
-
-	const { data: talkData } = await withRetry(() => api.post<{
-		query?: { pages?: Record<string, QueryPage> };
-	}>({
-		prop: 'revisions',
-		titles: talkTitle,
-		rvprop: 'content',
-	}, { retry: 25 }), 25, 'api.post(revisions)');
-	const talkContent = Object.values(talkData?.query?.pages || {})[0]?.revisions?.[0]?.content || '';
-	if (!talkContent && !result.unregisteredGroups.length) {
-		return;
-	}
-
-	const talkRes = updateInvalidCGroupTalkPage(talkContent, result.unregisteredGroups);
-	if (!talkRes.changed) {
-		return;
-	}
-
-	await editWithRetry(api, {
-		action: 'edit',
-		title: talkTitle,
-		text: talkRes.content,
-		summary: talkRes.removed
-			? `移除${UNREGISTERED_TEMPLATE}`
-			: `标记未登记的公共转换组：${result.unregisteredGroups.join('、')}`,
-		bot: true,
-		minor: true,
-		tags: TAGS,
-		watchlist: 'nochange',
-	}).then(({ data: editRes }) => console.log(JSON.stringify(editRes)));
-}
 
 (async () => {
 	console.log(`Start time: ${new Date().toISOString()}`);
@@ -180,55 +74,14 @@ async function processSingleNoteTAPage(
 		}
 	}
 
-	const listRows = Object.entries(conversionOfPage)
-		.sort(([a], [b]) => a.localeCompare(b))
-		.map(([title, info]) => {
-			const count = info.vocabularies.length;
-			const statusPrefix = info.error
-				? `<span style="color:red">'''${info.error}'''</span>`
-				: info.redirectTo
-					? `Redirect to → [[${info.redirectTo}]]${count > 0 ? '\n\n' : ''}`
-					: info.transclusions.length
-						? `嵌入转换组 ${info.transclusions.join(', ')} `
-						: '';
-			const detail = count > MAX_VOCAB_LIST
-				? '<span style="color:#F61">\'\'\'字词过多，割爱\'\'\'</span>'
-				: info.vocabularies.join('; ');
-			return `|-\n| [[${title}]] || ${count || !info.error && !info.redirectTo ? count : ''} || data-sort-value="${count}"|${statusPrefix}${detail}`;
-		});
-	const overLimitCount = Object.values(conversionOfPage).filter((i) => i.vocabularies.length > MAX_VOCAB_LIST).length;
-	await updateReport(
-		api,
-		CONVERSION_LIST_PAGE,
-		`{| class="wikitable sortable"\n|-\n! 公共转换组页面 !! # !! 定义的词汇\n${listRows.join('\n')}\n|}`,
-		`公共转换组各页面包含字词：总计 ${listRows.length} 个公共转换组页面。${overLimitCount > 0 ? `其中 ${overLimitCount} 个公共转换组字词过多，割爱。` : ''}`,
-		`${listRows.length}个公共转换组页面`,
-	);
+	const listReport = buildConversionListReport(conversionOfPage);
+	await updateConversionReport(api, CONVERSION_LIST_PAGE, listReport.wikitext, listReport.introduction, listReport.summary);
 
-	const dupRows: Array<[string, string]> = [];
-	for (const [vocab, owners] of vocabOwners) {
-		if (owners.size > 1) {
-			const pagesList = [...owners].sort().map((p) => `[[${p}]]`);
-			dupRows.push([vocab, `|-\n| ${vocab} || data-sort-value="${pagesList.length}"|${pagesList.length}: ${pagesList.join(', ')}`]);
-		}
-	}
-	dupRows.sort(([a], [b]) => a.localeCompare(b));
-	await updateReport(
-		api,
-		DUPLICATED_REPORT_PAGE,
-		dupRows.length
-			? `{| class="wikitable sortable"\n|-\n! 重复出现的词汇 !! 定义于公共转换组页面\n${dupRows.map(([, row]) => row).join('\n')}\n|}`
-			: "* '''太好了！无重复词汇。'''",
-		`出现在多个不同公共转换组中的词汇：总计 ${dupRows.length} 个词汇。`,
-		`${dupRows.length}个重复词汇`,
-	);
+	const dupReport = buildDuplicatedVocabReport(vocabOwners);
+	await updateConversionReport(api, DUPLICATED_REPORT_PAGE, dupReport.wikitext, dupReport.introduction, dupReport.summary);
 
 	const invalidTalkPages = new Set<string>();
-	for await (const data of paginate(api, {
-		list: 'embeddedin',
-		eititle: UNREGISTERED_TEMPLATE,
-		eilimit: 'max',
-	})) {
+	for await (const data of paginate(api, { list: 'embeddedin', eititle: UNREGISTERED_TEMPLATE, eilimit: 'max' })) {
 		for (const item of data?.query?.embeddedin || []) {
 			if (item.title && Parser.normalizeTitle(item.title).isTalkPage()) {
 				invalidTalkPages.add(Parser.normalizeTitle(item.title).title);
@@ -237,12 +90,7 @@ async function processSingleNoteTAPage(
 	}
 
 	const noteTAPages: string[] = [];
-	for await (const data of paginate(api, {
-		list: 'embeddedin',
-		eititle: 'Template:NoteTA',
-		einamespace: '0',
-		eilimit: 'max',
-	})) {
+	for await (const data of paginate(api, { list: 'embeddedin', eititle: 'Template:NoteTA', einamespace: '0', eilimit: 'max' })) {
 		for (const item of data?.query?.embeddedin || []) {
 			if (item.title) {
 				noteTAPages.push(item.title);
