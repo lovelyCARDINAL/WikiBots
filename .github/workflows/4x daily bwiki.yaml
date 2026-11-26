@@ -1,5 +1,5 @@
 name: "[daily] 4x bwiki"
-# valorant/userpageDelete.js
+# valorant/userpageDelete.ts
 
 on:
   schedule:
@@ -37,4 +37,4 @@ jobs:
       - name: Run Script
         env:
           BWIKI_VALORANT_BOT: ${{ secrets.BWIKI_VALORANT_BOT }}
-        run: npm start src_bwiki/valorant/userpageDelete.js
+        run: npm start src_bwiki/valorant/userpageDelete.ts

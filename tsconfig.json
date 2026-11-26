@@ -16,6 +16,6 @@
 		"skipLibCheck": true,
 		"types": ["node"]
 	},
-	"include": ["eslint.config.ts", "src/**/*.ts", "src/**/*.js"],
+	"include": ["eslint.config.ts", "src/**/*.ts", "src/**/*.js", "src_bwiki/**/*.ts"],
 	"exclude": ["node_modules", "src/test"]
 }

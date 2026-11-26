@@ -8,8 +8,8 @@
     "start": "node --import ./src/utils/core/colorConsole.ts --tls-cipher-list=DEFAULT@SECLEVEL=1",
     "test": "npm start ./src/Personal/test.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint --flag unstable_native_nodejs_ts_config src --exit-on-fatal-error --max-warnings 0",
-    "format": "eslint --flag unstable_native_nodejs_ts_config src --fix"
+    "lint": "eslint --flag unstable_native_nodejs_ts_config src src_bwiki --exit-on-fatal-error --max-warnings 0",
+    "format": "eslint --flag unstable_native_nodejs_ts_config src src_bwiki --fix"
   },
   "author": "hoshimi",
   "license": "MIT",
