@@ -16,6 +16,15 @@ interface ReportPage {
 	}>;
 }
 
+interface ParsedReportPage {
+	pageid?: number;
+	title: string;
+	categories: Set<string>;
+	timestamp?: string;
+	size?: number;
+	reason?: string;
+}
+
 /**
  * Load flattened override categories from raw JSON content of data/overrideCategory.json.
  */
@@ -24,84 +33,87 @@ function parseOverrideCategories(raw: string): string[] {
 	return [...data.page, ...data.temp, ...data.cat];
 }
 
+function parseTemplateReason(content: string, templateSelector: string, emptyReason: string): string {
+	const wikitext = Parser.parse(content.replaceAll('\n', ''));
+	const value = wikitext.querySelector<Parser.TranscludeToken>(templateSelector)?.getValue() as Record<string, string | undefined> | undefined
+		|| { 0: 'data-sort-value="*" | <i style="color:red;">找不到目标模板</i>' };
+	return Object.keys(value)
+		.filter((key) => !Number.isNaN(Number(key)) && value[key]?.trim())
+		.map((key) => value[key]?.trim())
+		.join(' • ')
+		|| emptyReason;
+}
+
 /**
- * Merge a single API page batch entry into the accumulator map.
+ * Merge a single API page batch entry into the accumulator map, parsing and discarding `content` immediately.
  */
-function mergePageIntoMap(pageMap: Map<string | number, ReportPage>, page: ReportPage): void {
+function mergePageIntoMap(
+	pageMap: Map<string | number, ParsedReportPage>,
+	page: ReportPage,
+	overrideSet: Set<string>,
+	parseReason: (content: string) => string,
+): void {
 	const key = page.pageid ?? page.title;
-	const existing = pageMap.get(key);
-	if (!existing) {
-		pageMap.set(key, {
-			...page,
-			categories: page.categories ? [...page.categories] : undefined,
-		});
-		return;
+	let entry = pageMap.get(key);
+	if (!entry) {
+		entry = {
+			pageid: page.pageid,
+			title: page.title,
+			categories: new Set<string>(),
+		};
+		pageMap.set(key, entry);
 	}
-	if (!existing.revisions && page.revisions) {
-		existing.revisions = page.revisions;
+	if (entry.timestamp === undefined && page.revisions?.[0]) {
+		const { timestamp, content = '', size } = page.revisions[0];
+		entry.timestamp = timestamp;
+		entry.size = size;
+		entry.reason = parseReason(content);
 	}
-	if (page.categories?.length) {
-		existing.categories = [...existing.categories || [], ...page.categories];
+	for (const { title: catTitle } of page.categories || []) {
+		if (!overrideSet.has(catTitle)) {
+			entry.categories.add(catTitle);
+		}
 	}
 }
 
 /**
- * Collect and merge paginated generator pages by pageid/title so multi-batch
- * `clcontinue` responses neither duplicate rows nor drop categories.
+ * Collect and merge paginated generator pages by pageid/title, parsing and dropping `content` per batch.
  */
-async function collectPages(api: MediaWikiApi, params: MwApiParams): Promise<ReportPage[]> {
-	const pageMap = new Map<string | number, ReportPage>();
+async function collectPages(
+	api: MediaWikiApi,
+	params: MwApiParams,
+	overrideSet: Set<string>,
+	parseReason: (content: string) => string,
+): Promise<ParsedReportPage[]> {
+	const pageMap = new Map<string | number, ParsedReportPage>();
 	for await (const data of paginate<{ query?: { pages?: Record<string, ReportPage> } }>(api, params)) {
 		for (const page of Object.values(data?.query?.pages || {})) {
-			mergePageIntoMap(pageMap, page);
+			mergePageIntoMap(pageMap, page, overrideSet, parseReason);
 		}
 	}
-	return [...pageMap.values()].filter((page) => page.revisions?.length);
+	return [...pageMap.values()].filter((page) => page.timestamp !== undefined);
 }
 
 interface BuildImproveReportOptions {
-	pages: ReportPage[];
-	overrideCategory: string[];
+	pages: ParsedReportPage[];
 	header: string;
-	templateSelector: string;
-	emptyReason: string;
 }
 
 /**
  * Build a sortable wikitable report for pages with improvement templates.
  */
-function buildImproveReport({
-	pages,
-	overrideCategory,
-	header,
-	templateSelector,
-	emptyReason,
-}: BuildImproveReportOptions): string {
+function buildImproveReport({ pages, header }: BuildImproveReportOptions): string {
 	let text = `${header}\n\n{| class="wikitable sortable" width=100%\n|-\n! 序号 || 条目名 || 改进方向 || style="width:30%"|部分所属分类 || style="min-width:50px"|代码长度 || style="min-width:80px"|最后版本\n`;
 	let count = 1;
 	for (const page of pages) {
-		const rev = page.revisions?.[0];
-		if (!rev) {
+		if (page.timestamp === undefined || page.size === undefined || page.reason === undefined) {
 			continue;
 		}
-		const { title, categories } = page;
-		const { timestamp, content = '', size } = rev;
-		const category = categories
-			?.map(({ title: catTitle }) => catTitle)
-			.filter((catTitle) => !overrideCategory.includes(catTitle))
-			.map((catTitle) => `[[:${catTitle}]]`)
-			.join('，')
-			|| 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
-		const wikitext = Parser.parse(content.replaceAll('\n', ''));
-		const value = wikitext.querySelector<Parser.TranscludeToken>(templateSelector)?.getValue() as Record<string, string | undefined> | undefined
-			|| { 0: 'data-sort-value="*" | <i style="color:red;">找不到目标模板</i>' };
-		const reason = Object.keys(value)
-			.filter((key) => !Number.isNaN(Number(key)) && value[key]?.trim())
-			.map((key) => value[key]?.trim())
-			.join(' • ')
-			|| emptyReason;
-		const time = `${moment(timestamp).utcOffset('+08:00').format('YYYY-MM-DD HH:mm')} (CST)`;
-		text += `|-\n| ${count} || [[${title}]] || ${reason} || ${category} || ${size} || ${time}\n`;
+		const category = page.categories.size
+			? [...page.categories].map((catTitle) => `[[:${catTitle}]]`).join('，')
+			: 'data-sort-value="*" | <i style="color:red;">无分类！</i>';
+		const time = `${moment(page.timestamp).utcOffset('+08:00').format('YYYY-MM-DD HH:mm')} (CST)`;
+		text += `|-\n| ${count} || [[${page.title}]] || ${page.reason} || ${category} || ${page.size} || ${time}\n`;
 		count++;
 	}
 	return `${text}|}\n\n[[Category:萌娘百科数据报告]][[Category:积压工作]]`;
@@ -150,22 +162,21 @@ async function runImproveReport({
 }: RunImproveReportOptions): Promise<void> {
 	console.log(`Start time: ${new Date().toISOString()}`);
 	const api = await createAndLogin('zh', 'ibot');
-	const overrideCategory = parseOverrideCategories(await readData('overrideCategory.json'));
-	const pages = await collectPages(api, {
-		prop: 'revisions|categories',
-		rvprop: 'content|timestamp|size',
-		rvsection: '0',
-		clshow: '!hidden',
-		cllimit: 'max',
-		...queryParams,
-	});
-	const text = buildImproveReport({
-		pages,
-		overrideCategory,
-		header,
-		templateSelector,
-		emptyReason,
-	});
+	const overrideSet = new Set(parseOverrideCategories(await readData('overrideCategory.json')));
+	const pages = await collectPages(
+		api,
+		{
+			prop: 'revisions|categories',
+			rvprop: 'content|timestamp|size',
+			rvsection: '0',
+			clshow: '!hidden',
+			cllimit: 'max',
+			...queryParams,
+		},
+		overrideSet,
+		(content) => parseTemplateReason(content, templateSelector, emptyReason),
+	);
+	const text = buildImproveReport({ pages, header });
 	await publishReport(api, targetPageId, text);
 	console.log(`End time: ${new Date().toISOString()}`);
 }
