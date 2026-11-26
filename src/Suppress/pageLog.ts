@@ -1,6 +1,7 @@
 import process from 'process';
 import { MediaWikiApi } from 'wiki-saikou';
 import { getTimeData, editTimeData } from '../utils/common/lastTime.ts';
+import logger, { c } from '../utils/common/logger.ts';
 import clientLogin from '../utils/core/clientLogin.ts';
 import config from '../utils/core/config.ts';
 import paginate from '../utils/core/paginate.ts';
@@ -14,7 +15,7 @@ const api = new MediaWikiApi({
 });
 
 (async () => {
-	console.log(`Start time: ${new Date().toISOString()}`);
+	logger.start('hide-page-log');
 
 	await clientLogin(api, config.zh.sbot.account, config.password);
 
@@ -25,7 +26,7 @@ const api = new MediaWikiApi({
 	let retry = 0;
 	let remainingIds = 0;
 	while (retry < 30) {
-		console.groupCollapsed(`Retry: ${retry}`);
+		logger.group(`Retry: ${retry}`);
 		const titles = await (async () => {
 			const result = [];
 			for await (const data of paginate(api, {
@@ -42,7 +43,7 @@ const api = new MediaWikiApi({
 			}
 			return [...new Set(result.map(({ title, comment }) => comment !== '被隐藏的用户' && title).filter(Boolean))];
 		})();
-		console.log(`titles: ${titles.length}`);
+		logger.info(`titles: ${c.num(titles.length)}`);
 
 		const ids = await Promise.all(titles.map(async (title) => {
 			const result: Array<{ id: number; hidden?: boolean }> = [];
@@ -59,25 +60,25 @@ const api = new MediaWikiApi({
 			return result.filter(({ hidden }) => !hidden).map(({ id }) => id);
 		})).then((result) => result.flat());
 
-		console.log(`ids: ${ids.length}`);
+		logger.info(`ids: ${c.num(ids.length)}`);
 		remainingIds = ids.length;
 		if (!ids.length) {
-			console.groupEnd();
+			logger.groupEnd();
 			break;
 		}
 
 		await hideAbuseLogIds(api, ids, '被隐藏的页面');
-		console.groupEnd();
+		logger.groupEnd();
 
 		retry++;
 	}
 
 	if (remainingIds > 0) {
-		console.error(`Failed to hide ${remainingIds} abuse log(s) after ${retry} retries.`);
+		logger.error(`Failed to hide ${remainingIds} abuse log(s) after ${retry} retries.`);
 		process.exitCode = 1;
 	} else {
 		await editTimeData(lastTime, 'hide-page-log', lestart);
 	}
 
-	console.log(`End time: ${new Date().toISOString()}`);
+	logger.end('hide-page-log');
 })();

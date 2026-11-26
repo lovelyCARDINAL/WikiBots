@@ -1,5 +1,6 @@
 import { load } from 'cheerio';
 import type { MediaWikiApi } from 'wiki-saikou';
+import logger, { c } from '../common/logger.ts';
 import config from '../core/config.ts';
 import paginate from '../core/paginate.ts';
 
@@ -104,9 +105,9 @@ export const hideAbuseLogIds = async (api: MediaWikiApi, ids: number[], reason: 
 		const successMsg = $('.cdx-message--success, .mw-message-box-success, .successbox').text().trim();
 		const errorMsg = $('.cdx-message--error, .mw-message-box-error, .errorbox, .error').text().trim();
 		if (successMsg) {
-			console.log(`Hid ${chunk.length} abuse log(s) [${chunk.join(', ')}]: ${successMsg}`);
+			logger.success(`Hid ${c.num(chunk.length)} abuse log(s) [${chunk.map((id) => c.id(id)).join(', ')}]: ${successMsg}`);
 		} else {
-			console.warn(`Unexpected response hiding [${chunk.join(', ')}] (HTTP ${status}, title="${pageTitle}"): ${errorMsg || 'no success message'}`);
+			logger.warn(`Unexpected response hiding [${chunk.map((id) => c.id(id)).join(', ')}] (HTTP ${status}, title="${pageTitle}"): ${errorMsg || 'no success message'}`);
 		}
 	}
 };
@@ -129,7 +130,7 @@ export const hideAbuseLog = async (zhapi: MediaWikiApi, afluser: string): Promis
 		if (!ids.length) {
 			break;
 		}
-		console.log(`Retry: ${retry}, ids: ${ids.length}`);
+		logger.info(`Retry: ${c.num(retry)}, ids: ${c.num(ids.length)}`);
 
 		await hideAbuseLogIds(zhapi, ids, '被隐藏的用户');
 

@@ -2,6 +2,7 @@ import { Buffer } from 'buffer';
 import process from 'process';
 import { Octokit } from '@octokit/core';
 import { load, dump } from 'js-yaml';
+import logger, { c } from './logger.ts';
 
 const octokit = new Octokit({
 	auth: process.env.GITHUB_TOKEN,
@@ -61,19 +62,19 @@ async function editTimeData(
 					content: Buffer.from(content, 'utf-8').toString('base64'),
 					sha: fileObj.sha,
 				});
-				console.log('SUCCESS!');
+				logger.success(`Updated ${c.cyan(TIME_PATH)} (${c.yellowBright(type)} = ${c.greenBright(value)})`);
 				return;
 			} catch (err: unknown) {
 				const status = (err as { status?: number } | undefined)?.status;
 				if (status === 409 && attempt < maxRetries) {
-					console.warn(`Conflict updating ${TIME_PATH} (attempt ${attempt}/${maxRetries}), retrying...`);
+					logger.warn(`Conflict updating ${TIME_PATH} (attempt ${attempt}/${maxRetries}), retrying...`);
 					continue;
 				}
 				throw err;
 			}
 		}
 	} catch (err) {
-		console.error(err);
+		logger.error(`Failed to update ${TIME_PATH}`, err);
 		process.exit(1);
 	}
 }

@@ -20,6 +20,7 @@ import {
 } from '../utils/anchor/wiki.ts';
 import mapLimit from '../utils/common/concurrency.ts';
 import { editTimeData, getTimeData } from '../utils/common/lastTime.ts';
+import logger, { c } from '../utils/common/logger.ts';
 import { createAndLogin } from '../utils/core/createApi.ts';
 import paginate from '../utils/core/paginate.ts';
 
@@ -202,7 +203,7 @@ async function cleanupResolvedBrokenAnchors(api: MediaWikiApi): Promise<void> {
 }
 
 (async () => {
-	console.log(`Start time: ${new Date().toISOString()}`);
+	logger.start('fix-anchor');
 
 	const api = await createAndLogin('zh', 'abot');
 	const botConfig = await loadFixAnchorConfig(api);
@@ -235,7 +236,7 @@ async function cleanupResolvedBrokenAnchors(api: MediaWikiApi): Promise<void> {
 		}
 	}
 
-	console.log(`Checking ${targetPages.length} page(s) since ${sinceIso}...`);
+	logger.step(`Checking ${c.num(targetPages.length)} page(s) since ${c.cyan(sinceIso)}...`);
 
 	await mapLimit(targetPages, 3, async (targetTitle) => {
 		try {
@@ -243,25 +244,25 @@ async function cleanupResolvedBrokenAnchors(api: MediaWikiApi): Promise<void> {
 			if (!state.renameMap.size && !state.brokenAnchors.size) {
 				return;
 			}
-			console.log(`Detected anchor changes on [[${targetTitle}]]:`, {
+			logger.info(`Detected anchor changes on ${c.page(targetTitle)}:`, {
 				renames: Object.fromEntries(state.renameMap),
 				removed: Object.fromEntries(state.brokenAnchors),
 			});
 			await processTargetPage(api, targetTitle, state);
 		} catch (err) {
-			console.error(`Error processing [[${targetTitle}]]:`, err instanceof Error ? err.message : String(err));
+			logger.error(`Error processing ${c.page(targetTitle)}:`, err instanceof Error ? err.message : String(err));
 			process.exitCode = 1;
 		}
 	});
 
-	console.log('Sweeping Template:Broken anchors...');
+	logger.step('Sweeping {{Broken anchors}}...');
 	await cleanupResolvedBrokenAnchors(api);
 
-	console.log(`Updating data/time.yaml (${TIME_KEY} = ${nowIso})...`);
+	logger.step(`Updating data/time.yaml (${c.yellowBright(TIME_KEY)} = ${c.greenBright(nowIso)})...`);
 	await editTimeData(timeData, TIME_KEY, nowIso);
 
-	console.log(`End time: ${new Date().toISOString()}`);
+	logger.end('fix-anchor');
 })().catch((err) => {
-	console.error(err);
+	logger.error('Unhandled error in fix-anchor', err);
 	process.exit(1);
 });
