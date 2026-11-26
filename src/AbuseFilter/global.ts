@@ -1,4 +1,3 @@
-import process from 'process';
 import moment from 'moment';
 import { MediaWikiApi } from 'wiki-saikou';
 import type { MwQueryResponse } from '../types/mediawiki.d.ts';
@@ -74,40 +73,40 @@ async function getAbuseFilter(api: MediaWikiApi): Promise<AbuseFilterEntry[]> {
 
 	let e = 0;
 	await Promise.all(SITE_LIST.map(async (site) => {
-		const api = new MediaWikiApi({
-			baseURL: config[site].api,
-			fexiosConfigs: {
-				headers: { 'user-agent': config.useragent },
-			},
-		});
-		await clientLogin(api, config[site].abot.account, config.password);
-
-		const ids = new Set(
-			Object.entries(setData)
-				.filter(([, data]) => Object.hasOwn(data, site))
-				.map(([, data]) => data[site]),
-		);
-		
-		const data = await (async () => {
-			const origin = await getAbuseFilter(api);
-			const result: Array<[number, string]> = [];
-			const idToKeyMap = new Map(Object.entries(setData).map(([key, value]) => [value[site], key]));
-
-			for (const { id, lastedittime } of origin) {
-				if (!ids.has(id)) {
-					continue;
-				}
-				const key = idToKeyMap.get(id);
-				if (!key || moment(lastedittime).isAfter(zhData[key].lastedittime)) {
-					console.log(`Don't need to update ${site} abuse filter ${id}.`);
-					continue;
-				}
-				result.push([id, zhData[key].pattern]);
-			}
-			return result;
-		})();
-
 		try {
+			const api = new MediaWikiApi({
+				baseURL: config[site].api,
+				fexiosConfigs: {
+					headers: { 'user-agent': config.useragent },
+				},
+			});
+			await clientLogin(api, config[site].abot.account, config.password);
+
+			const ids = new Set(
+				Object.entries(setData)
+					.filter(([, data]) => Object.hasOwn(data, site))
+					.map(([, data]) => data[site]),
+			);
+			
+			const data = await (async () => {
+				const origin = await getAbuseFilter(api);
+				const result: Array<[number, string]> = [];
+				const idToKeyMap = new Map(Object.entries(setData).map(([key, value]) => [value[site], key]));
+
+				for (const { id, lastedittime } of origin) {
+					if (!ids.has(id)) {
+						continue;
+					}
+					const key = idToKeyMap.get(id);
+					if (!key || moment(lastedittime).isAfter(zhData[key].lastedittime)) {
+						console.log(`Don't need to update ${site} abuse filter ${id}.`);
+						continue;
+					}
+					result.push([id, zhData[key].pattern]);
+				}
+				return result;
+			})();
+
 			await Promise.all(data.map(async ([id, pattern]) => {
 				const { formSnippet, action } = await getAbuseFilterDetails(api, id);
 				formSnippet.wpFilterRules = pattern;
@@ -126,8 +125,7 @@ async function getAbuseFilter(api: MediaWikiApi): Promise<AbuseFilterEntry[]> {
 		}
 	}));
 	if (e) {
-		console.log(`${e} error(s) occurred!`);
-		process.exit(1);
+		console.log(`${e} error(s) occurred (ignored for ${SITE_LIST.join(', ')}).`);
 	}
 
 	console.log(`End time: ${new Date().toISOString()}`);

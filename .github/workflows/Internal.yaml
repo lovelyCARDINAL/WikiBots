@@ -21,6 +21,8 @@ permissions:
 
 jobs:
   override-category:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'schedule' ||

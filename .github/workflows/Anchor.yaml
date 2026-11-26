@@ -25,6 +25,8 @@ permissions:
 
 jobs:
   fix-anchor:
+    permissions:
+      contents: write
     if: |
       github.event.schedule == '35 3 * * *' ||
       github.event.inputs.task == 'fix-anchor'

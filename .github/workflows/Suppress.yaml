@@ -26,6 +26,8 @@ permissions:
 
 jobs:
   page-log:
+    permissions:
+      contents: write
     if: |
       github.event.schedule == '35 8 * * 1,5' || 
       github.event.inputs.task == 'page-log'
@@ -46,6 +48,8 @@ jobs:
         run: npm start src/Suppress/pageLog.ts
 
   user-log:
+    permissions:
+      contents: write
     if: |
       github.event.schedule == '35 8 * * 3,0' || 
       github.event.inputs.task == 'user-log'

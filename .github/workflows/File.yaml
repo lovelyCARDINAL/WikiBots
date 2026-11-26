@@ -23,6 +23,8 @@ permissions:
 
 jobs:
   revision-deletion:
+    permissions:
+      contents: write
     if: |
       github.event_name == 'schedule' || 
       github.event.inputs.task == 'revision-deletion'

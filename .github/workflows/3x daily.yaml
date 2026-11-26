@@ -50,6 +50,8 @@ jobs:
         run: npm start src/Category/nulledit.ts
 
   file-info:
+    permissions:
+      contents: write
     if: |
       github.event_name == 'schedule' ||
       github.event.inputs.task == 'file-info'

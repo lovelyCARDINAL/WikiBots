@@ -86,6 +86,8 @@ jobs:
         run: npm start src/Report/badFileName.ts
 
   broken-file-links:
+    permissions:
+      contents: write
     needs: short-pages
     if: |
       !cancelled() && (
