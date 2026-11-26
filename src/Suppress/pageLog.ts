@@ -70,6 +70,8 @@ const api = new MediaWikiApi({
 				wpreason: '被隐藏的页面',
 				wphidden: true,
 				wpEditToken: await api.token('csrf'),
+			}, {
+				headers: { 'user-agent': config.indexUseragent },
 			}).then(() => console.log(`Try to hide ${id}`));
 		}));
 		console.groupEnd();

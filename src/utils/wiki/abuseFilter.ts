@@ -1,5 +1,6 @@
 import { load } from 'cheerio';
 import type { MediaWikiApi } from 'wiki-saikou';
+import config from '../core/config.ts';
 
 export interface AbuseFilterFormDetails {
 	formSnippet: Record<string, unknown>;
@@ -14,6 +15,7 @@ export async function getAbuseFilterDetails(api: MediaWikiApi, id: number): Prom
 		query: {
 			title: `Special:AbuseFilter/${id}`,
 		},
+		headers: { 'user-agent': config.indexUseragent },
 	});
 	const $raw = load(data);
 	const $form = $raw('#mw-content-text > form');

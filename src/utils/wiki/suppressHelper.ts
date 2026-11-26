@@ -1,5 +1,6 @@
 import { load } from 'cheerio';
 import type { MediaWikiApi } from 'wiki-saikou';
+import config from '../core/config.ts';
 import paginate from '../core/paginate.ts';
 
 export const queryLogs = async (api: MediaWikiApi, leaction: string, leend: string, lestart?: string): Promise<Array<number | string>> => {
@@ -34,6 +35,7 @@ const queryPages = async (zhapi: MediaWikiApi, apprefix: string, apnamespace: st
 const tryDeleteUserPage = async (zhapi: MediaWikiApi, title: string): Promise<boolean> => {
 	const { response: { data: htmlString } } = await zhapi.request.get('/index.php', {
 		query: { title, action: 'delete' },
+		headers: { 'user-agent': config.indexUseragent },
 	});
 	if (htmlString.includes('<title>无法删除页面')) {
 		console.warn('The page could not be deleted. It may have already been deleted by someone else.');
@@ -52,6 +54,8 @@ const tryDeleteUserPage = async (zhapi: MediaWikiApi, title: string): Promise<bo
 		wpSuppress: '',
 		wpConfirmB: '删除页面',
 		wpEditToken,
+	}, {
+		headers: { 'user-agent': config.indexUseragent },
 	});
 	if (!data.includes('<title>操作完成')) {
 		return false;
@@ -104,6 +108,8 @@ export const hideAbuseLog = async (zhapi: MediaWikiApi, afluser: string): Promis
 				wpreason: '被隐藏的用户',
 				wphidden: true,
 				wpEditToken: await zhapi.token('csrf'),
+			}, {
+				headers: { 'user-agent': config.indexUseragent },
 			}).then(() => console.log(`Try to hide ${id}`));
 		}));
 

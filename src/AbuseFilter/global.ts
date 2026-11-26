@@ -114,7 +114,10 @@ async function getAbuseFilter(api: MediaWikiApi): Promise<AbuseFilterEntry[]> {
 					throw new Error(`Missing form action for ${site} abuse filter ${id}`);
 				}
 				await api.request
-					.post(action, formSnippet, { retry: 50 })
+					.post(action, formSnippet, {
+						retry: 50,
+						headers: { 'user-agent': config.indexUseragent },
+					})
 					.then(() => console.log(`Try to update ${site} abuse filter ${id}!`));
 			}));
 		} catch (error) {

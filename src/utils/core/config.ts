@@ -26,8 +26,12 @@ function createSiteBotConfig(api: string, prefix: 'ZH' | 'CM') {
 	};
 }
 
+const useragent = `${env.MOEGIRL_API_USER_AGENT || 'Hoshimi-bot'} (GithubActions; Hoshimi-bot) `;
+const indexUseragent = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 ${useragent}`.trim();
+
 const config = {
-	useragent: `${env.MOEGIRL_API_USER_AGENT || 'Hoshimi-bot'} (GithubActions; Hoshimi-bot) `, // for WAF
+	useragent, // for WAF
+	indexUseragent,
 	password: env.MOEGIRL_PASSWORD ?? '', // for clientLogin
 	zh: createSiteBotConfig('https://mzh.moegirl.org.cn/api.php', 'ZH'),
 	cm: createSiteBotConfig('https://commons.moegirl.org.cn/api.php', 'CM'),

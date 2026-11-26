@@ -45,7 +45,9 @@ async function getAbuseFilter(id: number) {
 	
 	try {
 		await api.request
-			.post(action, formSnippet)
+			.post(action, formSnippet, {
+				headers: { 'user-agent': config.indexUseragent },
+			})
 			.then(() => console.log('Try to update AbuseFilter 18!'));
 	} catch (error) {
 		console.error('Failed to update AbuseFilter 18!');
