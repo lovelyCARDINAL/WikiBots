@@ -6,28 +6,66 @@ const INSTALLED_KEY = Symbol.for('wikibots.colorConsole');
 
 type GlobalWithColorFlag = typeof globalThis & { [INSTALLED_KEY]?: boolean };
 
+const HIGHLIGHT_RE = /(\[\[[^[\]]+\]\])|(\{\{[^{}]+\}\})|(\d{4}-\d{2}-\d{2}T[\d:.]+Z)|(→)|(\b(?:zh|cm|en|ja|lb|meta)(?=:|\s))|(\b(?:revid|pageid)\s+\d+\b)|(\b\d+(?=\s*(?:个|处|条|字节|page\(s\)|error\(s\))))/g;
+
 function hasAnsi(val: unknown): boolean {
 	return typeof val === 'string' && val.includes('\u001B[');
 }
 
-function highlightString(str: string): string {
-	if (/^Start time:/i.test(str)) {
-		return paint(['bold', 'magentaBright'], str);
+function tryColorizeJson(str: string): string | null {
+	const trimmed = str.trim();
+	if (!(trimmed.startsWith('{') && trimmed.endsWith('}') || trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+		return null;
 	}
-	if (/^End time:/i.test(str)) {
-		return paint(['bold', 'greenBright'], str);
+	try {
+		const parsed: unknown = JSON.parse(trimmed);
+		return inspect(parsed, { colors: true, depth: 4, compact: true });
+	} catch {
+		return null;
 	}
-	if (/^(?:SUCCESS!|登录成功)/.test(str)) {
-		return paint(['bold', 'greenBright'], str);
-	}
-	return str
-		.replace(/\[\[[^[\]]+\]\]/g, (m) => paint(['bold', 'magentaBright'], m))
-		.replace(/\{\{[^{}]+\}\}/g, (m) => paint('cyan', m))
-		.replace(/"result"\s*:\s*"Success"/g, (m) => paint(['bold', 'greenBright'], m))
-		.replace(/"error"\s*:/g, (m) => paint(['bold', 'redBright'], m));
 }
 
-function formatArgs(args: unknown[], defaultColor?: 'yellow' | 'red'): string[] {
+function highlightString(str: string): string {
+	const jsonColored = tryColorizeJson(str);
+	if (jsonColored !== null) {
+		return jsonColored;
+	}
+	return str.replace(HIGHLIGHT_RE, (
+		match,
+		wikiLink?: string,
+		template?: string,
+		isoTs?: string,
+		arrow?: string,
+		site?: string,
+		idPair?: string,
+		count?: string,
+	) => {
+		if (wikiLink) {
+			return paint(['bold', 'magentaBright'], wikiLink);
+		}
+		if (template) {
+			return paint('cyan', template);
+		}
+		if (isoTs) {
+			return paint('cyan', isoTs);
+		}
+		if (arrow) {
+			return paint(['bold', 'yellowBright'], arrow);
+		}
+		if (site) {
+			return paint(['bold', 'blueBright'], site);
+		}
+		if (idPair) {
+			return paint('blueBright', idPair);
+		}
+		if (count) {
+			return paint(['bold', 'yellowBright'], count);
+		}
+		return match;
+	});
+}
+
+function formatArgs(args: unknown[], defaultColor?: 'yellow' | 'red' | 'green' | 'dim'): string[] {
 	return args.map((arg) => {
 		if (typeof arg !== 'string') {
 			return inspect(arg, { colors: true, depth: 4, compact: true });
@@ -35,11 +73,57 @@ function formatArgs(args: unknown[], defaultColor?: 'yellow' | 'red'): string[] 
 		if (hasAnsi(arg)) {
 			return arg;
 		}
+		const jsonColored = tryColorizeJson(arg);
+		if (jsonColored !== null) {
+			return jsonColored;
+		}
 		if (defaultColor) {
 			return paint(defaultColor, arg);
 		}
 		return highlightString(arg);
 	});
+}
+
+function formatLogLine(args: unknown[]): { prefix: string; rest: string[] } {
+	const first = args[0];
+	if (typeof first === 'string') {
+		const startMatch = /^Start time:\s*(.+)$/i.exec(first);
+		if (startMatch) {
+			return {
+				prefix: `${timestamp()} ${paint(['bold', 'bgMagenta', 'white'], ' START ')} ${paint('cyan', startMatch[1])}`,
+				rest: formatArgs(args.slice(1)),
+			};
+		}
+		const endMatch = /^End time:\s*(.+)$/i.exec(first);
+		if (endMatch) {
+			return {
+				prefix: `${timestamp()} ${paint(['bold', 'bgGreen', 'black'], ' DONE ')} ${paint('cyan', endMatch[1])}`,
+				rest: formatArgs(args.slice(1)),
+			};
+		}
+		if (/^\s*✓|^SUCCESS!|^登录成功|^Successful\b/.test(first)) {
+			return {
+				prefix: `${timestamp()} ${paint(['bold', 'greenBright'], '[OK]')}`,
+				rest: formatArgs(args, 'green'),
+			};
+		}
+		if (/^\s*✗|^Failed\b|^Error:/.test(first)) {
+			return {
+				prefix: `${timestamp()} ${paint(['bold', 'redBright'], '[ERROR]')}`,
+				rest: formatArgs(args, 'red'),
+			};
+		}
+		if (/^(?:No change|No |Don't need to |跳过)|is empty\.|没有需要/.test(first)) {
+			return {
+				prefix: `${timestamp()} ${paint('gray', '[SKIP]')}`,
+				rest: formatArgs(args, 'dim'),
+			};
+		}
+	}
+	return {
+		prefix: `${timestamp()} ${paint(['bold', 'cyan'], '[INFO]')}`,
+		rest: formatArgs(args),
+	};
 }
 
 function installColorConsole(): void {
@@ -64,7 +148,8 @@ function installColorConsole(): void {
 			origLog(...args);
 			return;
 		}
-		origLog(`${timestamp()} ${paint(['bold', 'cyan'], '[INFO]')}`, ...formatArgs(args));
+		const { prefix, rest } = formatLogLine(args);
+		origLog(prefix, ...rest);
 	};
 
 	console.info = (...args: unknown[]): void => {
@@ -72,7 +157,8 @@ function installColorConsole(): void {
 			origInfo(...args);
 			return;
 		}
-		origInfo(`${timestamp()} ${paint(['bold', 'cyan'], '[INFO]')}`, ...formatArgs(args));
+		const { prefix, rest } = formatLogLine(args);
+		origInfo(prefix, ...rest);
 	};
 
 	console.warn = (...args: unknown[]): void => {
