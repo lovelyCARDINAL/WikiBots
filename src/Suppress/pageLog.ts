@@ -1,8 +1,10 @@
+import process from 'process';
 import { MediaWikiApi } from 'wiki-saikou';
 import { getTimeData, editTimeData } from '../utils/common/lastTime.ts';
 import clientLogin from '../utils/core/clientLogin.ts';
 import config from '../utils/core/config.ts';
 import paginate from '../utils/core/paginate.ts';
+import { hideAbuseLogIds } from '../utils/wiki/suppressHelper.ts';
 
 const api = new MediaWikiApi({
 	baseURL: config.zh.api,
@@ -21,6 +23,7 @@ const api = new MediaWikiApi({
 		lestart = new Date().toISOString();
 
 	let retry = 0;
+	let remainingIds = 0;
 	while (retry < 30) {
 		console.groupCollapsed(`Retry: ${retry}`);
 		const titles = await (async () => {
@@ -42,7 +45,7 @@ const api = new MediaWikiApi({
 		console.log(`titles: ${titles.length}`);
 
 		const ids = await Promise.all(titles.map(async (title) => {
-			const result = [];
+			const result: Array<{ id: number; hidden?: boolean }> = [];
 			for await (const data of paginate(api, {
 				list: 'abuselog',
 				afltitle: title,
@@ -55,31 +58,26 @@ const api = new MediaWikiApi({
 			}
 			return result.filter(({ hidden }) => !hidden).map(({ id }) => id);
 		})).then((result) => result.flat());
-		
+
 		console.log(`ids: ${ids.length}`);
+		remainingIds = ids.length;
 		if (!ids.length) {
 			console.groupEnd();
 			break;
 		}
 
-		await Promise.all(ids.map(async (id) => {
-			await api.request.post('/index.php', {
-				title: 'Special:滥用日志',
-				hide: id,
-				wpdropdownreason: 'other',
-				wpreason: '被隐藏的页面',
-				wphidden: true,
-				wpEditToken: await api.token('csrf'),
-			}, {
-				headers: { 'user-agent': config.indexUseragent },
-			}).then(() => console.log(`Try to hide ${id}`));
-		}));
+		await hideAbuseLogIds(api, ids, '被隐藏的页面');
 		console.groupEnd();
 
 		retry++;
 	}
 
-	await editTimeData(lastTime, 'hide-page-log', lestart);
+	if (remainingIds > 0) {
+		console.error(`Failed to hide ${remainingIds} abuse log(s) after ${retry} retries.`);
+		process.exitCode = 1;
+	} else {
+		await editTimeData(lastTime, 'hide-page-log', lestart);
+	}
 
 	console.log(`End time: ${new Date().toISOString()}`);
 })();

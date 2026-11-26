@@ -80,6 +80,37 @@ export const hidePages = async (zhapi: MediaWikiApi, user: string): Promise<void
 	}));
 };
 
+export const hideAbuseLogIds = async (api: MediaWikiApi, ids: number[], reason: string): Promise<void> => {
+	for (let i = 0; i < ids.length; i += 50) {
+		const chunk = ids.slice(i, i + 50);
+		const hideIdsQuery = Object.fromEntries(chunk.map((id) => [`hideids[${id}]`, '1']));
+		const wpEditToken = await api.token('csrf');
+		const { response: { status, data } } = await api.request.post('/index.php', {
+			title: 'Special:滥用日志/hide',
+			wpshoworhide: 'hide',
+			wpdropdownreason: 'other',
+			wpreason: reason,
+			wpEditToken,
+		}, {
+			query: {
+				title: 'Special:滥用日志/hide',
+				...hideIdsQuery,
+			},
+			headers: { 'user-agent': config.indexUseragent },
+		});
+
+		const $ = load(typeof data === 'string' ? data : '');
+		const pageTitle = $('title').text().trim();
+		const successMsg = $('.cdx-message--success, .mw-message-box-success, .successbox').text().trim();
+		const errorMsg = $('.cdx-message--error, .mw-message-box-error, .errorbox, .error').text().trim();
+		if (successMsg) {
+			console.log(`Hid ${chunk.length} abuse log(s) [${chunk.join(', ')}]: ${successMsg}`);
+		} else {
+			console.warn(`Unexpected response hiding [${chunk.join(', ')}] (HTTP ${status}, title="${pageTitle}"): ${errorMsg || 'no success message'}`);
+		}
+	}
+};
+
 export const hideAbuseLog = async (zhapi: MediaWikiApi, afluser: string): Promise<void> => {
 	let retry = 0;
 	while (retry < 30) {
@@ -100,18 +131,7 @@ export const hideAbuseLog = async (zhapi: MediaWikiApi, afluser: string): Promis
 		}
 		console.log(`Retry: ${retry}, ids: ${ids.length}`);
 
-		await Promise.all(ids.map(async (id) => {
-			await zhapi.request.post('/index.php', {
-				title: 'Special:滥用日志',
-				hide: id,
-				wpdropdownreason: 'other',
-				wpreason: '被隐藏的用户',
-				wphidden: true,
-				wpEditToken: await zhapi.token('csrf'),
-			}, {
-				headers: { 'user-agent': config.indexUseragent },
-			}).then(() => console.log(`Try to hide ${id}`));
-		}));
+		await hideAbuseLogIds(zhapi, ids, '被隐藏的用户');
 
 		retry++;
 	}
