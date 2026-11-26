@@ -9,8 +9,8 @@ Parser.config = 'moegirl';
 const time = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
 
 async function isActive(api: MediaWikiApi, user: string): Promise<boolean> {
-	const { data: { query: { usercontribs } } } = await api.post<MwQueryResponse<{
-		usercontribs: unknown[];
+	const { data } = await api.post<MwQueryResponse<{
+		usercontribs?: unknown[];
 	}>>({
 		list: 'usercontribs',
 		ucuser: user,
@@ -20,7 +20,7 @@ async function isActive(api: MediaWikiApi, user: string): Promise<boolean> {
 	}, {
 		retry: 15,
 	});
-	return !usercontribs.length;
+	return !(data?.query?.usercontribs ?? []).length;
 }
 
 async function edit(api: MediaWikiApi, pageid: string, text: string): Promise<void> {
@@ -52,15 +52,20 @@ async function edit(api: MediaWikiApi, pageid: string, text: string): Promise<vo
 
 	// signature
 	await Promise.all(pageids.signature.map(async (pageid) => {
-		const { data: { parse: { wikitext } } } = await api.post<{ parse: { wikitext: string } }>({
+		const { data } = await api.post<{ parse?: { wikitext?: string } }>({
 			action: 'parse',
 			pageid,
 			prop: 'wikitext',
 		}, {
 			retry: 15,
 		});
+		const wikitext = data?.parse?.wikitext;
+		if (!wikitext) {
+			return;
+		}
 
-		let lines = wikitext.split('\n');
+		const lines = wikitext.split('\n');
+		const inactiveLines = new Set<string>();
 		await Promise.all(lines.map(async (line) => {
 			if (!line.startsWith('#')) {
 				return;
@@ -77,11 +82,11 @@ async function edit(api: MediaWikiApi, pageid: string, text: string): Promise<vo
 				return;
 			}
 			if (await isActive(api, username)) {
-				lines = lines.filter((item) => line !== item);
+				inactiveLines.add(line);
 			}
 		}));
 
-		const text = lines.join('\n');
+		const text = lines.filter((item) => !inactiveLines.has(item)).join('\n');
 		if (text === wikitext) {
 			console.log(`No change: ${pageid}`);
 			return;
@@ -91,8 +96,8 @@ async function edit(api: MediaWikiApi, pageid: string, text: string): Promise<vo
 
 	// template
 	await Promise.all(pageids.template.map(async (pageid) => {
-		const { data: { parse: { wikitext, links } } } = await api.post<{
-			parse: { wikitext: string; links: Array<{ ns: number; title: string }> };
+		const { data } = await api.post<{
+			parse?: { wikitext?: string; links?: Array<{ ns: number; title: string }> };
 		}>({
 			action: 'parse',
 			pageid,
@@ -100,6 +105,11 @@ async function edit(api: MediaWikiApi, pageid: string, text: string): Promise<vo
 		}, {
 			retry: 15,
 		});
+		const wikitext = data?.parse?.wikitext;
+		const links = data?.parse?.links ?? [];
+		if (!wikitext) {
+			return;
+		}
 
 		// {{User}}与{{Supu}}均包含User talk内部链接
 		const inactive = (await Promise.all(links
@@ -108,6 +118,11 @@ async function edit(api: MediaWikiApi, pageid: string, text: string): Promise<vo
 			.filter(Boolean)
 			.map(async (user) => await isActive(api, user) ? user.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : ''),
 		)).filter(Boolean);
+
+		if (!inactive.length) {
+			console.log(`No change: ${pageid}`);
+			return;
+		}
 
 		const content = Parser.parse(wikitext);
 		const templates = content.querySelectorAll<Parser.TranscludeToken>('template#Template:Hlist');

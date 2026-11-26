@@ -57,7 +57,11 @@ async function processCategoryRedirect(
 			gcmlimit: '500',
 		});
 
-		for (const { pageid, revisions: [{ content }] } of members) {
+		for (const { pageid, revisions } of members) {
+			const content = revisions?.[0]?.content;
+			if (content === undefined) {
+				continue;
+			}
 			const wikitext = Parser.parse(contentData[pageid]?.content || content);
 			updatePageCategories(wikitext, target, variant);
 			if (site === 'zh') {
@@ -99,23 +103,27 @@ async function processSite(
 		gcmlimit: 'max',
 	});
 
-	pages = pages.filter(({ categoryinfo: { size } }) => size > 0);
+	pages = pages.filter(({ categoryinfo }) => (categoryinfo?.size ?? 0) > 0);
 	console.info(`${site}: ${pages.length}个已重定向分类尚未清空`);
 	if (!pages.length) {
 		console.log(`${site}: 没有需要修复的已重定向分类`);
 		return;
 	}
 
-	pages = pages.filter(({ revisions: [{ user, timestamp }] }) => userlist.includes(user) || moment(timestamp).isBefore(moment().subtract(3, 'days')));
+	pages = pages.filter(({ revisions }) => {
+		const rev = revisions?.[0];
+		return rev ? userlist.includes(rev.user) || moment(rev.timestamp).isBefore(moment().subtract(3, 'days')) : false;
+	});
 	console.info(`${site}: ${pages.length}个已重定向分类符合自动修复条件`);
 	if (!pages.length) {
 		return;
 	}
 
-	const { data: { query: { redirects } } } = await api.post<MwQueryResponse<{ redirects?: MwRedirectItem[] }>>({
+	const { data: redirectRes } = await api.post<MwQueryResponse<{ redirects?: MwRedirectItem[] }>>({
 		redirects: true,
 		pageids: pages.map(({ pageid }) => String(pageid)),
 	}, { retry: 50 });
+	const redirects = redirectRes?.query?.redirects;
 
 	const contentData: Record<number, { content?: string; summary?: string }> = {};
 	await Promise.all(pages.map((page) => processCategoryRedirect(api, site, page, redirects, contentData)));
@@ -126,12 +134,12 @@ async function processSite(
 	console.log(`Start time: ${new Date().toISOString()}`);
 	const zhapi = await createAndLogin('zh', 'bot', 75);
 
-	const { data: { query: { allusers } } } = await zhapi.post<MwQueryResponse<{ allusers: MwAllUser[] }>>({
+	const { data } = await zhapi.post<MwQueryResponse<{ allusers?: MwAllUser[] }>>({
 		list: 'allusers',
 		augroup: ['sysop', 'bot', 'patroller', 'honoredmaintainer', 'goodeditor', 'extendedconfirmed', 'staff'],
 		aulimit: 'max',
 	}, { retry: 50 });
-	const userlist = allusers.map(({ name }) => name);
+	const userlist = (data?.query?.allusers ?? []).map(({ name }) => name);
 	console.info(`共${userlist.length}个延确或优编及以上用户`);
 
 	await Promise.all(SITE_LIST.map(async (site) => {

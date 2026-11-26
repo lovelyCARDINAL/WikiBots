@@ -8,8 +8,8 @@ import { safePostWithToken } from '../utils/core/retry.ts';
 	
 	const api = await createAndLogin('zh', 'abot');
 		
-	const { data: { query: { querypage: { results } } } } = await api.post<MwQueryResponse<{
-		querypage: { results: Array<{ ns: number; title: string }> };
+	const { data } = await api.post<MwQueryResponse<{
+		querypage?: { results?: Array<{ ns: number; title: string }> };
 	}>>({
 		list: 'querypage',
 		qppage: 'BrokenRedirects',
@@ -17,6 +17,7 @@ import { safePostWithToken } from '../utils/core/retry.ts';
 	}, {
 		retry: 15,
 	});
+	const results = data?.query?.querypage?.results ?? [];
 	if (results.length) {
 		await mapLimit(results, 5, async (item) => {
 			if (item.ns === 2 || Number(item.title) % 2 === 1) {

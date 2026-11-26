@@ -156,14 +156,16 @@ async function loadFileInfoConfig(zhapi: MediaWikiApi) {
 				.flatMap((name) => ['Category:', 'Category:作者:'].map((prefix) => `${prefix}${name}`))
 				.filter((item) => !jsonContent.badCategoryOverride.includes(item.replace('Category:', ''))),
 		),
-		prefixRegex: new RegExp(`File:(?:${jsonContent.titlePrefixOverride.join('|')})`),
+		prefixRegex: jsonContent.titlePrefixOverride.length
+			? new RegExp(`File:(?:${jsonContent.titlePrefixOverride.join('|')})`)
+			: /$^/,
 		noCatSet: new Set(jsonContent.noCategory.map((name) => `Category:${name}`)),
 	};
 }
 
 async function fetchNoBotsUsers(zhapi: MediaWikiApi): Promise<Set<string>> {
-	const { data: { query: { pages } } } = await zhapi.post<{
-		query: { pages: Array<{ title: string; revisions: Array<{ content: string }> }> };
+	const { data } = await zhapi.post<{
+		query?: { pages?: Array<{ title: string; revisions?: Array<{ content?: string }> }> };
 	}>({
 		prop: 'revisions',
 		titles: 'Template:Bots',
@@ -177,8 +179,8 @@ async function fetchNoBotsUsers(zhapi: MediaWikiApi): Promise<Set<string>> {
 	});
 	const regex = /{{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=.*?机娘星海酱|optout=(?:all|.*?fileInfo)|deny=all))}}/;
 	return new Set(
-		pages
-			.filter((page) => regex.test(page.revisions[0].content.replace(/\s\n/g, '')))
+		(data?.query?.pages ?? [])
+			.filter((page) => regex.test((page.revisions?.[0]?.content ?? '').replace(/\s\n/g, '')))
 			.map((page) => page.title.slice('User talk:'.length)),
 	);
 }
@@ -213,7 +215,7 @@ async function fetchNoBotsUsers(zhapi: MediaWikiApi): Promise<Set<string>> {
 		gailimit: '500',
 	}, {
 		retry: 15,
-	}).then(({ data }) => (data?.query?.pages as FileInfoPage[] | undefined)?.filter((page) => page.revisions[0].parentid === 0));
+	}).then(({ data }) => (data?.query?.pages as FileInfoPage[] | undefined)?.filter((page) => page.revisions?.[0]?.parentid === 0));
 
 	if (fileData) {
 		const ctx: FileCheckContext = {

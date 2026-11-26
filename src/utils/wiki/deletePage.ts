@@ -6,14 +6,18 @@ import { safePostWithToken } from '../core/retry.ts';
  * Remove a deletion-request template from a page that cannot be auto-deleted.
  */
 export async function removeDeletionTemplate(api: MediaWikiApi, pageid: number, templatePattern: RegExp): Promise<void> {
-	const { data: { query: { pages } } } = await api.post<MwPageContentResponse>({
+	const { data } = await api.post<MwPageContentResponse>({
 		prop: 'revisions',
 		pageids: pageid,
 		rvprop: 'content',
 	}, {
 		retry: 15,
 	});
-	const wikitext = pages[0].revisions[0].content.replaceAll(templatePattern, '');
+	const content = data?.query?.pages?.[0]?.revisions?.[0]?.content;
+	if (content === undefined) {
+		return;
+	}
+	const wikitext = content.replaceAll(templatePattern, '');
 	await safePostWithToken(api, 'csrf', {
 		action: 'edit',
 		pageid,

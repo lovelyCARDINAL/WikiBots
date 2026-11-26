@@ -1,4 +1,5 @@
 import Parser from 'wikiparser-node';
+import splitAndJoin from '../utils/common/splitAndJoin.ts';
 import { createAndLogin } from '../utils/core/createApi.ts';
 import { safePostWithToken } from '../utils/core/retry.ts';
 
@@ -23,8 +24,8 @@ function sectionCount(parsed: Parser.Token, setData: Record<string, Record<strin
 	
 	const api = await createAndLogin('zh', 'ibot');
 
-	const { data: { query: { pages: [{ revisions: [{ content: setPage }] }] } } } = await api.post<{
-		query: { pages: Array<{ revisions: Array<{ content: string }> }> };
+	const { data: configRes } = await api.post<{
+		query?: { pages?: Array<{ revisions?: Array<{ content?: string }> }> };
 	}>({
 		prop: 'revisions',
 		titles: 'Module:VOCALOID_Song_Counter/data.json',
@@ -32,8 +33,12 @@ function sectionCount(parsed: Parser.Token, setData: Record<string, Record<strin
 	}, {
 		retry: 15,
 	});
+	const setPage = configRes?.query?.pages?.[0]?.revisions?.[0]?.content;
+	if (!setPage) {
+		throw new Error('Missing Module:VOCALOID_Song_Counter/data.json');
+	}
 	const setData = JSON.parse(setPage);
-	const titles = Object.keys(setData).flatMap((page) => {
+	const titles = [...new Set(Object.keys(setData).flatMap((page) => {
 		if (typeof setData[page] === 'number') {
 			return page;
 		}
@@ -62,47 +67,53 @@ function sectionCount(parsed: Parser.Token, setData: Record<string, Record<strin
 			});
 		}
 		return Object.keys(setData[page]).map((subpage) => `${page}/${subpage}`);
-	});
+	}))];
 
-	const { data: { query: { pages } } } = await api.post<{
-		query: { pages: Array<{ title: string; revisions: Array<{ content: string }> }> };
-	}>({
-		prop: 'revisions',
-		titles,
-		rvprop: 'content',
-	}, {
-		retry: 15,
-	});
+	for (const chunk of splitAndJoin(titles, 50)) {
+		const { data } = await api.post<{
+			query?: { pages?: Array<{ title: string; revisions?: Array<{ content?: string }> }> };
+		}>({
+			prop: 'revisions',
+			titles: chunk,
+			rvprop: 'content',
+		}, {
+			retry: 15,
+		});
 
-	await Promise.all(pages.map(({ title, revisions: [{ content }] }) => {
-		const [root, sub, subsub] = title.split(/\/(?!Ego)/);
-		const parsed = Parser.parse(content);
-		switch (sub) {
-			case undefined:
-				if (typeof setData[root]?.root === 'number') {
-					setData[root].root = templateCount(parsed);
-				} else if (setData[root]?.section) {
-					sectionCount(parsed, setData, root, 'section');
-				} else {
-					setData[root] = templateCount(parsed);
-				}
-				break;
-			case '梗曲相关':
-				sectionCount(parsed, setData, root, sub);
-				break;
-			case 'YouTube投稿':
-			case 'bilibili投稿':
-				if (subsub) {
-					setData[root][sub][subsub] = templateCount(parsed);
-				} else {
+		for (const { title, revisions } of data?.query?.pages ?? []) {
+			const content = revisions?.[0]?.content;
+			if (!content) {
+				continue;
+			}
+			const [root, sub, subsub] = title.split(/\/(?!Ego)/);
+			const parsed = Parser.parse(content);
+			switch (sub) {
+				case undefined:
+					if (typeof setData[root]?.root === 'number') {
+						setData[root].root = templateCount(parsed);
+					} else if (setData[root]?.section) {
+						sectionCount(parsed, setData, root, 'section');
+					} else {
+						setData[root] = templateCount(parsed);
+					}
+					break;
+				case '梗曲相关':
+					sectionCount(parsed, setData, root, sub);
+					break;
+				case 'YouTube投稿':
+				case 'bilibili投稿':
+					if (subsub) {
+						setData[root][sub][subsub] = templateCount(parsed);
+					} else {
+						setData[root][sub] = templateCount(parsed);
+					}
+					break;
+				default:
 					setData[root][sub] = templateCount(parsed);
-				}
-				break;
-			default:
-				setData[root][sub] = templateCount(parsed);
-				break;
+					break;
+			}
 		}
-	}));
+	}
 	
 	await safePostWithToken(api, 'csrf', {
 		action: 'edit',

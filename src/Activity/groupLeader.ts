@@ -54,17 +54,21 @@ async function updateData(zhapi: MediaWikiApi, text: string): Promise<void> {
 		createAndLogin('cm', 'ibot'),
 	]);
 
-	const { data: { parse: { wikitext } } } = await zhapi.post<{ parse: { wikitext: string } }>({
+	const { data: parseRes } = await zhapi.post<{ parse?: { wikitext?: string } }>({
 		action: 'parse',
 		pageid: '490849',
 		prop: 'wikitext',
 	}, {
 		retry: 15,
 	});
+	const wikitext = parseRes?.parse?.wikitext;
+	if (!wikitext) {
+		return;
+	}
 
 	const userlist = (() => {
 		const regex = /{{User\|(.+?)}}/gi;
-		const data = Array.from(wikitext.matchAll(regex), (match) => match[1]?.replace(/^\w/, (first) => first.toUpperCase()));
+		const data = Array.from(wikitext.matchAll(regex), (match) => match[1]?.replace(/^\w/, (first) => first.toUpperCase())).filter(Boolean);
 		return [...new Set(data)].sort();
 	})();
 
@@ -82,35 +86,42 @@ async function updateData(zhapi: MediaWikiApi, text: string): Promise<void> {
 	}
 
 	const parser = Parser.parse(wikitext);
-	const table = parser.querySelector('table')!;
+	const table = parser.querySelector('table');
+	if (!table) {
+		throw new Error('Table not found in page 490849');
+	}
 	const rowCount = table.getRowCount();
 	let text = '* 本页面为[[U:星海-interfacebot|机器人]]生成的编辑组负责人30日内中文萌娘百科与萌娘共享主、模板、分类、帮助、萌娘百科、文件命名空间下编辑数统计。\n* 生成时间：{{subst:#time:Y年n月j日 (D) H:i (T)}}｜{{subst:#time:Y年n月j日 (D) H:i (T)|||1}}\n<div style="display: flex; flex-wrap: wrap; justify-content: center;">\n<div style="min-width: 60%; margin:0 3rem 1rem">\n{| class="wikitable sortable" width=100%\n|-\n! width=35%|编辑组 !! width=35%|用户名 !! 编辑数 !! 是否活跃';
 
 	let lastGroup: string | undefined;
 	for (let i = 2; i < rowCount; i++) {
-		const groupCell = table.getNthCell({ y: i, x: 0 })!.innerText;
-		if (groupCell === lastGroup) {
+		const groupCell = table.getNthCell({ y: i, x: 0 })?.innerText;
+		if (!groupCell || groupCell === lastGroup) {
 			continue;
 		}
 		lastGroup = groupCell;
 		const users = (() => {
-			const userCell = table.getNthCell({ y: i, x: 2 })!.innerText;
+			const userCell = table.getNthCell({ y: i, x: 2 })?.innerText ?? '';
 			const regex = /{{User\|(.+?)}}/gi;
-			return Array.from(userCell.matchAll(regex), (match) => match[1]?.replace(/^\w/, (first) => first.toUpperCase()));
+			return Array.from(userCell.matchAll(regex), (match) => match[1]?.replace(/^\w/, (first) => first.toUpperCase())).filter(Boolean);
 		})();
 		const userCount = users.length;
-		const isActive = Math.max(...users.map((user) => userContribsCount[user])) >= 3
+		if (!userCount) {
+			continue;
+		}
+		const isActive = Math.max(...users.map((user) => userContribsCount[user] ?? 0)) >= 3
 			? '是'
 			: '<b style="color:red">否</b>';
 		const userContribs = (user: string) => {
-			const contribsCount = userContribsCount[user];
+			const contribsCount = userContribsCount[user] ?? 0;
 			return contribsCount >= 3
 				? `data-sort-value="${contribsCount}"|${contribsCount}次`
 				: `data-sort-value="${contribsCount}"|<span style="color:red">${contribsCount}次</span>`;
 		};
-		text += userCount === 1 
-			? `\n|-\n|${groupCell} || ${userInfo(users[0])} || ${userContribs(users[0])} || ${isActive}`
-			: `\n|-\n| rowspan=${userCount}|${groupCell} || ${userInfo(users[0])} || ${userContribs(users.shift()!)} || rowspan=${userCount} |${isActive}${users.map((user) => `\n|-\n| ${userInfo(user)} || ${userContribs(user)}`).join('')}`;
+		const [firstUser, ...restUsers] = users;
+		text += userCount === 1
+			? `\n|-\n|${groupCell} || ${userInfo(firstUser)} || ${userContribs(firstUser)} || ${isActive}`
+			: `\n|-\n| rowspan=${userCount}|${groupCell} || ${userInfo(firstUser)} || ${userContribs(firstUser)} || rowspan=${userCount} |${isActive}${restUsers.map((user) => `\n|-\n| ${userInfo(user)} || ${userContribs(user)}`).join('')}`;
 	}
 
 	text += '\n|-\n|}\n</div>\n</div>\n\n[[Category:萌娘百科数据报告]]';

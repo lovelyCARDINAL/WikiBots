@@ -6,8 +6,8 @@ import { safePostWithToken } from '../utils/core/retry.ts';
 const time = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
 
 async function isActive(api: MediaWikiApi, user: string): Promise<boolean> {
-	const { data: { query: { usercontribs } } } = await api.post<MwQueryResponse<{
-		usercontribs: unknown[];
+	const { data } = await api.post<MwQueryResponse<{
+		usercontribs?: unknown[];
 	}>>({
 		list: 'usercontribs',
 		ucuser: user,
@@ -17,7 +17,7 @@ async function isActive(api: MediaWikiApi, user: string): Promise<boolean> {
 	}, {
 		retry: 15,
 	});
-	return !usercontribs.length;
+	return !(data?.query?.usercontribs ?? []).length;
 }
 
 (async () => {
@@ -29,8 +29,8 @@ async function isActive(api: MediaWikiApi, user: string): Promise<boolean> {
 
 	await Promise.all(pageids.map(async (pageid) => {
 
-		const { data: { parse: { wikitext } } } = await api.post<{
-			parse: { wikitext: string };
+		const { data } = await api.post<{
+			parse?: { wikitext?: string };
 		}>({
 			action: 'parse',
 			pageid,
@@ -39,6 +39,10 @@ async function isActive(api: MediaWikiApi, user: string): Promise<boolean> {
 		}, {
 			retry: 15,
 		});
+		const wikitext = data?.parse?.wikitext;
+		if (!wikitext) {
+			return;
+		}
 
 		const userlist = await (async () => {
 			const data: string[] = [];

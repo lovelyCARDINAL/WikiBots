@@ -4,8 +4,8 @@ import { createAndLogin } from '../utils/core/createApi.ts';
 import { deletePageById, removeDeletionTemplate } from '../utils/wiki/deletePage.ts';
 
 async function ruleTest(api: MediaWikiApi, pageid: number, maintainlist: string[]): Promise<boolean> {
-	const { data: { query: { pages } } } = await api.post<MwQueryResponse<{
-		pages: Array<{ revisions: Array<{ user: string }> }>;
+	const { data } = await api.post<MwQueryResponse<{
+		pages?: Array<{ revisions?: Array<{ user: string }> }>;
 	}>>({
 		prop: 'revisions',
 		pageids: pageid,
@@ -15,7 +15,11 @@ async function ruleTest(api: MediaWikiApi, pageid: number, maintainlist: string[
 	}, {
 		retry: 15,
 	});
-	const editlist: string[] = pages[0].revisions.map((item) => item.user);
+	const revisions = data?.query?.pages?.[0]?.revisions;
+	if (!revisions?.length) {
+		return false;
+	}
+	const editlist: string[] = revisions.map((item) => item.user);
 	const creator = editlist[0];
 	const exuserlist = editlist.filter((element) => !maintainlist.includes(element) && element !== creator);
 
@@ -40,18 +44,18 @@ async function cannotDelete(api: MediaWikiApi, pageid: number) {
 	const api = await createAndLogin('zh', 'abot');
 
 	const maintainlist = await (async () => {
-		const { data: { query: { allusers } } } = await api.post<MwQueryResponse<{ allusers: MwAllUser[] }>>({
+		const { data } = await api.post<MwQueryResponse<{ allusers?: MwAllUser[] }>>({
 			list: 'allusers',
 			augroup: ['bot'],
 			aulimit: 'max',
 		}, {
 			retry: 15,
 		});
-		return allusers.map(({ name }) => name);
+		return (data?.query?.allusers ?? []).map(({ name }) => name);
 	})();
-		
+
 	const { data } = await api.post<MwQueryResponse<{
-		pages: Array<{ transcludedin?: Array<{ pageid: number }> }>;
+		pages?: Array<{ transcludedin?: Array<{ pageid: number }> }>;
 	}>>({
 		prop: 'transcludedin',
 		titles: 'Template:Nsdd',
@@ -61,9 +65,8 @@ async function cannotDelete(api: MediaWikiApi, pageid: number) {
 	}, {
 		retry: 15,
 	});
-	const pagedata = data.query.pages[0];
-	if (pagedata.transcludedin) {
-		const pagelist = pagedata.transcludedin;
+	const pagelist = data?.query?.pages?.[0]?.transcludedin;
+	if (pagelist?.length) {
 		await Promise.all(
 			pagelist.map(async (page) => {
 				const { pageid } = page;

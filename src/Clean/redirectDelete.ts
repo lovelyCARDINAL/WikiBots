@@ -36,8 +36,8 @@ function shouldDeleteMoveLog({ pageid, ns, comment, params, commenthidden }: Mov
 	
 	const api = await createAndLogin('zh', 'abot');
 
-	const { data: { query: { logevents } } } = await api.post<{
-		query: { logevents: MoveLogEvent[] };
+	const { data } = await api.post<{
+		query?: { logevents?: MoveLogEvent[] };
 	}>({
 		list: 'logevents',
 		letype: 'move',
@@ -49,7 +49,7 @@ function shouldDeleteMoveLog({ pageid, ns, comment, params, commenthidden }: Mov
 		retry: 15,
 	});
 
-	const pages = logevents.filter(shouldDeleteMoveLog);
+	const pages = (data?.query?.logevents ?? []).filter(shouldDeleteMoveLog);
 
 	if (!pages.length) {
 		console.log('No pages to delete.');
@@ -61,8 +61,8 @@ function shouldDeleteMoveLog({ pageid, ns, comment, params, commenthidden }: Mov
 			return;
 		}
 		const needsDelete = await (async () => {
-			const { data: { query: { pages: [{ missing, revisions }] } } } = await api.post<MwQueryResponse<{
-				pages: Array<{ missing?: boolean; revisions: Array<{ tags?: string[] }> }>;
+			const { data: revData } = await api.post<MwQueryResponse<{
+				pages?: Array<{ missing?: boolean; revisions?: Array<{ tags?: string[] }> }>;
 			}>>({
 				prop: 'revisions',
 				pageids: pageid,
@@ -71,7 +71,8 @@ function shouldDeleteMoveLog({ pageid, ns, comment, params, commenthidden }: Mov
 			}, {
 				retry: 15,
 			});
-			return !missing && revisions.length === 1 && revisions[0]?.tags?.includes('mw-new-redirect');
+			const page = revData?.query?.pages?.[0];
+			return Boolean(page && !page.missing && page.revisions?.length === 1 && page.revisions[0]?.tags?.includes('mw-new-redirect'));
 		})();
 		if (needsDelete) {
 			await safePostWithToken(api, 'csrf', {
