@@ -47,21 +47,29 @@ const tryDeleteUserPage = async (zhapi: MediaWikiApi, title: string): Promise<bo
 	if (!wpEditToken) {
 		return false;
 	}
-	const { response: { data } } = await zhapi.request.post('/index.php', {
+	const wpConfirmationRevId = $('[name="wpConfirmationRevId"]').attr('value');
+	const { response: { status, data } } = await zhapi.request.post('/index.php', {
 		title,
 		action: 'delete',
 		wpDeleteReasonList: 'other',
 		wpReason: '被隐藏的用户',
-		wpSuppress: '',
+		wpSuppress: '1',
 		wpConfirmB: '删除页面',
 		wpEditToken,
+		...wpConfirmationRevId ? { wpConfirmationRevId } : {},
 	}, {
+		query: { title, action: 'delete' },
 		headers: { 'user-agent': config.indexUseragent },
 	});
-	if (!data.includes('<title>操作完成')) {
+	const resHtml = typeof data === 'string' ? data : '';
+	if (!resHtml.includes('<title>操作完成')) {
+		const $res = load(resHtml);
+		const pageTitle = $res('title').text().trim();
+		const errorMsg = $res('.cdx-message--error, .cdx-message--warning, .mw-message-box-error, .errorbox, .error').text().trim();
+		logger.warn(`Failed to delete ${c.page(title)} (HTTP ${status}, title="${pageTitle}"): ${errorMsg || 'unexpected response'}`);
 		return false;
 	}
-	console.log('Successful deleted the page');
+	logger.success(`Deleted ${c.page(title)}`);
 	return true;
 };
 
