@@ -1,6 +1,7 @@
 import moment from 'moment';
 import type { MediaWikiApi } from 'wiki-saikou';
 import { createAndLogin } from '../utils/core/createApi.ts';
+import paginate from '../utils/core/paginate.ts';
 import { safePostWithToken } from '../utils/core/retry.ts';
 
 const PAGE_MAP: Record<string, { content: string; summary: string }> = {
@@ -48,9 +49,9 @@ async function pageEdit(api: MediaWikiApi, title: string) {
 	const api = await createAndLogin('zh', 'abot');
 
 	if (moment().utc().format('dddd') === 'Sunday') {
-		await Promise.all(['Help:沙盒', 'Template:沙盒'].map(async (title) => {
-			const { data: { query: { pages: [{ revisions: { length } }] } } } = await api.post<{
-				query: { pages: Array<{ revisions: Array<unknown> }> };
+		await Promise.all(['Draft:沙盒', 'Template:沙盒'].map(async (title) => {
+			const { data } = await api.post<{
+				query?: { pages?: Array<{ revisions?: Array<unknown> }> };
 			}>({
 				prop: 'revisions',
 				titles: title,
@@ -59,6 +60,7 @@ async function pageEdit(api: MediaWikiApi, title: string) {
 			}, {
 				retry: 15,
 			});
+			const length = data?.query?.pages?.[0]?.revisions?.length ?? 0;
 			console.info(`${title} has ${length} revisions.`);
 			if (length > 2000) {
 				await safePostWithToken(api, 'csrf', {
@@ -77,21 +79,25 @@ async function pageEdit(api: MediaWikiApi, title: string) {
 
 		const prefix = ['沙盒/', 'Sandbox/'];
 		const deletePages = await Promise.all(prefix.map(async (gapprefix) => {
-			const { data: { query: { pages } } } = await api.post<{
-				query: { pages: Array<{ title: string; revisions: Array<{ timestamp: string }> }> };
-			}>({
+			const result: Array<[string, string]> = [];
+			for await (const data of paginate<{
+				query?: { pages?: Array<{ title: string; revisions?: Array<{ timestamp?: string }> }> };
+			}>(api, {
 				prop: 'revisions',
 				generator: 'allpages',
 				rvprop: 'timestamp',
 				gapprefix,
 				gapnamespace: '10',
 				gaplimit: 'max',
-			}, {
-				retry: 15,
-			});
-			return pages
-				.filter(({ title, revisions: [{ timestamp }] }) => moment().diff(moment(timestamp), 'days') > 90 && !Object.keys(PAGE_MAP).includes(title))
-				.map(({ title, revisions: [{ timestamp }] }): [string, string] => [title, timestamp]);
+			})) {
+				for (const { title, revisions } of data?.query?.pages ?? []) {
+					const timestamp = revisions?.[0]?.timestamp;
+					if (timestamp && moment().diff(moment(timestamp), 'days') > 90 && !Object.keys(PAGE_MAP).includes(title)) {
+						result.push([title, timestamp]);
+					}
+				}
+			}
+			return result;
 		})).then((result) => result.flat());
 		console.info(`There are ${deletePages.length} pages to delete.`);
 		await Promise.all(deletePages.map(async ([title, timestamp]) => {
@@ -108,13 +114,13 @@ async function pageEdit(api: MediaWikiApi, title: string) {
 		}));
 	}
 
-	const { data: { query: { pages } } } = await api.post<{
-		query: {
-			pages: Array<{
+	const { data } = await api.post<{
+		query?: {
+			pages?: Array<{
 				title: string;
-				revisions: Array<{ content: string }>;
-				protection: Array<{ type: string; level: string }>;
-				touched: string;
+				revisions?: Array<{ content?: string }>;
+				protection?: Array<{ type: string; level: string }>;
+				touched?: string;
 			}>;
 		};
 	}>({
@@ -126,8 +132,8 @@ async function pageEdit(api: MediaWikiApi, title: string) {
 		retry: 15,
 	});
 
-	await Promise.all(pages.map(async ({ title, revisions: [{ content }], protection, touched }) => {
-		if (protection.length === 0 || protection[0].type !== 'move' || protection[0].level !== 'sysop') {
+	await Promise.all((data?.query?.pages ?? []).map(async ({ title, revisions, protection, touched }) => {
+		if (!protection?.some((p) => p.type === 'move' && p.level === 'sysop')) {
 			await safePostWithToken(api, 'csrf', {
 				action: 'protect',
 				title,
@@ -141,7 +147,10 @@ async function pageEdit(api: MediaWikiApi, title: string) {
 				noCache: true,
 			});
 		}
-		if (PAGE_MAP[title].content !== content) {
+		const content = revisions?.[0]?.content;
+		if (content === undefined) {
+			await pageEdit(api, title);
+		} else if (PAGE_MAP[title].content !== content) {
 			const minutesDiff = moment().diff(moment(touched), 'minutes');
 			if (minutesDiff > 20) {
 				await pageEdit(api, title);
