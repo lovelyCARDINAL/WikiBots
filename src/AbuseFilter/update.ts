@@ -4,7 +4,7 @@ import type { MwQueryResponse } from '../types/mediawiki.d.ts';
 import clientLogin from '../utils/core/clientLogin.ts';
 import config from '../utils/core/config.ts';
 import { createApi } from '../utils/core/createApi.ts';
-import { getAbuseFilterDetails } from '../utils/wiki/abuseFilter.ts';
+import { getAbuseFilterDetails, submitAbuseFilterForm } from '../utils/wiki/abuseFilter.ts';
 
 const api = createApi('zh');
 
@@ -41,14 +41,13 @@ async function getAbuseFilter(id: number) {
 	}
 	
 	const { formSnippet, action } = await getAbuseFilterDetails(api, 18);
+	if (!action) {
+		throw new Error('Missing form action for AbuseFilter 18');
+	}
 	formSnippet.wpFilterRules = af18.replace(/(\/\*\s*下方内容由机器人同步自滥用过滤器70\s*\*\/).+$/s, '$1') + af70.replace(/^.+?\/\*\s*下方内容会被机器人同步到滥用过滤器18\s*\*\//s, '');
-	
+
 	try {
-		await api.request
-			.post(action, formSnippet, {
-				headers: { 'user-agent': config.indexUseragent },
-			})
-			.then(() => console.log('Try to update AbuseFilter 18!'));
+		await submitAbuseFilterForm(api, action, formSnippet, { label: 'AbuseFilter 18' });
 	} catch (error) {
 		console.error('Failed to update AbuseFilter 18!');
 		console.error(error);

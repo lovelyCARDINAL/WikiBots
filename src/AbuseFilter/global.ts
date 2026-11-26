@@ -3,7 +3,7 @@ import { MediaWikiApi } from 'wiki-saikou';
 import type { MwQueryResponse } from '../types/mediawiki.d.ts';
 import clientLogin from '../utils/core/clientLogin.ts';
 import config from '../utils/core/config.ts';
-import { getAbuseFilterDetails } from '../utils/wiki/abuseFilter.ts';
+import { getAbuseFilterDetails, submitAbuseFilterForm } from '../utils/wiki/abuseFilter.ts';
 
 const SITE_LIST = ['en', 'ja', 'lb'] as const;
 
@@ -113,12 +113,10 @@ async function getAbuseFilter(api: MediaWikiApi): Promise<AbuseFilterEntry[]> {
 				if (!action) {
 					throw new Error(`Missing form action for ${site} abuse filter ${id}`);
 				}
-				await api.request
-					.post(action, formSnippet, {
-						retry: 50,
-						headers: { 'user-agent': config.indexUseragent },
-					})
-					.then(() => console.log(`Try to update ${site} abuse filter ${id}!`));
+				await submitAbuseFilterForm(api, action, formSnippet, {
+					retry: 50,
+					label: `${site} abuse filter ${id}`,
+				});
 			}));
 		} catch (error) {
 			// Avoid outputting detailed rules for filters.
