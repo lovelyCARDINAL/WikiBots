@@ -162,25 +162,19 @@ function rewriteAnchorLinks(
 
 /**
  * Find links in `content` that point to `normalizedTargetTitles` with a fragment
- * in `brokenAnchors`.
- *
- * @param {string} content
- * @param {Set<string>} normalizedTargetTitles
- * @param {Set<string>} brokenAnchors
- * @param {boolean} [isTargetPage=false]
- * @returns {string[]} normalized `[[Title#Anchor]]` strings
+ * in `brokenAnchors`, and format them for `{{Broken anchors}}` talk-page notices.
  */
 function findBrokenAnchorLinks(
 	content: string,
 	normalizedTargetTitles: Set<string>,
-	brokenAnchors: Set<string>,
+	brokenAnchors: Map<string, number | undefined> | Set<string>,
 	isTargetPage = false,
 ): string[] {
 	if (!brokenAnchors.size) {
 		return [];
 	}
 	const root = Parser.parse(content);
-	const found = new Set<string>();
+	const found = new Map<string, string>();
 	const primaryTitle = [...normalizedTargetTitles][0] || '';
 
 	for (const link of root.querySelectorAll('link')) {
@@ -197,27 +191,23 @@ function findBrokenAnchorLinks(
 			continue;
 		}
 		const titlePart = link.name ? normalizedLinkName : primaryTitle;
-		found.add(`[[${titlePart}#${normFragment}]]`);
+		const key = `[[${titlePart}#${normFragment}]]`;
+		if (!found.has(key)) {
+			const rawLink = link.toString();
+			const displayAnchor = normFragment.replace(/_/g, ' ');
+			const revid = brokenAnchors instanceof Map ? brokenAnchors.get(normFragment) : undefined;
+			const entry = revid !== undefined
+				? `<nowiki>${rawLink}</nowiki> 锚点（${displayAnchor}）[[Special:Diff/${revid}|已被删除]]。`
+				: `<nowiki>${rawLink}</nowiki> 锚点（${displayAnchor}）已失效。`;
+			found.set(key, entry);
+		}
 	}
-	return [...found];
+	return [...found.values()];
 }
 
-/**
- * Update or remove `{{Broken anchors|links=...}}` on a talk page using wikiparser-node.
- * - Prunes entries for which `isStillBroken(title, anchor)` returns `false`.
- * - Appends new `addLinks` (each like `[[Page#Anchor]]`) not already listed.
- * - Removes `removeTemplate` (e.g. `Template:即将删除`) when adding/reminding broken anchors.
- * - Removes the entire `{{Broken anchors}}` template if `links` becomes empty.
- *
- * @param {string} talkContent
- * @param {object} options
- * @param {string[]} [options.addLinks=[]]
- * @param {(title: string, anchor: string) => boolean} [options.isStillBroken]
- * @param {string} [options.removeTemplate]
- * @returns {{ changed: boolean, content: string, addedCount: number, removedCount: number, templateRemoved: boolean }}
- */
 export {
 	updateBrokenAnchorsTalkPage,
+	parseBrokenAnchorLine,
 	loadFixAnchorConfig,
 } from './talkPage.ts';
 

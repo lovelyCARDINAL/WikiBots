@@ -6,6 +6,30 @@ interface UpdateBrokenAnchorsOptions {
 	addLinks?: string[];
 	isStillBroken?: (title: string, anchor: string) => boolean;
 	removeTemplate?: string;
+	subjectTitle?: string;
+}
+
+/**
+ * Extract normalized `{ title, anchor }` from a `{{Broken anchors}}` list line,
+ * supporting both `<nowiki>[[Title#Anchor|...]]</nowiki> ...` and legacy `[[Title#Anchor]]` entries.
+ */
+function parseBrokenAnchorLine(line: string, defaultTitle?: string): { title: string; anchor: string } | null {
+	const root = Parser.parse(line);
+	const nowiki = root.querySelector<Parser.ExtToken>('ext#nowiki');
+	const link = nowiki && typeof nowiki.innerText === 'string'
+		? Parser.parse(nowiki.innerText).querySelector('link')
+		: root.querySelector('link');
+	if (!link?.fragment) {
+		return null;
+	}
+	const rawTitle = link.name || defaultTitle;
+	if (!rawTitle) {
+		return null;
+	}
+	return {
+		title: Parser.normalizeTitle(rawTitle).title,
+		anchor: normalizeAnchor(link.fragment),
+	};
 }
 
 /**
@@ -36,24 +60,23 @@ function removeTemplatesByName(root: Parser.Token, templateName: string): boolea
 function pruneExistingLinks(
 	rawLinks: string,
 	isStillBroken: (title: string, anchor: string) => boolean,
+	subjectTitle?: string,
 ): { keptLines: string[]; existingNormalized: Set<string>; removedCount: number } {
 	const keptLines: string[] = [];
 	const existingNormalized = new Set<string>();
 	let removedCount = 0;
 
 	for (const line of rawLinks.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)) {
-		const link = Parser.parse(line).querySelector('link');
-		if (!link || !link.name || !link.fragment) {
+		const parsed = parseBrokenAnchorLine(line, subjectTitle);
+		if (!parsed) {
 			keptLines.push(line);
 			continue;
 		}
-		const normTitle = Parser.normalizeTitle(link.name).title;
-		const normFragment = normalizeAnchor(link.fragment);
-		if (!isStillBroken(normTitle, normFragment)) {
+		if (!isStillBroken(parsed.title, parsed.anchor)) {
 			removedCount++;
 			continue;
 		}
-		existingNormalized.add(`[[${normTitle}#${normFragment}]]`);
+		existingNormalized.add(`[[${parsed.title}#${parsed.anchor}]]`);
 		keptLines.push(line);
 	}
 	return { keptLines, existingNormalized, removedCount };
@@ -63,13 +86,12 @@ function appendNewLinks(
 	addLinks: string[],
 	existingNormalized: Set<string>,
 	keptLines: string[],
+	subjectTitle?: string,
 ): number {
 	let addedCount = 0;
 	for (const newLink of addLinks) {
-		const link = Parser.parse(newLink).querySelector('link');
-		const key = link?.name && link?.fragment
-			? `[[${Parser.normalizeTitle(link.name).title}#${normalizeAnchor(link.fragment)}]]`
-			: newLink;
+		const parsed = parseBrokenAnchorLine(newLink, subjectTitle);
+		const key = parsed ? `[[${parsed.title}#${parsed.anchor}]]` : newLink;
 		if (!existingNormalized.has(key)) {
 			existingNormalized.add(key);
 			keptLines.push(`* ${newLink}`);
@@ -84,7 +106,7 @@ function appendNewLinks(
  */
 function updateBrokenAnchorsTalkPage(
 	talkContent: string,
-	{ addLinks = [], isStillBroken = () => true, removeTemplate = '' }: UpdateBrokenAnchorsOptions = {},
+	{ addLinks = [], isStillBroken = () => true, removeTemplate = '', subjectTitle }: UpdateBrokenAnchorsOptions = {},
 ): { changed: boolean; content: string; addedCount: number; removedCount: number; templateRemoved: boolean } {
 	const BROKEN_ANCHORS_RE = /^Template:Broken[ _]anchors$/i;
 	const root = Parser.parse(talkContent);
@@ -108,8 +130,12 @@ function updateBrokenAnchorsTalkPage(
 		};
 	}
 
-	const { keptLines, existingNormalized, removedCount } = pruneExistingLinks(template.getValue('links') || '', isStillBroken);
-	const addedCount = appendNewLinks(addLinks, existingNormalized, keptLines);
+	const { keptLines, existingNormalized, removedCount } = pruneExistingLinks(
+		template.getValue('links') || '',
+		isStillBroken,
+		subjectTitle,
+	);
+	const addedCount = appendNewLinks(addLinks, existingNormalized, keptLines, subjectTitle);
 
 	let templateRemoved = false;
 	if (keptLines.length === 0) {
@@ -176,5 +202,6 @@ async function loadFixAnchorConfig(
 
 export {
 	updateBrokenAnchorsTalkPage,
+	parseBrokenAnchorLine,
 	loadFixAnchorConfig,
 };

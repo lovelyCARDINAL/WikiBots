@@ -57,13 +57,19 @@ export async function getBacklinks(api: MediaWikiApi, targetTitles: Set<string>,
 	return [...backlinks];
 }
 
+export interface PageAnchorState {
+	renameMap: Map<string, string>;
+	brokenAnchors: Map<string, number | undefined>;
+	finalAnchors: Set<string>;
+}
+
 export async function computePageAnchorState(
 	api: MediaWikiApi,
 	title: string,
 	sinceIso: string,
-): Promise<{ renameMap: Map<string, string>; brokenAnchors: Set<string>; finalAnchors: Set<string> }> {
+): Promise<PageAnchorState> {
 	const { data } = await api.post<{
-		query?: { pages?: Record<string, { revisions?: Array<{ timestamp: string; content?: string }> }> };
+		query?: { pages?: Record<string, { revisions?: Array<{ revid?: number; timestamp: string; content?: string }> }> };
 	}>({
 		prop: 'revisions',
 		titles: title,
@@ -73,9 +79,11 @@ export async function computePageAnchorState(
 	}, { retry: 15 });
 
 	const page = Object.values(data?.query?.pages || {})[0];
-	const revs = (page?.revisions || []).filter((r): r is { timestamp: string; content: string } => typeof r.content === 'string');
+	const revs = (page?.revisions || []).filter(
+		(r): r is { revid?: number; timestamp: string; content: string } => typeof r.content === 'string',
+	);
 	if (revs.length < 2) {
-		return { renameMap: new Map(), brokenAnchors: new Set(), finalAnchors: new Set() };
+		return { renameMap: new Map(), brokenAnchors: new Map(), finalAnchors: new Set() };
 	}
 
 	const chronological = [...revs].reverse();
@@ -84,27 +92,30 @@ export async function computePageAnchorState(
 	const startIdx = firstInWindowIdx > 0 ? firstInWindowIdx - 1 : 0;
 	const relevant = chronological.slice(startIdx);
 	if (relevant.length < 2) {
-		return { renameMap: new Map(), brokenAnchors: new Set(), finalAnchors: new Set() };
+		return { renameMap: new Map(), brokenAnchors: new Map(), finalAnchors: new Set() };
 	}
 
 	const anchorSnapshots = relevant.map((r) => extractAnchors(r.content));
 	const stepRenames: Array<Map<string, string>> = [];
-	const removedCandidates = new Set<string>();
+	const removedCandidates = new Map<string, number | undefined>();
 	for (let i = 1; i < anchorSnapshots.length; i++) {
 		const { renames, removed } = detectSectionChanges(anchorSnapshots[i - 1], anchorSnapshots[i]);
 		if (renames.size) {
 			stepRenames.push(renames);
 		}
 		for (const item of removed) {
-			removedCandidates.add(item);
+			removedCandidates.set(item, relevant[i].revid);
 		}
 	}
 
 	const finalAnchors = anchorSnapshots[anchorSnapshots.length - 1].all;
 	const renameMap = buildRenameMap(stepRenames, finalAnchors);
-	const brokenAnchors = new Set(
-		[...removedCandidates].filter((a) => !finalAnchors.has(a) && !renameMap.has(a)),
-	);
+	const brokenAnchors = new Map<string, number | undefined>();
+	for (const [anchor, revid] of removedCandidates) {
+		if (!finalAnchors.has(anchor) && !renameMap.has(anchor)) {
+			brokenAnchors.set(anchor, revid);
+		}
+	}
 	return { renameMap, brokenAnchors, finalAnchors };
 }
 

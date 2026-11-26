@@ -6,6 +6,7 @@ import {
 	findBrokenAnchorLinks,
 	loadFixAnchorConfig,
 	normalizeAnchor,
+	parseBrokenAnchorLine,
 	rewriteAnchorLinks,
 	updateBrokenAnchorsTalkPage,
 } from '../utils/anchor/index.ts';
@@ -15,6 +16,7 @@ import {
 	getBacklinks,
 	getTargetTitleSet,
 	saveOrDeleteTalkPage,
+	type PageAnchorState,
 } from '../utils/anchor/wiki.ts';
 import mapLimit from '../utils/common/concurrency.ts';
 import { editTimeData, getTimeData } from '../utils/common/lastTime.ts';
@@ -28,15 +30,18 @@ const MAX_LOOKBACK_MS = 30 * 24 * 60 * 60 * 1000;
 const TARGET_NAMESPACES = '0|4|10|12|14';
 const NOBOTS_REGEX = /\{\{(?:[Nn]obots|[Bb]ots\|(?:allow=none|deny=[^}]*(?:星海-adminbot|all)))\}\}/;
 
-function pageHasLinkTo(content: string, targetTitle: string, targetAnchor: string): boolean {
+function pageHasLinkTo(content: string, targetTitle: string, targetAnchor: string, pageTitle?: string): boolean {
 	const root = Parser.parse(content);
 	const normTarget = Parser.normalizeTitle(targetTitle).title;
+	const normPage = pageTitle ? Parser.normalizeTitle(pageTitle).title : '';
 	const normAnchor = normalizeAnchor(targetAnchor);
-	return root.querySelectorAll('link').some((link) => Boolean(
-		link.name && link.fragment
-		&& Parser.normalizeTitle(link.name).title === normTarget
-		&& normalizeAnchor(link.fragment) === normAnchor,
-	));
+	return root.querySelectorAll('link').some((link) => {
+		if (!link.fragment || normalizeAnchor(link.fragment) !== normAnchor) {
+			return false;
+		}
+		const isSelfSection = !link.name && Boolean(normPage) && normPage === normTarget;
+		return isSelfSection || Boolean(link.name) && Parser.normalizeTitle(link.name).title === normTarget;
+	});
 }
 
 interface ProcessCandidateOptions {
@@ -45,7 +50,7 @@ interface ProcessCandidateOptions {
 	targetTitle: string;
 	normalizedTarget: string;
 	targetTitles: Set<string>;
-	state: { renameMap: Map<string, string>; brokenAnchors: Set<string>; finalAnchors: Set<string> };
+	state: PageAnchorState;
 }
 
 async function processCandidatePage({
@@ -94,8 +99,9 @@ async function processCandidatePage({
 	const talkResult = updateBrokenAnchorsTalkPage(talkContent, {
 		addLinks: remainingBroken,
 		removeTemplate: 'Template:即将删除',
+		subjectTitle: pageTitle,
 		isStillBroken: (linkTitle, linkAnchor) => !targetTitles.has(linkTitle)
-			|| !finalAnchors.has(linkAnchor) && pageHasLinkTo(latestContent, linkTitle, linkAnchor),
+			|| !finalAnchors.has(linkAnchor) && pageHasLinkTo(latestContent, linkTitle, linkAnchor, pageTitle),
 	});
 	if (talkResult.changed) {
 		await saveOrDeleteTalkPage(api, talkTitle, talkResult, false);
@@ -105,7 +111,7 @@ async function processCandidatePage({
 async function processTargetPage(
 	api: MediaWikiApi,
 	targetTitle: string,
-	state: { renameMap: Map<string, string>; brokenAnchors: Set<string>; finalAnchors: Set<string> },
+	state: PageAnchorState,
 ): Promise<void> {
 	const targetTitles = await getTargetTitleSet(api, targetTitle);
 	const backlinks = await getBacklinks(api, targetTitles, TARGET_NAMESPACES);
@@ -147,9 +153,9 @@ async function sweepTalkPage(
 
 	const targetTitlesToFetch = new Set<string>();
 	for (const line of (tpl.getValue('links') || '').split(/\r?\n/)) {
-		const link = Parser.parse(line).querySelector('link');
-		if (link?.name) {
-			targetTitlesToFetch.add(Parser.normalizeTitle(link.name).title);
+		const parsed = parseBrokenAnchorLine(line, subjectTitle);
+		if (parsed) {
+			targetTitlesToFetch.add(parsed.title);
 		}
 	}
 	for (const t of targetTitlesToFetch) {
@@ -158,7 +164,8 @@ async function sweepTalkPage(
 
 	const talkResult = updateBrokenAnchorsTalkPage(talkContent, {
 		addLinks: [],
-		isStillBroken: (linkTitle, linkAnchor) => pageHasLinkTo(subjectContent, linkTitle, linkAnchor)
+		subjectTitle,
+		isStillBroken: (linkTitle, linkAnchor) => pageHasLinkTo(subjectContent, linkTitle, linkAnchor, subjectTitle)
 			&& !anchorCache.get(linkTitle)?.has(linkAnchor),
 	});
 	if (talkResult.changed) {
@@ -238,7 +245,7 @@ async function cleanupResolvedBrokenAnchors(api: MediaWikiApi): Promise<void> {
 			}
 			console.log(`Detected anchor changes on [[${targetTitle}]]:`, {
 				renames: Object.fromEntries(state.renameMap),
-				removed: [...state.brokenAnchors],
+				removed: Object.fromEntries(state.brokenAnchors),
 			});
 			await processTargetPage(api, targetTitle, state);
 		} catch (err) {
